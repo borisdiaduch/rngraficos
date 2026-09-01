@@ -4,7 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>GRÁFICOS — Diario RÍO NEGRO</title>
-<link rel="icon" type="image/x-icon" href="./favicon.svg">
+<link rel="icon" type="image/x-icon" href="https://borisdiaduch.github.io/rnmapas/favicon.svg">
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/PapaParse/5.4.1/papaparse.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
@@ -598,28 +598,68 @@ function wrapNoCut(ctx, text, maxWidth, sizePt, weight){
 // items: [{type:'dot'|'dash', tok:{c,m,y,k}, label:string}]
 function drawLegend(ctx, area, top, items){
   if(!items || !items.length) return top;
-  const labelSize = 8;
+  const labelSize = 9;
+  const refSize = 7.5;
   const refTxt = 'REFERENCIA';
-  const y = top + 0.16;
-  ctx.text(area.left, y+0.02, refTxt, {sizePt:7.5, weight:'semibold', fillTok:RN.grayK70, align:'left'});
-  let x = area.left + ctx.measure(refTxt,7.5,'semibold') + 0.16;
-  ctx.line(x, y-0.15, x, y+0.11, 0.5*PT2CM);
-  x += 0.18;
-  items.forEach(it=>{
-    if(it.type==='dash'){
-      ctx.dashedPolyline([[x,y],[x+0.36,y]], it.tok, 0.032, [0.07,0.055]);
-      x += 0.36 + 0.10;
-    } else {
-      ctx.circleMark(x+0.07, y, 0.07, it.tok);
-      x += 0.14 + 0.10;
-    }
-    ctx.text(x, y+0.02, it.label, {sizePt:labelSize, weight:'medium', fillTok:RN.black, align:'left'});
-    x += ctx.measure(it.label, labelSize, 'medium') + 0.26;
+  const dotD = 0.30, dotR = dotD/2;
+  const dashW = 0.36;
+  const dividerH = 0.6;
+  const gapAfterMark = 0.12;
+  const gapBetweenItems = 0.28;
+  const gapAfterDivider = 0.16;
+  const baselineOffset = labelSize*PT2CM*0.32;
+
+  const refW = ctx.measure(refTxt, refSize, 'semibold');
+  const firstLineStartX = area.left + refW + gapAfterDivider*2;
+
+  // medir cada ítem (marcador + texto) para poder armar filas con wrap real
+  const measured = items.map(it=>{
+    const markW = it.type==='dash' ? dashW : dotD;
+    const textW = ctx.measure(it.label, labelSize, 'semibold');
+    return {...it, itemW: markW + gapAfterMark + textW};
   });
-  return top + 0.42;
+
+  const lines = [];
+  let current = [];
+  let curX = firstLineStartX;
+  measured.forEach(it=>{
+    const w = it.itemW + gapBetweenItems;
+    if(current.length && curX + it.itemW > area.left + area.width){
+      lines.push(current);
+      current = [];
+      curX = area.left;
+    }
+    current.push(it);
+    curX += w;
+  });
+  if(current.length) lines.push(current);
+
+  let rowTop = top;
+  lines.forEach((lineItems, li)=>{
+    const yc = rowTop + dividerH/2 + 0.06;
+    let x = area.left;
+    if(li===0){
+      ctx.text(area.left, yc+baselineOffset, refTxt, {sizePt:refSize, weight:'semibold', fillTok:RN.grayK70, align:'left'});
+      x = area.left + refW + gapAfterDivider;
+      ctx.line(x, yc-dividerH/2, x, yc+dividerH/2, 0.5*PT2CM);
+      x += gapAfterDivider;
+    }
+    lineItems.forEach(it=>{
+      if(it.type==='dash'){
+        ctx.dashedPolyline([[x,yc],[x+dashW,yc]], it.tok, 0.032, [0.07,0.055]);
+        x += dashW + gapAfterMark;
+      } else {
+        ctx.circleMark(x+dotR, yc, dotR, it.tok);
+        x += dotD + gapAfterMark;
+      }
+      ctx.text(x, yc+baselineOffset, it.label, {sizePt:labelSize, weight:'semibold', fillTok:RN.black, align:'left'});
+      x += ctx.measure(it.label, labelSize, 'semibold') + gapBetweenItems;
+    });
+    rowTop += dividerH + 0.14;
+  });
+  return rowTop + 0.04;
 }
 
-// ---------- regresión lineal simple, para la línea de promedio/tendencia ----------
 function drawHeader(ctx, W, titulo, bajada){
   ctx.line(MARGIN, 0.03, W-MARGIN, 0.03, 1*PT2CM);
   let y = 0.03;
@@ -671,9 +711,9 @@ function drawVerticalBars(ctx, area, rows, headers, numSeries, destacar, sufijo)
   let top = area.top;
   const legendItems = [];
   if(numSeries>1 && headers){
-    headers.forEach((h,i)=> legendItems.push({type:'dot', tok:seriesColorCmyk(i,numSeries), label:h}));
+    headers.forEach((h,i)=>{ if(rows.some(r=>Math.abs(r.vals[i])>0)) legendItems.push({type:'dot', tok:seriesColorCmyk(i,numSeries), label:h}); });
   }
-  if(legendItems.length) top = drawLegend(ctx, area, top, legendItems);
+  if(legendItems.length) top = drawLegend(ctx, area, top, legendItems) + 0.18;
 
   const groupGap = 0.26, barGapInner = numSeries>1?0.05:0;
   const groupW = (area.width - groupGap*(n-1))/n;
@@ -718,20 +758,22 @@ function drawHorizontalBars(ctx, area, rows, headers, numSeries, sufijo){
 
   let top = area.top;
   if(numSeries>1 && headers){
-    const legendItems = headers.map((h,i)=>({type:'dot', tok:seriesColorCmyk(i,numSeries), label:h}));
+    const legendItems = headers.map((h,i)=>({type:'dot', tok:seriesColorCmyk(i,numSeries), label:h})).filter((it,i)=> rows.some(r=>Math.abs(r.vals[i])>0));
     top = drawLegend(ctx, area, top, legendItems);
   }
 
   const catLabelW = Math.min(2.3, area.width*0.32);
+  const catSize=9, valSize=9;
+  const maxValLabelW = Math.max(...rows.flatMap(r=>r.vals.map(v=> ctx.measure(formatAR(v)+(sufijo?(' '+sufijo):''), valSize, 'medium'))));
+  const valReserve = maxValLabelW + 0.20;
   const plotLeft = area.left + catLabelW;
-  const plotWidth = area.width - catLabelW;
+  const plotWidth = area.width - catLabelW - valReserve;
   const rowGap = 0.18;
   const groupH = (area.bottom-top-rowGap*(n-1))/n;
   const barGapInner = numSeries>1?0.05:0;
   const barHeightRatio = numSeries>1 ? 0.90 : 0.62;
   const barH = ((groupH - barGapInner*(numSeries-1))/numSeries) * barHeightRatio;
   const rowOffset = numSeries===1 ? (groupH - barH)/2 : (groupH - (barH*numSeries + barGapInner*(numSeries-1)))/2;
-  const catSize=9, valSize=9;
 
   rows.forEach((d,gi)=>{
     const gy = top + gi*(groupH+rowGap) + rowOffset;
@@ -759,17 +801,20 @@ function drawLines(ctx, area, rows, headers, numSeries, sufijo){
   let top = area.top;
   const legendItems = [];
   if(numSeries>1 && headers){
-    headers.forEach((h,i)=> legendItems.push({type:'dot', tok:seriesColorCmyk(i,numSeries), label:h}));
+    headers.forEach((h,i)=>{ if(rows.some(r=>Math.abs(r.vals[i])>0)) legendItems.push({type:'dot', tok:seriesColorCmyk(i,numSeries), label:h}); });
   }
   if(legendItems.length) top = drawLegend(ctx, area, top, legendItems);
 
-  const stepX = area.width/(n-1);
+  const inset = 0.38; // para que las etiquetas de los puntos extremos no se salgan del área
+  const plotLeft = area.left + inset;
+  const plotWidth = area.width - inset*2;
+  const stepX = plotWidth/(n-1);
   const usableH = area.bottom - top - 0.30;
   const scaleY = v => area.bottom - ((v-minVal)/((maxVal-minVal)||1))*usableH;
 
   for(let si=0; si<numSeries; si++){
     const tok = seriesColorCmyk(si,numSeries);
-    const pts = rows.map((r,i)=>[area.left+i*stepX, scaleY(r.vals[si])]);
+    const pts = rows.map((r,i)=>[plotLeft+i*stepX, scaleY(r.vals[si])]);
     ctx.polyline(pts, tok, 0.035);
     pts.forEach((p,i)=>{
       ctx.circleMark(p[0],p[1],0.05,tok);
@@ -779,7 +824,7 @@ function drawLines(ctx, area, rows, headers, numSeries, sufijo){
   rows.forEach((r,i)=>{
     const catLines = wrapNoCut(ctx, r.cat, stepX-0.10, 8, 'normal');
     const catLH = 8*PT2CM*1.15;
-    catLines.forEach((line,li)=> ctx.text(area.left+i*stepX, area.bottom+0.30+li*catLH, line, {sizePt:8,weight:'normal',fillTok:RN.black,align:'center'}));
+    catLines.forEach((line,li)=> ctx.text(plotLeft+i*stepX, area.bottom+0.30+li*catLH, line, {sizePt:8,weight:'normal',fillTok:RN.black,align:'center'}));
   });
   ctx.line(area.left, area.bottom, area.left+area.width, area.bottom, 0.5*PT2CM);
 }
@@ -806,23 +851,45 @@ function drawDonut(ctx, area, rows, sufijo){
     angle = a1;
   });
 
-  // etiquetas externas: nombre + porcentaje, conectadas a la porción con una línea guía en ángulo
+  // etiquetas externas: nombre + porcentaje, conectadas a la porción con una línea guía en ángulo.
+  // se agrupan por lado (izquierda/derecha) y se separan verticalmente si colisionan, para que nunca se superpongan.
   const nameSize=8, pctSize=9;
   const armLen = Math.min(0.55, area.width*0.09);
-  rows.forEach((r,i)=>{
+  const minGap = 0.62; // alto mínimo por etiqueta (nombre + porcentaje en 2 líneas)
+
+  const labelData = rows.map((r,i)=>{
     const a = mids[i];
-    const isRight = Math.cos(a) >= 0.02;
     const isLeft = Math.cos(a) <= -0.02;
-    const align = isLeft ? 'right' : 'left';
+    const dir = isLeft ? -1 : 1;
     const p0 = [cx+Math.cos(a)*rOuter, cy+Math.sin(a)*rOuter];
     const p1 = [cx+Math.cos(a)*(rOuter+0.20), cy+Math.sin(a)*(rOuter+0.20)];
-    const dir = isLeft ? -1 : 1;
-    const p2 = [p1[0] + dir*armLen, p1[1]];
-    ctx.polyline([p0,p1,p2], RN.grayK70, 0.014);
+    return { r, dir, align: isLeft?'right':'left', p0, p1, y: p1[1] };
+  });
+
+  ['left','right'].forEach(side=>{
+    const dir = side==='left' ? -1 : 1;
+    const group = labelData.filter(l=>l.dir===dir).sort((a,b)=>a.y-b.y);
+    for(let i=1;i<group.length;i++){
+      if(group[i].y - group[i-1].y < minGap) group[i].y = group[i-1].y + minGap;
+    }
+    // si el conjunto se corrió por debajo del área disponible, lo desplazamos entero hacia arriba
+    if(group.length){
+      const overflow = group[group.length-1].y - (area.bottom-0.15);
+      if(overflow>0) group.forEach(l=> l.y -= overflow);
+      const underflow = (area.top+0.15) - group[0].y;
+      if(underflow>0) group.forEach(l=> l.y += underflow);
+    }
+  });
+
+  labelData.forEach(l=>{
+    const { r, dir, align, p0, p1, y } = l;
+    const p2 = [p1[0] + dir*armLen, y];
+    const bend = [p1[0], y];
+    ctx.polyline([p0, p1, bend, p2], RN.grayK70, 0.014);
     const pct = r.vals[0]/total*100;
     const tx = p2[0] + dir*0.08;
-    ctx.text(tx, p2[1]-0.04, r.cat, {sizePt:nameSize, weight:'medium', fillTok:RN.black, align});
-    ctx.text(tx, p2[1]+pctSize*PT2CM*0.95, formatAR(pct)+'%'+(sufijo?(' '+sufijo):''), {sizePt:pctSize, weight:'extrabold', fillTok:RN.black, align});
+    ctx.text(tx, y-0.04, r.cat, {sizePt:nameSize, weight:'medium', fillTok:RN.black, align});
+    ctx.text(tx, y+pctSize*PT2CM*0.95, formatAR(pct)+'%'+(sufijo?(' '+sufijo):''), {sizePt:pctSize, weight:'extrabold', fillTok:RN.black, align});
   });
 }
 
@@ -848,6 +915,7 @@ function render(){
   const CSS_PX_PER_CM = 96/2.54; // ~37.795 — conversión estándar CSS, lo más cercano posible al tamaño físico real en pantalla
   svg.setAttribute('width', Math.round(W*CSS_PX_PER_CM));
   svg.setAttribute('height', Math.round(H*CSS_PX_PER_CM));
+  $('stageLabel').textContent = 'Vista previa — ' + formatAR(W) + ' × ' + formatAR(H) + ' cm';
   svg.innerHTML = '';
 
   const ns = 'http://www.w3.org/2000/svg';
@@ -878,7 +946,7 @@ function mostrarToast(msg, ok=true){
   const label = $('stageLabel');
   clearTimeout(mostrarToast._t);
   label.textContent = msg;
-  mostrarToast._t = setTimeout(()=>{ label.textContent = 'Vista previa'; }, 2600);
+  mostrarToast._t = setTimeout(render, 2600);
 }
 
 // ---------- export PDF CMYK real ----------
@@ -1004,7 +1072,7 @@ document.querySelectorAll('#chartTypePicker .ctp-btn').forEach(btn=>{
     render();
   });
 });
-['titulo','bajada','datos','fuente','sufijo','destacar','columnas','altoCm'].forEach(id=>{
+['titulo','bajada','datos','fuente','sufijo','destacar','columnas','altoCm','seriesNames'].forEach(id=>{
   $(id).addEventListener('input', render);
   $(id).addEventListener('change', render);
 });
