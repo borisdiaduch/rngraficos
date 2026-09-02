@@ -42,7 +42,7 @@
   #canvas::-webkit-scrollbar{ display:none; width:0; height:0; }
   #canvas.dragging{ cursor:grabbing; }
   #board{
-    display:flex; align-items:center; gap:34px;
+    display:flex; align-items:center; justify-content:center; gap:34px;
     min-height:100%; width:max-content; min-width:100%;
     padding:130px 160px 130px 380px;
   }
@@ -89,6 +89,43 @@
     transition: transform .1s ease;
   }
   .add-tile:hover{ transform: scale(1.05); color:#000; }
+
+  .color-overrides-list{ display:flex; flex-direction:column; gap:10px; max-height:260px; overflow-y:auto; }
+  .cor-row{ display:flex; align-items:center; justify-content:space-between; gap:8px; }
+  .cor-label{ font-size:12px; color:var(--text); overflow:hidden; text-overflow:ellipsis; white-space:nowrap; flex:1; min-width:0; }
+  .cor-trigger{
+    width:20px; height:20px; border-radius:50%; border:2px solid #fff; padding:0; cursor:pointer; flex:none;
+    box-shadow:0 0 0 1px var(--panel-border);
+  }
+
+  /* el popover vive como hijo directo de <body> (position:fixed), nunca dentro de un
+     contenedor con overflow — eso era lo que rompía el layout con scrollbars fantasma */
+  .cor-popover{
+    display:none; position:fixed; z-index:200;
+    background:#fff; border:1px solid var(--panel-border); border-radius:10px;
+    box-shadow:0 10px 28px rgba(43,42,37,0.22); padding:10px;
+    width:168px;
+  }
+  .cor-popover.open{ display:block; }
+  .cor-opts-grid{ display:grid; grid-template-columns:repeat(5, 1fr); gap:6px; }
+  .cor-opt{
+    width:22px; height:22px; border-radius:50%; border:2px solid transparent; padding:0; cursor:pointer;
+    box-shadow:inset 0 0 0 1px rgba(0,0,0,0.12);
+  }
+  .cor-opt.active{ border-color:var(--accent); }
+  .cor-divider{ border-top:1px solid var(--panel-border); margin:9px 0 7px; }
+  .cor-cmyk-label{ font-size:10px; text-transform:uppercase; letter-spacing:0.04em; color:var(--muted); margin-bottom:6px; }
+  .cor-cmyk-grid{ display:grid; grid-template-columns:1fr 1fr; gap:6px; margin-bottom:8px; }
+  .cor-cmyk-grid label{ display:flex; align-items:center; gap:5px; font-size:11px; color:var(--muted); }
+  .cor-cmyk-grid input{
+    width:100%; padding:4px 5px; border:1px solid var(--panel-border); border-radius:5px;
+    font-size:12px; color:var(--text); background:var(--bg);
+  }
+  .cor-cmyk-apply{
+    width:100%; padding:6px; border:none; border-radius:6px; background:var(--accent); color:#fff;
+    font-size:11.5px; font-weight:600; cursor:pointer;
+  }
+  .cor-cmyk-apply:hover{ background:#000; }
 
   .global-toast{
     position:fixed; top:16px; left:50%; transform:translateX(-50%) translateY(-8px);
@@ -438,6 +475,31 @@ Viedma, 34, 35</textarea>
       </div>
     </div>
 
+    <div class="subsection collapsed" id="colores-section">
+      <div class="subsection-header" id="colores-toggle">
+        <span>Colores</span>
+        <svg class="chevron" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="2">
+          <path d="M5 7l5 5 5-5" stroke-linecap="round" stroke-linejoin="round"/>
+        </svg>
+      </div>
+      <div class="subsection-body">
+        <div class="field">
+          <label>Estilo de sección</label>
+          <select id="tema">
+            <option value="diario" selected>Diario Río Negro</option>
+            <option value="rural">Rural</option>
+            <option value="economico">Económico</option>
+            <option value="energia">Energía</option>
+          </select>
+        </div>
+        <div class="field">
+          <label>Color por categoría / serie</label>
+          <div id="colorOverridesList" class="color-overrides-list"></div>
+          <div class="hint">El primer círculo de cada fila es el color por defecto de la sección; el resto son colores puntuales para destacar una barra.</div>
+        </div>
+      </div>
+    </div>
+
     <div class="btnrow">
       <button class="btn btn-secondary" id="btnReset">Restablecer</button>
       <div class="split-btn" id="exportSplit">
@@ -496,16 +558,98 @@ const RN = {
   bar:     {c:30, m:0, y:0,  k:10},
   barDark: {c:55, m:5, y:0,  k:25},
 };
+// Simula la tinta de imprenta real (capas de C/M/Y/K sobre papel blanco) en vez de
+// primarios ideales (0,255,255 / 255,0,255 / 255,255,0). La fórmula "ingenua" hace que
+// colores saturados como el verde se vean mucho más "neón" en pantalla que impresos.
+// Los valores de tinta son una aproximación de proceso offset estándar (tipo SWOP), no un
+// perfil ICC real — es una mejora visual, no una prueba de color certificada.
+const PRINT_INK_RGB = {
+  c: [0, 174, 239],
+  m: [236, 0, 140],
+  y: [255, 241, 0],
+  k: [35, 34, 30],
+};
 function cmykToRgbCss(o){
-  const r = 255*(1-o.c/100)*(1-o.k/100);
-  const g = 255*(1-o.m/100)*(1-o.k/100);
-  const b = 255*(1-o.y/100)*(1-o.k/100);
+  const c=o.c/100, m=o.m/100, y=o.y/100, k=o.k/100;
+  let r=255, g=255, b=255;
+  [[c,PRINT_INK_RGB.c],[m,PRINT_INK_RGB.m],[y,PRINT_INK_RGB.y],[k,PRINT_INK_RGB.k]].forEach(([amt,ink])=>{
+    r *= (1-amt) + amt*(ink[0]/255);
+    g *= (1-amt) + amt*(ink[1]/255);
+    b *= (1-amt) + amt*(ink[2]/255);
+  });
   return `rgb(${r},${g},${b})`;
 }
-function seriesColorCmyk(i, total){
-  if(total<=1) return RN.bar;
+function hexToCmyk(hex){
+  hex = hex.replace('#','');
+  const r = parseInt(hex.slice(0,2),16)/255;
+  const g = parseInt(hex.slice(2,4),16)/255;
+  const b = parseInt(hex.slice(4,6),16)/255;
+  const k = 1 - Math.max(r,g,b);
+  if(k>=1) return {c:0,m:0,y:0,k:100};
+  return {
+    c: Math.round((1-r-k)/(1-k)*100),
+    m: Math.round((1-g-k)/(1-k)*100),
+    y: Math.round((1-b-k)/(1-k)*100),
+    k: Math.round(k*100)
+  };
+}
+function tokensEqual(a,b){
+  if(!a || !b) return false;
+  return a.c===b.c && a.m===b.m && a.y===b.y && a.k===b.k;
+}
+
+// ---------- temas de sección ----------
+// NOTA: los colores de Rural/Económico/Energía son placeholders razonables — pasame los
+// valores reales (hex o CMYK) de cada sección y los ajusto directo.
+const THEMES = {
+  diario: {
+    name:'Diario Río Negro',
+    headerBg: null,
+    headerTextTok: RN.black,
+    bar: RN.bar,
+    barDark: RN.barDark,
+  },
+  rural: {
+    name:'Rural',
+    headerBg: {c:80, m:15, y:50, k:0},    // verde oscuro
+    headerTextTok: {c:0, m:0, y:0, k:0},  // blanco
+    bar: {c:25, m:0, y:40, k:0},          // verde claro
+    barDark: {c:80, m:15, y:50, k:0},     // verde oscuro
+  },
+  economico: {
+    name:'Económico',
+    headerBg: null,
+    headerTextTok: RN.black,
+    bar: {c:0, m:45, y:95, k:0},          // naranja (placeholder)
+    barDark: {c:10, m:60, y:100, k:10},
+  },
+  energia: {
+    name:'Energía',
+    headerBg: null,
+    headerTextTok: RN.black,
+    bar: {c:0, m:60, y:90, k:0},          // rojo-naranja (placeholder)
+    barDark: {c:0, m:80, y:90, k:15},
+  },
+};
+
+// ---------- paleta de acento (color puntual por barra/serie) ----------
+const ACCENT_COLORS = {
+  gris:    {c:0,  m:0,  y:0,   k:30},
+  naranja: {c:0,  m:50, y:100, k:0},
+  verde:   {c:70, m:0,  y:75,  k:10},
+  rojo:    {c:0,  m:85, y:75,  k:0},
+};
+
+function seriesColorCmyk(i, total, theme){
+  theme = theme || THEMES.diario;
+  if(total<=1) return theme.bar;
   const f = i/(total-1);
-  return { c: RN.bar.c + f*(70-RN.bar.c), m: RN.bar.m + f*(15-RN.bar.m), y: 0, k: RN.bar.k + f*(35-RN.bar.k) };
+  return {
+    c: theme.bar.c + f*(theme.barDark.c - theme.bar.c),
+    m: theme.bar.m + f*(theme.barDark.m - theme.bar.m),
+    y: theme.bar.y + f*(theme.barDark.y - theme.bar.y),
+    k: theme.bar.k + f*(theme.barDark.k - theme.bar.k),
+  };
 }
 
 // ---------- parseo de datos (una o varias series) ----------
@@ -660,7 +804,7 @@ function makePdfCtx(doc){
     circleMark(cx,cy,r,tok){ doc.setFillColor(frac(tok.c),frac(tok.m),frac(tok.y),frac(tok.k)); doc.circle(cx,cy,r,'F'); },
     text(x,y,str,{sizePt,weight,fillTok,align}){
       applyFont(weight,sizePt);
-      doc.setTextColor(0,0,0,frac(fillTok.k));
+      doc.setTextColor(frac(fillTok.c),frac(fillTok.m),frac(fillTok.y),frac(fillTok.k));
       const opts={}; if(align==='center') opts.align='center'; else if(align==='right') opts.align='right';
       doc.text(str,x,y,opts);
     },
@@ -697,10 +841,33 @@ function wrapNoCut(ctx, text, maxWidth, sizePt, weight){
   return lines;
 }
 
+// Busca el tamaño de fuente más grande posible (entre maxSize y minSize, de a medio punto)
+// que evite dejar una palabra suelta ("viuda") en la última línea del título. Si no encuentra
+// ninguno, usa el mejor candidato hallado; como última red de seguridad, aplica el wrap con
+// tope de 3 líneas + elipsis al tamaño mínimo (nunca deja el título sin resolver).
+function fitTitleAutoShrink(ctx, titulo, maxWidth, maxSize, minSize){
+  maxSize = maxSize || 14;
+  minSize = minSize || 11;
+  let best = null;
+  for(let size=maxSize; size>=minSize; size-=0.5){
+    const lines = wrapNoCut(ctx, titulo, maxWidth, size, 'titlebold');
+    if(lines.length===1) return {lines, sizePt:size};
+    if(lines.length<=3){
+      const lastWordCount = lines[lines.length-1].trim().split(' ').length;
+      const isWidow = lastWordCount===1 && lines.length>1;
+      if(!isWidow) return {lines, sizePt:size};
+      if(!best) best = {lines, sizePt:size};
+    }
+  }
+  if(best) return best;
+  return {lines: wrapTitleCtx(ctx, titulo, maxWidth, minSize, 'titlebold'), sizePt:minSize};
+}
+
 // ---------- leyenda compartida ("REFERENCIA" + puntos/rayas de color) ----------
 // items: [{type:'dot'|'dash', tok:{c,m,y,k}, label:string}]
-function drawLegend(ctx, area, top, items){
+function drawLegend(ctx, area, top, items, startX){
   if(!items || !items.length) return top;
+  startX = (startX===undefined) ? area.left : startX;
   const labelSize = 9;
   const refSize = 7.5;
   const refTxt = 'REFERENCIA';
@@ -713,7 +880,7 @@ function drawLegend(ctx, area, top, items){
   const baselineOffset = labelSize*PT2CM*0.32;
 
   const refW = ctx.measure(refTxt, refSize, 'semibold');
-  const firstLineStartX = area.left + refW + gapAfterDivider*2;
+  const firstLineStartX = startX + refW + gapAfterDivider*2;
 
   // medir cada ítem (marcador + texto) para poder armar filas con wrap real
   const measured = items.map(it=>{
@@ -730,7 +897,7 @@ function drawLegend(ctx, area, top, items){
     if(current.length && curX + it.itemW > area.left + area.width){
       lines.push(current);
       current = [];
-      curX = area.left;
+      curX = startX;
     }
     current.push(it);
     curX += w;
@@ -740,10 +907,10 @@ function drawLegend(ctx, area, top, items){
   let rowTop = top;
   lines.forEach((lineItems, li)=>{
     const yc = rowTop + dividerH/2 + 0.06;
-    let x = area.left;
+    let x = startX;
     if(li===0){
-      ctx.text(area.left, yc+baselineOffset, refTxt, {sizePt:refSize, weight:'bold', fillTok:RN.black, align:'left'});
-      x = area.left + refW + gapAfterDivider;
+      ctx.text(startX, yc+baselineOffset, refTxt, {sizePt:refSize, weight:'bold', fillTok:RN.black, align:'left'});
+      x = startX + refW + gapAfterDivider;
       ctx.line(x, yc-dividerH/2, x, yc+dividerH/2, 0.5*PT2CM);
       x += gapAfterDivider;
     }
@@ -763,14 +930,59 @@ function drawLegend(ctx, area, top, items){
   return rowTop + 0.04;
 }
 
-function drawHeader(ctx, W, titulo, bajada){
-  ctx.line(MARGIN, 0.03, W-MARGIN, 0.03, 1*PT2CM);
-  let y = 0.03;
-  const maxTitleW = W - MARGIN*2;
+function themeTextInset(theme){
+  return (theme && theme.headerBg) ? 0.26 : 0;
+}
+
+function drawHeader(ctx, W, titulo, bajada, theme){
+  theme = theme || THEMES.diario;
+  const hasBand = !!theme.headerBg;
+  const inset = themeTextInset(theme);
+  const textX = MARGIN + inset;
+
+  if(hasBand){
+    // banda de color: cubre únicamente el bloque del título, a sangre en los 4 lados.
+    // el texto lleva el mismo margen a izquierda y derecha (simétrico), y si no entra en
+    // una línea o dejaría una palabra viuda al cortar, se achica un poco en vez de eso.
+    const maxTitleW = W - inset*2;
+    const { lines: titleLines, sizePt: titleSizePt } = fitTitleAutoShrink(ctx, titulo, maxTitleW, 14, 11);
+    const titleLH = titleSizePt*PT2CM*1.15;
+    const firstBaseline = 0.68;
+    const padBottom = 0.24;
+    const titleBaselines = titleLines.map((line,i)=> firstBaseline + i*titleLH);
+    const bandH = firstBaseline + (titleLines.length-1)*titleLH + padBottom;
+    ctx.rect(0, 0, W, bandH, theme.headerBg);
+    titleLines.forEach((line,i)=> ctx.text(textX, titleBaselines[i], line, {sizePt:titleSizePt,weight:'titlebold',fillTok:theme.headerTextTok,align:'left'}));
+
+    let y = bandH + 0.20;
+    if(bajada){
+      let bajadaSize = 10;
+      let bajadaLines = [bajada];
+      if(ctx.measure(bajada, 10, 'normal') > maxTitleW){
+        bajadaSize = 9;
+        bajadaLines = wrapTitleCtx(ctx, bajada, maxTitleW, 9, 'normal');
+      }
+      const bajadaLH = bajadaSize*PT2CM*1.15;
+      const bajadaBaselines = bajadaLines.map((line,i)=> y+bajadaSize*PT2CM+i*bajadaLH);
+      bajadaLines.forEach((line,i)=> ctx.text(textX, bajadaBaselines[i], line, {sizePt:bajadaSize,weight:'normal',fillTok:RN.black,align:'left'}));
+      y += bajadaSize*PT2CM + (bajadaLines.length-1)*bajadaLH + 0.08;
+    }
+    y += 0.20;
+    return y;
+  }
+
+  // --- Diario: sin banda, comportamiento original ---
+  const maxTitleW = W - textX - MARGIN;
   const titleLines = wrapTitleCtx(ctx, titulo, maxTitleW, 14, 'titlebold');
   const titleLH = 14*PT2CM*1.15;
-  titleLines.forEach((line,i)=> ctx.text(MARGIN, y+0.1761108000000001+14*PT2CM+i*titleLH, line, {sizePt:14,weight:'titlebold',fillTok:RN.black,align:'left'}));
-  y += 0.1761108000000001 + 14*PT2CM + (titleLines.length-1)*titleLH + 0.10;
+  const topPad = 0.03;
+  const titleGap = 0.1761108000000001;
+  let y = topPad;
+  const titleBaselines = titleLines.map((line,i)=> y+titleGap+14*PT2CM+i*titleLH);
+  y += titleGap + 14*PT2CM + (titleLines.length-1)*titleLH + 0.10;
+  ctx.line(MARGIN, 0.03, W-MARGIN, 0.03, 1*PT2CM);
+  titleLines.forEach((line,i)=> ctx.text(textX, titleBaselines[i], line, {sizePt:14,weight:'titlebold',fillTok:RN.black,align:'left'}));
+
   if(bajada){
     y += 0.14;
     let bajadaSize = 10;
@@ -780,7 +992,8 @@ function drawHeader(ctx, W, titulo, bajada){
       bajadaLines = wrapTitleCtx(ctx, bajada, maxTitleW, 9, 'normal');
     }
     const bajadaLH = bajadaSize*PT2CM*1.15;
-    bajadaLines.forEach((line,i)=> ctx.text(MARGIN, y+bajadaSize*PT2CM+i*bajadaLH, line, {sizePt:bajadaSize,weight:'normal',fillTok:RN.black,align:'left'}));
+    const bajadaBaselines = bajadaLines.map((line,i)=> y+bajadaSize*PT2CM+i*bajadaLH);
+    bajadaLines.forEach((line,i)=> ctx.text(textX, bajadaBaselines[i], line, {sizePt:bajadaSize,weight:'normal',fillTok:RN.black,align:'left'}));
     y += bajadaSize*PT2CM + (bajadaLines.length-1)*bajadaLH + 0.08;
   }
   y += 0.20;
@@ -804,7 +1017,9 @@ function drawFooter(ctx, W, H, fuente){
 }
 
 // ---------- tipos de gráfico ----------
-function drawVerticalBars(ctx, area, rows, headers, numSeries, destacar, sufijo){
+function drawVerticalBars(ctx, area, rows, headers, numSeries, destacar, sufijo, theme, colorOverrides){
+  theme = theme || THEMES.diario;
+  colorOverrides = colorOverrides || {};
   const n = rows.length;
   if(!n) return;
   const maxVal = Math.max(...rows.flatMap(r=>r.vals));
@@ -814,9 +1029,13 @@ function drawVerticalBars(ctx, area, rows, headers, numSeries, destacar, sufijo)
   let top = area.top;
   const legendItems = [];
   if(numSeries>1 && headers){
-    headers.forEach((h,i)=>{ if(rows.some(r=>Math.abs(r.vals[i])>0)) legendItems.push({type:'dot', tok:seriesColorCmyk(i,numSeries), label:h}); });
+    headers.forEach((h,i)=>{
+      if(!rows.some(r=>Math.abs(r.vals[i])>0)) return;
+      const tok = colorOverrides['s'+i] || seriesColorCmyk(i,numSeries,theme);
+      legendItems.push({type:'dot', tok, label:h});
+    });
   }
-  if(legendItems.length) top = drawLegend(ctx, area, top, legendItems) + 0.18;
+  if(legendItems.length) top = drawLegend(ctx, area, top, legendItems, area.left+themeTextInset(theme)) + 0.18;
 
   const groupGap = 0.26, barGapInner = numSeries>1?0.05:0;
   const groupW = (area.width - groupGap*(n-1))/n;
@@ -835,11 +1054,13 @@ function drawVerticalBars(ctx, area, rows, headers, numSeries, destacar, sufijo)
       const bx = gx + si*(barW+barGapInner);
       const bh = Math.max(0,(v/maxVal))*(chartH-0.35);
       const by = area.bottom - bh;
-      let tok = RN.bar;
-      let isHi = false;
-      if(numSeries>1) tok = seriesColorCmyk(si,numSeries);
-      else if(destacar==='max' && v===maxSingle){ tok = RN.barDark; isHi = true; }
-      else if(destacar==='min' && v===minSingle){ tok = RN.barDark; isHi = true; }
+      const isHi = numSeries===1 && ((destacar==='max' && v===maxSingle) || (destacar==='min' && v===minSingle));
+      const override = numSeries>1 ? colorOverrides['s'+si] : colorOverrides[d.cat];
+      let tok;
+      if(override) tok = override;
+      else if(numSeries>1) tok = seriesColorCmyk(si,numSeries,theme);
+      else if(isHi) tok = theme.barDark;
+      else tok = theme.bar;
       ctx.group('bar-group', ()=>{
         ctx.rect(bx,by,barW,bh,tok);
         if(barW>0.5){
@@ -856,15 +1077,20 @@ function drawVerticalBars(ctx, area, rows, headers, numSeries, destacar, sufijo)
   ctx.line(area.left, area.bottom, area.left+area.width, area.bottom, 0.5*PT2CM);
 }
 
-function drawHorizontalBars(ctx, area, rows, headers, numSeries, sufijo){
+function drawHorizontalBars(ctx, area, rows, headers, numSeries, sufijo, theme, colorOverrides){
+  theme = theme || THEMES.diario;
+  colorOverrides = colorOverrides || {};
   const n = rows.length;
   if(!n) return;
   const maxVal = Math.max(...rows.flatMap(r=>r.vals));
 
   let top = area.top;
   if(numSeries>1 && headers){
-    const legendItems = headers.map((h,i)=>({type:'dot', tok:seriesColorCmyk(i,numSeries), label:h})).filter((it,i)=> rows.some(r=>Math.abs(r.vals[i])>0));
-    top = drawLegend(ctx, area, top, legendItems);
+    const legendItems = headers.map((h,i)=>{
+      const tok = colorOverrides['s'+i] || seriesColorCmyk(i,numSeries,theme);
+      return {type:'dot', tok, label:h};
+    }).filter((it,i)=> rows.some(r=>Math.abs(r.vals[i])>0));
+    top = drawLegend(ctx, area, top, legendItems, area.left+themeTextInset(theme));
   }
 
   const catLabelW = Math.min(2.3, area.width*0.32);
@@ -890,7 +1116,8 @@ function drawHorizontalBars(ctx, area, rows, headers, numSeries, sufijo){
     d.vals.forEach((v,si)=>{
       const by = gy + si*(barH+barGapInner);
       const bw = Math.max(0,(v/maxVal))*plotWidth;
-      const tok = numSeries>1?seriesColorCmyk(si,numSeries):RN.bar;
+      const override = numSeries>1 ? colorOverrides['s'+si] : colorOverrides[d.cat];
+      const tok = override || (numSeries>1 ? seriesColorCmyk(si,numSeries,theme) : theme.bar);
       ctx.group('bar-group', ()=>{
         ctx.rect(plotLeft, by, bw, barH, tok);
         ctx.text(plotLeft+bw+0.16, by+barH/2+0.06, formatAR(v)+(sufijo?(' '+sufijo):''), {sizePt:valSize,weight:'medium',fillTok:RN.black,align:'left',cls:'val-el'});
@@ -899,7 +1126,8 @@ function drawHorizontalBars(ctx, area, rows, headers, numSeries, sufijo){
   });
 }
 
-function drawLines(ctx, area, rows, headers, numSeries, sufijo){
+function drawLines(ctx, area, rows, headers, numSeries, sufijo, theme){
+  theme = theme || THEMES.diario;
   const n = rows.length;
   if(n<2) return;
   const allVals = rows.flatMap(r=>r.vals);
@@ -908,9 +1136,9 @@ function drawLines(ctx, area, rows, headers, numSeries, sufijo){
   let top = area.top;
   const legendItems = [];
   if(numSeries>1 && headers){
-    headers.forEach((h,i)=>{ if(rows.some(r=>Math.abs(r.vals[i])>0)) legendItems.push({type:'dot', tok:seriesColorCmyk(i,numSeries), label:h}); });
+    headers.forEach((h,i)=>{ if(rows.some(r=>Math.abs(r.vals[i])>0)) legendItems.push({type:'dot', tok:seriesColorCmyk(i,numSeries,theme), label:h}); });
   }
-  if(legendItems.length) top = drawLegend(ctx, area, top, legendItems);
+  if(legendItems.length) top = drawLegend(ctx, area, top, legendItems, area.left+themeTextInset(theme));
 
   const inset = 0.38; // para que las etiquetas de los puntos extremos no se salgan del área
   const plotLeft = area.left + inset;
@@ -920,7 +1148,7 @@ function drawLines(ctx, area, rows, headers, numSeries, sufijo){
   const scaleY = v => area.bottom - ((v-minVal)/((maxVal-minVal)||1))*usableH;
 
   for(let si=0; si<numSeries; si++){
-    const tok = seriesColorCmyk(si,numSeries);
+    const tok = seriesColorCmyk(si,numSeries,theme);
     const pts = rows.map((r,i)=>[plotLeft+i*stepX, scaleY(r.vals[si])]);
     ctx.polyline(pts, tok, 0.035);
     pts.forEach((p,i)=>{
@@ -936,7 +1164,8 @@ function drawLines(ctx, area, rows, headers, numSeries, sufijo){
   ctx.line(area.left, area.bottom, area.left+area.width, area.bottom, 0.5*PT2CM);
 }
 
-function drawDonut(ctx, area, rows, sufijo){
+function drawDonut(ctx, area, rows, sufijo, theme){
+  theme = theme || THEMES.diario;
   const total = rows.reduce((s,r)=>s+r.vals[0],0);
   if(total<=0) return;
   const h = area.bottom-area.top;
@@ -953,7 +1182,7 @@ function drawDonut(ctx, area, rows, sufijo){
     const pts = [];
     for(let s=0;s<=steps;s++){ const a=a0+(a1-a0)*(s/steps); pts.push([cx+Math.cos(a)*rOuter, cy+Math.sin(a)*rOuter]); }
     for(let s=steps;s>=0;s--){ const a=a0+(a1-a0)*(s/steps); pts.push([cx+Math.cos(a)*rInner, cy+Math.sin(a)*rInner]); }
-    ctx.polygon(pts, seriesColorCmyk(i, rows.length));
+    ctx.polygon(pts, seriesColorCmyk(i, rows.length, theme));
     mids.push((a0+a1)/2);
     angle = a1;
   });
@@ -1010,11 +1239,12 @@ function makeDefaultModel(){
     fuente:'Estadísticas de ANAC',
     datos:'Bariloche, 2372, 2571\nNeuquén, 1121, 1365\nChapelco, 316, 349\nViedma, 34, 35',
     seriesNames:'2024, 2025',
-    sufijo:'', destacar:'ninguno', columnas:'2', altoCm:'10', tipoGrafico:'verticales'
+    sufijo:'', destacar:'ninguno', columnas:'2', altoCm:'10', tipoGrafico:'verticales',
+    tema:'diario', colorOverrides:{}
   };
 }
 function makeEmptyModel(){
-  return { titulo:'', bajada:'', fuente:'', datos:'', seriesNames:'', sufijo:'', destacar:'ninguno', columnas:'2', altoCm:'10', tipoGrafico:'verticales' };
+  return { titulo:'', bajada:'', fuente:'', datos:'', seriesNames:'', sufijo:'', destacar:'ninguno', columnas:'2', altoCm:'10', tipoGrafico:'verticales', tema:'diario', colorOverrides:{} };
 }
 
 function computeChartData(model){
@@ -1025,19 +1255,20 @@ function computeChartData(model){
   const W = colsToWidth(cols);
   const H = parseFloat(model.altoCm) || 10;
   const resolvedType = model.tipoGrafico==='auto' ? detectChartType(rows, numSeries) : model.tipoGrafico;
-  return {...model, rows, numSeries, headers, W, H, resolvedType};
+  const theme = THEMES[model.tema] || THEMES.diario;
+  return {...model, rows, numSeries, headers, W, H, resolvedType, theme};
 }
 
 function drawChart(ctx, model){
-  const {titulo, bajada, fuente, sufijo, destacar, rows, numSeries, headers, W, H, resolvedType} = model;
-  const chartTop = drawHeader(ctx, W, titulo, bajada);
+  const {titulo, bajada, fuente, sufijo, destacar, rows, numSeries, headers, W, H, resolvedType, theme, colorOverrides} = model;
+  const chartTop = drawHeader(ctx, W, titulo, bajada, theme);
   const chartBottom = H - 1.55;
   const area = {left:MARGIN, top:chartTop, bottom:chartBottom, width:W-MARGIN*2};
   if(rows.length){
-    if(resolvedType==='horizontales') drawHorizontalBars(ctx, area, rows, headers, numSeries, sufijo);
-    else if(resolvedType==='lineas') drawLines(ctx, area, rows, headers, numSeries, sufijo);
-    else if(resolvedType==='dona') drawDonut(ctx, area, rows, sufijo);
-    else drawVerticalBars(ctx, area, rows, headers, numSeries, destacar, sufijo);
+    if(resolvedType==='horizontales') drawHorizontalBars(ctx, area, rows, headers, numSeries, sufijo, theme, colorOverrides);
+    else if(resolvedType==='lineas') drawLines(ctx, area, rows, headers, numSeries, sufijo, theme);
+    else if(resolvedType==='dona') drawDonut(ctx, area, rows, sufijo, theme);
+    else drawVerticalBars(ctx, area, rows, headers, numSeries, destacar, sufijo, theme, colorOverrides);
   }
   drawFooter(ctx, W, H, fuente);
 }
@@ -1166,10 +1397,152 @@ function loadModelIntoPanel(model){
   $('columnas').value = model.columnas;
   $('altoCm').value = model.altoCm;
   $('tipoGrafico').value = model.tipoGrafico;
+  $('tema').value = model.tema;
   document.querySelectorAll('#chartTypePicker .ctp-btn').forEach(b=>{
     b.classList.toggle('active', b.dataset.value===model.tipoGrafico);
   });
+  renderColorOverridesUI();
 }
+
+// ---------- selector visual de color puntual por categoría/serie ----------
+let colorPopoverEl = null;
+let colorPopoverCtx = null; // {sel, item}
+
+function getColorPopover(){
+  if(colorPopoverEl) return colorPopoverEl;
+  const pop = document.createElement('div');
+  pop.className = 'cor-popover';
+  pop.innerHTML =
+    '<div class="cor-opts-grid"></div>' +
+    '<div class="cor-divider"></div>' +
+    '<div class="cor-cmyk-label">Personalizado (CMYK)</div>' +
+    '<div class="cor-cmyk-grid">' +
+      '<label>C<input type="number" min="0" max="100" step="1" class="cor-cmyk-c"></label>' +
+      '<label>M<input type="number" min="0" max="100" step="1" class="cor-cmyk-m"></label>' +
+      '<label>Y<input type="number" min="0" max="100" step="1" class="cor-cmyk-y"></label>' +
+      '<label>K<input type="number" min="0" max="100" step="1" class="cor-cmyk-k"></label>' +
+    '</div>' +
+    '<button type="button" class="cor-cmyk-apply">Aplicar</button>';
+  pop.addEventListener('click', e=> e.stopPropagation());
+  pop.querySelector('.cor-cmyk-apply').addEventListener('click', ()=>{
+    if(!colorPopoverCtx) return;
+    const clamp = v => Math.max(0, Math.min(100, Math.round(Number(v)||0)));
+    const c = clamp(pop.querySelector('.cor-cmyk-c').value);
+    const m = clamp(pop.querySelector('.cor-cmyk-m').value);
+    const y = clamp(pop.querySelector('.cor-cmyk-y').value);
+    const k = clamp(pop.querySelector('.cor-cmyk-k').value);
+    const { sel, item } = colorPopoverCtx;
+    sel.model.colorOverrides[item.key] = {c,m,y,k};
+    renderChartCard(sel);
+    renderColorOverridesUI();
+    closeColorPopover();
+  });
+  document.body.appendChild(pop);
+  colorPopoverEl = pop;
+  return pop;
+}
+
+function closeColorPopover(){
+  if(colorPopoverEl) colorPopoverEl.classList.remove('open');
+  colorPopoverCtx = null;
+}
+
+function openColorPopover(triggerEl, sel, item){
+  const pop = getColorPopover();
+  const isSameTarget = colorPopoverCtx && colorPopoverCtx.item.key===item.key && pop.classList.contains('open');
+  if(isSameTarget){ closeColorPopover(); return; }
+  colorPopoverCtx = { sel, item };
+
+  const grid = pop.querySelector('.cor-opts-grid');
+  grid.innerHTML = '';
+  const current = sel.model.colorOverrides[item.key];
+  const options = [{key:null, tok:item.defaultTok, title:'Color de la sección'}]
+    .concat(Object.keys(ACCENT_COLORS).map(k=>({key:k, tok:ACCENT_COLORS[k], title:k.charAt(0).toUpperCase()+k.slice(1)})));
+  options.forEach(opt=>{
+    const btn = document.createElement('button');
+    btn.type = 'button';
+    btn.className = 'cor-opt';
+    const isActive = opt.key===null ? !current : tokensEqual(current, opt.tok);
+    if(isActive) btn.classList.add('active');
+    btn.style.background = cmykToRgbCss(opt.tok);
+    btn.title = opt.title;
+    btn.addEventListener('click', (e)=>{
+      e.stopPropagation();
+      if(opt.key===null) delete sel.model.colorOverrides[item.key];
+      else sel.model.colorOverrides[item.key] = {...opt.tok};
+      renderChartCard(sel);
+      renderColorOverridesUI();
+      closeColorPopover();
+    });
+    grid.appendChild(btn);
+  });
+
+  const cmykTok = current || item.defaultTok;
+  pop.querySelector('.cor-cmyk-c').value = Math.round(cmykTok.c);
+  pop.querySelector('.cor-cmyk-m').value = Math.round(cmykTok.m);
+  pop.querySelector('.cor-cmyk-y').value = Math.round(cmykTok.y);
+  pop.querySelector('.cor-cmyk-k').value = Math.round(cmykTok.k);
+
+  pop.classList.add('open');
+  // posicionar con fixed, relativo al viewport (no depende de contenedores con scroll)
+  const rect = triggerEl.getBoundingClientRect();
+  const popW = 168;
+  let left = rect.right - popW;
+  left = Math.max(8, Math.min(left, window.innerWidth - popW - 8));
+  let top = rect.bottom + 6;
+  pop.style.left = left + 'px';
+  pop.style.top = top + 'px';
+  const popH = pop.offsetHeight;
+  if(top + popH > window.innerHeight - 8){
+    pop.style.top = (rect.top - popH - 6) + 'px';
+  }
+}
+
+function renderColorOverridesUI(){
+  const sel = getSelected();
+  const container = $('colorOverridesList');
+  container.innerHTML = '';
+  closeColorPopover();
+  if(!sel) return;
+  const data = computeChartData(sel.model);
+  const { rows, numSeries, headers, theme } = data;
+  if(!rows.length) return;
+
+  const items = numSeries>1
+    ? Array.from({length:numSeries}, (_,i)=>({
+        key:'s'+i,
+        label:(headers && headers[i]) || ('Serie '+(i+1)),
+        defaultTok: seriesColorCmyk(i,numSeries,theme)
+      }))
+    : rows.map(r=>({ key:r.cat, label:r.cat, defaultTok: theme.bar }));
+
+  items.forEach(item=>{
+    const row = document.createElement('div');
+    row.className = 'cor-row';
+
+    const label = document.createElement('span');
+    label.className = 'cor-label';
+    label.textContent = item.label;
+    label.title = item.label;
+
+    const currentTok = sel.model.colorOverrides[item.key] || item.defaultTok;
+    const trigger = document.createElement('button');
+    trigger.type = 'button';
+    trigger.className = 'cor-trigger';
+    trigger.style.background = cmykToRgbCss(currentTok);
+    trigger.title = 'Elegir color';
+    trigger.addEventListener('click', (e)=>{
+      e.stopPropagation();
+      openColorPopover(trigger, sel, item);
+    });
+
+    row.appendChild(label);
+    row.appendChild(trigger);
+    container.appendChild(row);
+  });
+}
+document.addEventListener('click', closeColorPopover);
+document.addEventListener('scroll', closeColorPopover, true);
 
 // ---------- render de una tarjeta (SVG) ----------
 function renderChartCard(chart){
@@ -1366,6 +1739,7 @@ async function handleFileUpload(e){
     sel.model.datos = tsv;
     $('datos').value = tsv;
     renderChartCard(sel);
+    renderColorOverridesUI();
     mostrarToast('✓ Archivo importado — '+rows.length+' filas');
   }catch(err){
     mostrarToast('⚠ No se pudo leer el archivo: '+err.message);
@@ -1422,11 +1796,12 @@ document.querySelectorAll('#chartTypePicker .ctp-btn').forEach(btn=>{
     renderChartCard(sel);
   });
 });
-['titulo','bajada','datos','fuente','sufijo','destacar','columnas','altoCm','seriesNames'].forEach(id=>{
+['titulo','bajada','datos','fuente','sufijo','destacar','columnas','altoCm','seriesNames','tema'].forEach(id=>{
   const onChange = ()=>{
     const sel = getSelected(); if(!sel) return;
     sel.model[id] = $(id).value;
     renderChartCard(sel);
+    if(id==='datos' || id==='seriesNames' || id==='tema') renderColorOverridesUI();
   };
   $(id).addEventListener('input', onChange);
   $(id).addEventListener('change', onChange);
@@ -1435,11 +1810,11 @@ document.querySelectorAll('#chartTypePicker .ctp-btn').forEach(btn=>{
 document.getElementById('panel-toggle').addEventListener('click', () => {
   document.getElementById('panel').classList.toggle('collapsed');
 });
-['formato','contenido','datos','estilo'].forEach(name=>{
+['formato','contenido','datos','estilo','colores'].forEach(name=>{
   document.getElementById(name+'-toggle').addEventListener('click', () => {
     const section = document.getElementById(name+'-section');
     const wasCollapsed = section.classList.contains('collapsed');
-    ['formato','contenido','datos','estilo'].forEach(n=>{
+    ['formato','contenido','datos','estilo','colores'].forEach(n=>{
       document.getElementById(n+'-section').classList.add('collapsed');
     });
     if(wasCollapsed) section.classList.remove('collapsed');
