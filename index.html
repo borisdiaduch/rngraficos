@@ -304,6 +304,12 @@
     <div class="hint">Carga datos de prueba en el gráfico seleccionado, para debuggear los ajustes de espaciado y estilo.</div>
   </div>
   <hr>
+  <div class="dbw-title">Máximo del eje Y</div>
+  <div class="dbw-row">
+    <input type="number" id="dbaMax" placeholder="Automático" style="width:100%; padding:5px 8px; border:1.5px solid var(--panel-border); border-radius:6px; font-size:11px;">
+    <button type="button" id="dbaReset" title="Volver al máximo automático">Reset</button>
+  </div>
+  <hr>
   <div class="dbw-title">Ancho de barras</div>
   <div class="dbw-row">
     <input type="range" id="dbwSlider" min="0.1" max="1" step="0.01" value="0.82">
@@ -1175,7 +1181,8 @@ function drawVerticalBars(ctx, area, rows, headers, numSeries, destacar, sufijo,
 
   // ---- escala del eje: ticks redondos (0,1,2,3...), igual criterio que en líneas ----
   const axisSize = 8;
-  const ticks = niceTicks(dataMin, dataMax, 5);
+  const axisMaxForced = debugAxisMax!=null ? Math.max(dataMax, debugAxisMax) : dataMax;
+  const ticks = niceTicks(dataMin, axisMaxForced, 5);
   const axisMin = ticks[0], axisMax = ticks[ticks.length-1];
   const axisRange = (axisMax-axisMin) || 1;
   const axisLabels = ticks.map(t=> formatAR(t));
@@ -1294,7 +1301,8 @@ function drawHorizontalBars(ctx, area, rows, headers, numSeries, sufijo, theme, 
 
   // ---- escala del eje: ticks redondos (0,1,2,3...), igual criterio que en verticales/líneas ----
   const axisSize = 8;
-  const ticks = niceTicks(dataMin, dataMax, 5);
+  const axisMaxForced = debugAxisMax!=null ? Math.max(dataMax, debugAxisMax) : dataMax;
+  const ticks = niceTicks(dataMin, axisMaxForced, 5);
   const axisMin = ticks[0], axisMax = ticks[ticks.length-1];
   const axisRange = (axisMax-axisMin) || 1;
   const axisRowH = 0.34; // espacio reservado abajo para las etiquetas del eje
@@ -1372,7 +1380,8 @@ function drawLines(ctx, area, rows, headers, numSeries, sufijo, theme, colorOver
 
   // ---- escala del eje: ticks redondos (0,1,2,3,4...), en vez del rango crudo de los datos ----
   const axisSize = 8;
-  const ticks = niceTicks(dataMin, dataMax, 5);
+  const axisMaxForced = debugAxisMax!=null ? Math.max(dataMax, debugAxisMax) : dataMax;
+  const ticks = niceTicks(dataMin, axisMaxForced, 5);
   const minVal = ticks[0], maxVal = ticks[ticks.length-1];
   const axisLabels = ticks.map(t=> formatAR(t));
   const axisColW = Math.max(...axisLabels.map(l=> ctx.measure(l, axisSize, 'medium'))) + 0.18;
@@ -1655,6 +1664,7 @@ let boards = [];
 let selectedId = null;
 let debugBarWidthRatio = null; // DEBUG: override manual del ancho/grosor de barras (null = usar el valor por defecto)
 let debugBarGapInner = null; // DEBUG: override manual del espacio entre barras de una misma categoría (null = usar el valor por defecto)
+let debugAxisMax = null; // DEBUG: fuerza el máximo del eje de valores (null = automático, según los datos)
 let chartSeq = 0;
 
 function getSelected(){ return boards.find(b=>b.id===selectedId) || null; }
@@ -2231,6 +2241,22 @@ $('usaGrupo').addEventListener('change', ()=>{
     debugBarGapInner = null;
     dbgSlider.value = DEFAULT_DBG;
     dbgVal.textContent = DEFAULT_DBG.toFixed(2);
+    const sel = getSelected();
+    if(sel) renderChartCard(sel);
+  });
+
+  const dbaMax = $('dbaMax'), dbaReset = $('dbaReset');
+  const applyDba = ()=>{
+    const n = parseFloat(dbaMax.value);
+    debugAxisMax = Number.isFinite(n) ? n : null;
+    const sel = getSelected();
+    if(sel) renderChartCard(sel);
+  };
+  dbaMax.addEventListener('input', applyDba);
+  dbaMax.addEventListener('change', applyDba);
+  dbaReset.addEventListener('click', ()=>{
+    debugAxisMax = null;
+    dbaMax.value = '';
     const sel = getSelected();
     if(sel) renderChartCard(sel);
   });
