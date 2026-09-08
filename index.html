@@ -267,6 +267,17 @@
   .ctp-btn.active{ background:#ececea; border-color:var(--accent); }
   .ctp-btn.active svg{ filter:none; }
   .footer-hint{ font-size: 10.5px; color: var(--muted); line-height: 1.4; margin-top: 10px; }
+  .debug-bar-width{
+    position:fixed; right:16px; bottom:16px; z-index:9999;
+    background:#fff; border:1.5px solid var(--panel-border); border-radius:10px;
+    padding:10px 14px; box-shadow:0 4px 16px rgba(0,0,0,.16);
+    font-size:11px; display:flex; flex-direction:column; gap:6px; min-width:230px;
+  }
+  .debug-bar-width .dbw-title{ font-weight:700; letter-spacing:.03em; color:#b3261e; text-transform:uppercase; font-size:10px; }
+  .debug-bar-width .dbw-row{ display:flex; align-items:center; gap:8px; }
+  .debug-bar-width input[type=range]{ flex:1; }
+  .debug-bar-width .dbw-val{ font-variant-numeric:tabular-nums; width:36px; text-align:right; }
+  .debug-bar-width button{ font-size:10px; border:1px solid var(--panel-border); background:var(--bg); border-radius:6px; padding:3px 8px; cursor:pointer; }
 </style>
 </head>
 <body>
@@ -275,6 +286,15 @@
   <div id="board"></div>
 </div>
 <div class="global-toast" id="globalToast"></div>
+
+<div class="debug-bar-width" id="debugBarWidth">
+  <div class="dbw-title">Debug · ancho de barras</div>
+  <div class="dbw-row">
+    <input type="range" id="dbwSlider" min="0.1" max="1" step="0.01" value="0.82">
+    <span class="dbw-val" id="dbwVal">0.82</span>
+    <button type="button" id="dbwReset" title="Volver al ancho por defecto">Reset</button>
+  </div>
+</div>
 
 <div class="panel" id="panel">
   <div class="panel-header" id="panel-toggle">
@@ -1154,7 +1174,7 @@ function drawVerticalBars(ctx, area, rows, headers, numSeries, destacar, sufijo,
   const barsWidth = area.width - axisColW;
   const groupGap = 0.26, barGapInner = numSeries>1?0.05:0;
   const groupW = (barsWidth - groupGap*(n-1))/n;
-  const barWidthRatio = numSeries>1 ? 0.82 : 0.52; // barras más angostas dentro de su carril, con más aire alrededor
+  const barWidthRatio = debugBarWidthRatio!=null ? debugBarWidthRatio : (numSeries>1 ? 0.82 : 0.52); // barras más angostas dentro de su carril, con más aire alrededor
   const barsBlockW = (groupW - barGapInner*(numSeries-1)) * barWidthRatio;
   const barW = barsBlockW/numSeries;
   const valSize = numSeries>1?9:11, catSize=9;
@@ -1280,7 +1300,7 @@ function drawHorizontalBars(ctx, area, rows, headers, numSeries, sufijo, theme, 
   const rowGap = 0.18;
   const groupH = (plotBottom-top-rowGap*(n-1))/n;
   const barGapInner = numSeries>1?0.05:0;
-  const barHeightRatio = numSeries>1 ? 0.90 : 0.62;
+  const barHeightRatio = debugBarWidthRatio!=null ? debugBarWidthRatio : (numSeries>1 ? 0.90 : 0.62);
   const barH = ((groupH - barGapInner*(numSeries-1))/numSeries) * barHeightRatio;
   const rowOffset = numSeries===1 ? (groupH - barH)/2 : (groupH - (barH*numSeries + barGapInner*(numSeries-1)))/2;
 
@@ -1622,6 +1642,7 @@ function buildFileName(ext, model, forWeb){
 // ---------- mesa de trabajo: estado de los gráficos ----------
 let boards = [];
 let selectedId = null;
+let debugBarWidthRatio = null; // DEBUG: override manual del ancho/grosor de barras (null = usar el valor por defecto)
 let chartSeq = 0;
 
 function getSelected(){ return boards.find(b=>b.id===selectedId) || null; }
@@ -2165,6 +2186,26 @@ $('usaGrupo').addEventListener('change', ()=>{
   renderChartCard(sel);
   renderColorOverridesUI();
 });
+
+// ---------- DEBUG: slider de ancho/grosor de barras ----------
+{
+  const dbwSlider = $('dbwSlider'), dbwVal = $('dbwVal'), dbwReset = $('dbwReset');
+  const DEFAULT_DBW = 0.82;
+  const applyDbw = ratio=>{
+    debugBarWidthRatio = ratio;
+    dbwVal.textContent = ratio.toFixed(2);
+    const sel = getSelected();
+    if(sel) renderChartCard(sel);
+  };
+  dbwSlider.addEventListener('input', ()=> applyDbw(parseFloat(dbwSlider.value)));
+  dbwReset.addEventListener('click', ()=>{
+    debugBarWidthRatio = null;
+    dbwSlider.value = DEFAULT_DBW;
+    dbwVal.textContent = DEFAULT_DBW.toFixed(2);
+    const sel = getSelected();
+    if(sel) renderChartCard(sel);
+  });
+}
 
 document.getElementById('panel-toggle').addEventListener('click', () => {
   document.getElementById('panel').classList.toggle('collapsed');
