@@ -291,7 +291,7 @@
   .debug-window.collapsed .dbg-body{ display:none; }
   .debug-window .dbg-body{ padding: 0 16px 14px 16px; }
   .debug-window .field{ margin-bottom:0; }
-  .debug-window .dbw-title{ font-weight:600; letter-spacing:.02em; color:var(--muted); font-size:10.5px; }
+  .debug-window .dbw-title{ letter-spacing:.02em; color:var(--muted); font-size:10.5px; }
   .debug-window .dbw-row{ display:flex; align-items:center; gap:8px; }
   .debug-window input[type=range]{
     flex:1; accent-color: var(--accent); height:4px; cursor:pointer;
@@ -326,7 +326,7 @@
   <div class="dbg-body">
     <div class="subsection collapsed" id="dbgEjemplos-section">
       <div class="subsection-header" id="dbgEjemplos-toggle">
-        <span>Ejemplos</span>
+        <span>Gráficos de ejemplo</span>
         <svg class="chevron" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="2">
           <path d="M5 7l5 5 5-5" stroke-linecap="round" stroke-linejoin="round"/>
         </svg>
@@ -386,7 +386,7 @@
           </div>
         </div>
         <div class="field" style="gap:8px;">
-          <div class="dbw-title">Altura del gráfico — aire arriba</div>
+          <div class="dbw-title">Margen superior</div>
           <div class="dbw-row">
             <input type="range" id="dbvtSlider" min="-1.5" max="1.5" step="0.05" value="0">
             <span class="dbw-val" id="dbvtVal">0.00</span>
@@ -394,7 +394,7 @@
           </div>
         </div>
         <div class="field" style="gap:8px;">
-          <div class="dbw-title">Altura del gráfico — aire abajo</div>
+          <div class="dbw-title">Margen inferior</div>
           <div class="dbw-row">
             <input type="range" id="dbvbSlider" min="-1.5" max="1.5" step="0.05" value="0">
             <span class="dbw-val" id="dbvbVal">0.00</span>
@@ -402,7 +402,7 @@
           </div>
         </div>
         <div class="field" style="gap:8px;">
-          <div class="dbw-title">Margen lateral (distancia a los bordes)</div>
+          <div class="dbw-title">Márgenes laterales</div>
           <div class="dbw-row">
             <input type="range" id="dbmSlider" min="-1.5" max="1.5" step="0.05" value="0">
             <span class="dbw-val" id="dbmVal">0.00</span>
@@ -2438,10 +2438,16 @@ $('usaGrupo').addEventListener('change', ()=>{
 }
 
 document.getElementById('panel-toggle').addEventListener('click', () => {
-  document.getElementById('panel').classList.toggle('collapsed');
+  const panel = document.getElementById('panel');
+  const wasCollapsed = panel.classList.contains('collapsed');
+  panel.classList.toggle('collapsed');
+  if(wasCollapsed) document.getElementById('debugWindow').classList.add('collapsed');
 });
 document.getElementById('debugWindowToggle').addEventListener('click', () => {
-  document.getElementById('debugWindow').classList.toggle('collapsed');
+  const dbg = document.getElementById('debugWindow');
+  const wasCollapsed = dbg.classList.contains('collapsed');
+  dbg.classList.toggle('collapsed');
+  if(wasCollapsed) document.getElementById('panel').classList.add('collapsed');
 });
 ['formato','contenido','datos','estilo','colores'].forEach(name=>{
   document.getElementById(name+'-toggle').addEventListener('click', () => {
