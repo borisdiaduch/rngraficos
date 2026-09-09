@@ -1786,7 +1786,13 @@ function scheduleSave(){
 }
 function saveBoardsToStorage(){
   try{
-    const data = { v:1, chartSeq, selectedId, boards: boards.map(b=>({id:b.id, model:b.model})) };
+    const data = {
+      v:1, chartSeq, selectedId, boards: boards.map(b=>({id:b.id, model:b.model})),
+      experimental: {
+        barWidthRatio: debugBarWidthRatio, barGapInner: debugBarGapInner, axisMax: debugAxisMax,
+        chartTopPad: debugChartTopPad, chartBottomPad: debugChartBottomPad, sideMargin: debugSideMargin
+      }
+    };
     localStorage.setItem(STORAGE_KEY, JSON.stringify(data));
   }catch(e){
     // localStorage puede fallar (navegación privada, cuota llena, etc.) — no debe romper la app
@@ -1803,10 +1809,33 @@ function loadBoardsFromStorage(){
     return null;
   }
 }
+// vuelca los overrides del panel Experimental guardados a las variables globales y a los controles
+function applyExperimentalFromStorage(exp){
+  if(!exp || typeof exp!=='object') return;
+  debugBarWidthRatio = typeof exp.barWidthRatio==='number' ? exp.barWidthRatio : null;
+  debugBarGapInner = typeof exp.barGapInner==='number' ? exp.barGapInner : null;
+  debugAxisMax = typeof exp.axisMax==='number' ? exp.axisMax : null;
+  debugChartTopPad = typeof exp.chartTopPad==='number' ? exp.chartTopPad : 0;
+  debugChartBottomPad = typeof exp.chartBottomPad==='number' ? exp.chartBottomPad : 0;
+  debugSideMargin = typeof exp.sideMargin==='number' ? exp.sideMargin : 0;
+  syncExperimentalControls();
+}
+function syncExperimentalControls(){
+  const DEFAULT_DBW = 0.82, DEFAULT_DBG = 0.05;
+  const dbw = debugBarWidthRatio!=null ? debugBarWidthRatio : DEFAULT_DBW;
+  $('dbwSlider').value = dbw; $('dbwVal').textContent = dbw.toFixed(2);
+  const dbg = debugBarGapInner!=null ? debugBarGapInner : DEFAULT_DBG;
+  $('dbgSlider').value = dbg; $('dbgVal').textContent = dbg.toFixed(2);
+  $('dbaMax').value = debugAxisMax!=null ? debugAxisMax : '';
+  $('dbvtSlider').value = debugChartTopPad; $('dbvtVal').textContent = debugChartTopPad.toFixed(2);
+  $('dbvbSlider').value = debugChartBottomPad; $('dbvbVal').textContent = debugChartBottomPad.toFixed(2);
+  $('dbmSlider').value = debugSideMargin; $('dbmVal').textContent = debugSideMargin.toFixed(2);
+}
 // reconstruye las tarjetas guardadas; devuelve false si no había nada válido para restaurar
 function restoreBoardsFromStorage(){
   const saved = loadBoardsFromStorage();
   if(!saved) return false;
+  applyExperimentalFromStorage(saved.experimental);
   saved.boards.forEach(b=>{
     if(!b || typeof b.id!=='string' || !b.model || typeof b.model!=='object') return;
     const el = createChartCardEl(b.id);
