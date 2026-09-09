@@ -423,6 +423,22 @@
           <div class="dbw-title">Nota debajo del gráfico</div>
           <textarea id="epigrafe" rows="2" placeholder="Ej: En 2020 no se hicieron pagos"></textarea>
         </div>
+        <div class="field" style="gap:8px;">
+          <div class="dbw-title">Posición vertical</div>
+          <div class="dbw-row">
+            <input type="range" id="dbepSlider" min="-1.5" max="1.5" step="0.05" value="0">
+            <span class="dbw-val" id="dbepVal">0.00</span>
+            <button type="button" class="icon-btn" id="dbepReset" title="Volver a la posición por defecto" aria-label="Restablecer"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12a9 9 0 1 1-3-6.7"/><polyline points="21 3 21 9 15 9"/></svg></button>
+          </div>
+        </div>
+        <div class="field" style="gap:8px;">
+          <div class="dbw-title">Tamaño de letra</div>
+          <div class="dbw-row">
+            <input type="range" id="dbesSlider" min="6" max="16" step="0.5" value="8">
+            <span class="dbw-val" id="dbesVal">8.0</span>
+            <button type="button" class="icon-btn" id="dbesReset" title="Volver al tamaño por defecto" aria-label="Restablecer"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12a9 9 0 1 1-3-6.7"/><polyline points="21 3 21 9 15 9"/></svg></button>
+          </div>
+        </div>
       </div>
     </div>
   </div>
@@ -921,9 +937,10 @@ function makeSvgCtx(svg, elFn){
     polyline(points,tok,w){ const s=points.map(p=>p[0]+','+p[1]).join(' '); container.appendChild(elFn('polyline',{points:s, fill:'none', stroke:cmykToRgbCss(tok), 'stroke-width':w})); },
     dashedPolyline(points,tok,w,dashArr){ const s=points.map(p=>p[0]+','+p[1]).join(' '); container.appendChild(elFn('polyline',{points:s, fill:'none', stroke:cmykToRgbCss(tok), 'stroke-width':w, 'stroke-dasharray':dashArr.join(',')})); },
     circleMark(cx,cy,r,tok){ container.appendChild(elFn('circle',{cx,cy,r,fill:cmykToRgbCss(tok)})); },
-    text(x,y,str,{sizePt,weight,fillTok,align,noSqueeze,cls}){
+    text(x,y,str,{sizePt,weight,fillTok,align,noSqueeze,cls,italic}){
       const fw = (weight==='bold'||weight==='titlebold')?700:(weight==='extrabold'?800:(weight==='semibold'?600:(weight==='medium'?500:400)));
       const attrs={x,y,'font-family':'Chivo, sans-serif','font-weight':fw,'font-size':sizePt*PT2CM, fill:cmykToRgbCss(fillTok)};
+      if(italic) attrs['font-style']='italic';
       if(cls) attrs.class = cls;
       if(align==='center') attrs['text-anchor']='middle'; else if(align==='right') attrs['text-anchor']='end';
       const t=elFn('text',attrs); t.textContent=str;
@@ -983,8 +1000,11 @@ function makePdfCtx(doc){
       if(doc.setLineDashPattern) doc.setLineDashPattern([], 0);
     },
     circleMark(cx,cy,r,tok){ doc.setFillColor(frac(tok.c),frac(tok.m),frac(tok.y),frac(tok.k)); doc.circle(cx,cy,r,'F'); },
-    text(x,y,str,{sizePt,weight,fillTok,align}){
-      applyFont(weight,sizePt);
+    text(x,y,str,{sizePt,weight,fillTok,align,italic}){
+      // sin variante itálica real de Chivo embebida: para "italic" se usa Helvetica-Oblique
+      // (fuente estándar de jsPDF, siempre disponible) como mejor aproximación segura en el PDF
+      if(italic){ doc.setFont('helvetica','italic'); doc.setFontSize(sizePt); }
+      else applyFont(weight,sizePt);
       doc.setTextColor(frac(fillTok.c),frac(fillTok.m),frac(fillTok.y),frac(fillTok.k));
       const opts={}; if(align==='center') opts.align='center'; else if(align==='right') opts.align='right';
       doc.text(str,x,y,opts);
@@ -1762,7 +1782,7 @@ function drawChart(ctx, model){
 
   // ---- epígrafe (EXPERIMENTAL): nota libre entre los datos y el pie de la tarjeta ----
   const epiTxt = epigrafe && epigrafe.trim();
-  const epiSize = 8;
+  const epiSize = debugEpigrafeSize || 8;
   const epiLH = epiSize*PT2CM*1.15;
   const epiLines = epiTxt ? wrapNoCut(ctx, epiTxt, W-MARGIN*2, epiSize, 'normal') : [];
   if(epiLines.length) bottomReserve += epiLines.length*epiLH + 0.18;
@@ -1778,10 +1798,11 @@ function drawChart(ctx, model){
   if(epiLines.length){
     // se ancla desde el pie hacia arriba: así queda pegado arriba del pie sin pisar
     // las etiquetas/fila de grupo que dibuja cada tipo de gráfico debajo de sus propios datos
-    const epiBaseline = H - footerL.reserve - 0.16;
+    // (+ el corrimiento manual del slider "Posición vertical", EXPERIMENTAL)
+    const epiBaseline = H - footerL.reserve - 0.16 + (debugEpigrafePos||0);
     epiLines.forEach((line,i)=>{
       const y = epiBaseline - (epiLines.length-1-i)*epiLH;
-      ctx.text(MARGIN, y, line, {sizePt:epiSize, weight:'normal', fillTok:RN.grayK70, align:'left'});
+      ctx.text(MARGIN, y, line, {sizePt:epiSize, weight:'normal', fillTok:RN.black, align:'left', italic:true});
     });
   }
   drawFooter(ctx, W, H, fuente, footerL);
@@ -1806,6 +1827,8 @@ let debugAxisMax = null; // DEBUG: fuerza el máximo del eje de valores (null = 
 let debugChartTopPad = 0; // EXPERIMENTAL: aire extra arriba del área de trazado, en cm (0 = comportamiento original)
 let debugChartBottomPad = 0; // EXPERIMENTAL: aire extra abajo del área de trazado, en cm (0 = comportamiento original)
 let debugSideMargin = 0; // EXPERIMENTAL: separa las barras/líneas de los bordes laterales sin mover la escala, la línea base ni la leyenda "REFERENCIA" (0 = comportamiento original)
+let debugEpigrafePos = 0; // EXPERIMENTAL: desplaza el epígrafe verticalmente en cm (+ = abajo, - = arriba; 0 = posición original)
+let debugEpigrafeSize = 8; // EXPERIMENTAL: tamaño de letra del epígrafe, en pt
 let chartSeq = 0;
 
 // ---------- persistencia local (localStorage): no perder el trabajo al recargar ----------
@@ -1821,7 +1844,8 @@ function saveBoardsToStorage(){
       v:1, chartSeq, selectedId, boards: boards.map(b=>({id:b.id, model:b.model})),
       experimental: {
         barWidthRatio: debugBarWidthRatio, barGapInner: debugBarGapInner, axisMax: debugAxisMax,
-        chartTopPad: debugChartTopPad, chartBottomPad: debugChartBottomPad, sideMargin: debugSideMargin
+        chartTopPad: debugChartTopPad, chartBottomPad: debugChartBottomPad, sideMargin: debugSideMargin,
+        epigrafePos: debugEpigrafePos, epigrafeSize: debugEpigrafeSize
       }
     };
     localStorage.setItem(STORAGE_KEY, JSON.stringify(data));
@@ -1849,6 +1873,8 @@ function applyExperimentalFromStorage(exp){
   debugChartTopPad = typeof exp.chartTopPad==='number' ? exp.chartTopPad : 0;
   debugChartBottomPad = typeof exp.chartBottomPad==='number' ? exp.chartBottomPad : 0;
   debugSideMargin = typeof exp.sideMargin==='number' ? exp.sideMargin : 0;
+  debugEpigrafePos = typeof exp.epigrafePos==='number' ? exp.epigrafePos : 0;
+  debugEpigrafeSize = typeof exp.epigrafeSize==='number' ? exp.epigrafeSize : 8;
   syncExperimentalControls();
 }
 function syncExperimentalControls(){
@@ -1861,6 +1887,8 @@ function syncExperimentalControls(){
   $('dbvtSlider').value = debugChartTopPad; $('dbvtVal').textContent = debugChartTopPad.toFixed(2);
   $('dbvbSlider').value = debugChartBottomPad; $('dbvbVal').textContent = debugChartBottomPad.toFixed(2);
   $('dbmSlider').value = debugSideMargin; $('dbmVal').textContent = debugSideMargin.toFixed(2);
+  $('dbepSlider').value = debugEpigrafePos; $('dbepVal').textContent = debugEpigrafePos.toFixed(2);
+  $('dbesSlider').value = debugEpigrafeSize; $('dbesVal').textContent = debugEpigrafeSize.toFixed(1);
 }
 // reconstruye las tarjetas guardadas; devuelve false si no había nada válido para restaurar
 function restoreBoardsFromStorage(){
@@ -2545,6 +2573,33 @@ $('usaGrupo').addEventListener('change', ()=>{
   dbmReset.addEventListener('click', ()=>{
     dbmSlider.value = 0;
     applyDbm(0);
+  });
+
+  const dbepSlider = $('dbepSlider'), dbepVal = $('dbepVal'), dbepReset = $('dbepReset');
+  const applyDbep = pos=>{
+    debugEpigrafePos = pos;
+    dbepVal.textContent = pos.toFixed(2);
+    const sel = getSelected();
+    if(sel) renderChartCard(sel);
+  };
+  dbepSlider.addEventListener('input', ()=> applyDbep(parseFloat(dbepSlider.value)));
+  dbepReset.addEventListener('click', ()=>{
+    dbepSlider.value = 0;
+    applyDbep(0);
+  });
+
+  const dbesSlider = $('dbesSlider'), dbesVal = $('dbesVal'), dbesReset = $('dbesReset');
+  const DEFAULT_DBES = 8;
+  const applyDbes = size=>{
+    debugEpigrafeSize = size;
+    dbesVal.textContent = size.toFixed(1);
+    const sel = getSelected();
+    if(sel) renderChartCard(sel);
+  };
+  dbesSlider.addEventListener('input', ()=> applyDbes(parseFloat(dbesSlider.value)));
+  dbesReset.addEventListener('click', ()=>{
+    dbesSlider.value = DEFAULT_DBES;
+    applyDbes(DEFAULT_DBES);
   });
 }
 
