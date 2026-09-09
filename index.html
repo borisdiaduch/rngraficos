@@ -312,12 +312,12 @@
 
 <div class="debug-window" id="debugWindow">
   <div class="dbg-header">
-    <span class="dbg-badge">Debug</span>
-    <span class="dbg-headline">Ajustes para depurar el gráfico</span>
+    <span class="dbg-badge">Experimental</span>
+    <span class="dbg-headline">Ajustes experimentales del gráfico</span>
   </div>
   <div class="dbg-body">
     <div class="field">
-      <label>Ejemplos (debug)</label>
+      <label>Ejemplos (experimental)</label>
       <select id="ejemploSelect">
         <option value="">Elegir ejemplo…</option>
         <option value="barrasNegativas">Barras con valores negativos</option>
@@ -325,7 +325,7 @@
         <option value="grupoTexto">Barras + grupo de texto libre</option>
         <option value="donutSeparadores">Dona con separadores</option>
       </select>
-      <div class="hint">Carga datos de prueba en el gráfico seleccionado, para debuggear los ajustes de espaciado y estilo.</div>
+      <div class="hint">Carga datos de prueba en el gráfico seleccionado, para probar ajustes de espaciado y estilo.</div>
     </div>
     <hr>
     <div class="field" style="gap:8px;">
@@ -350,6 +350,23 @@
         <input type="range" id="dbgSlider" min="0" max="0.6" step="0.01" value="0.05">
         <span class="dbw-val" id="dbgVal">0.05</span>
         <button type="button" id="dbgReset" title="Volver al espacio por defecto">Reset</button>
+      </div>
+    </div>
+    <hr>
+    <div class="field" style="gap:8px;">
+      <div class="dbw-title">Altura del gráfico (aire arriba/abajo)</div>
+      <div class="dbw-row">
+        <input type="range" id="dbvSlider" min="0" max="1.5" step="0.05" value="0">
+        <span class="dbw-val" id="dbvVal">0.00</span>
+        <button type="button" id="dbvReset" title="Volver al aire por defecto">Reset</button>
+      </div>
+    </div>
+    <div class="field" style="gap:8px;">
+      <div class="dbw-title">Margen lateral (distancia a los bordes)</div>
+      <div class="dbw-row">
+        <input type="range" id="dbmSlider" min="0" max="1.5" step="0.05" value="0">
+        <span class="dbw-val" id="dbmVal">0.00</span>
+        <button type="button" id="dbmReset" title="Volver al margen por defecto">Reset</button>
       </div>
     </div>
   </div>
@@ -1670,7 +1687,8 @@ function drawChart(ctx, model){
   const hasGroup = rows.some(r=>r.group!==undefined);
   if(hasGroup && (resolvedType==='verticales' || resolvedType==='lineas')) bottomReserve += 0.055;
   const chartBottom = H - bottomReserve;
-  const area = {left:MARGIN, top:chartTop, bottom:chartBottom, width:W-MARGIN*2};
+  const marginX = MARGIN + (debugSideMargin||0);
+  const area = {left:marginX, top:chartTop+(debugChartVPad||0), bottom:chartBottom-(debugChartVPad||0), width:W-marginX*2};
   if(rows.length){
     if(resolvedType==='horizontales') drawHorizontalBars(ctx, area, rows, headers, numSeries, sufijo, theme, colorOverrides);
     else if(resolvedType==='lineas') drawLines(ctx, area, rows, headers, numSeries, sufijo, theme, colorOverrides, destacar);
@@ -1696,6 +1714,8 @@ let selectedId = null;
 let debugBarWidthRatio = null; // DEBUG: override manual del ancho/grosor de barras (null = usar el valor por defecto)
 let debugBarGapInner = null; // DEBUG: override manual del espacio entre barras de una misma categoría (null = usar el valor por defecto)
 let debugAxisMax = null; // DEBUG: fuerza el máximo del eje de valores (null = automático, según los datos)
+let debugChartVPad = 0; // EXPERIMENTAL: aire extra arriba/abajo del área de trazado, en cm (0 = comportamiento original)
+let debugSideMargin = 0; // EXPERIMENTAL: margen lateral extra a los costados del gráfico, en cm (0 = comportamiento original)
 let chartSeq = 0;
 
 function getSelected(){ return boards.find(b=>b.id===selectedId) || null; }
@@ -2290,6 +2310,32 @@ $('usaGrupo').addEventListener('change', ()=>{
     dbaMax.value = '';
     const sel = getSelected();
     if(sel) renderChartCard(sel);
+  });
+
+  const dbvSlider = $('dbvSlider'), dbvVal = $('dbvVal'), dbvReset = $('dbvReset');
+  const applyDbv = pad=>{
+    debugChartVPad = pad;
+    dbvVal.textContent = pad.toFixed(2);
+    const sel = getSelected();
+    if(sel) renderChartCard(sel);
+  };
+  dbvSlider.addEventListener('input', ()=> applyDbv(parseFloat(dbvSlider.value)));
+  dbvReset.addEventListener('click', ()=>{
+    dbvSlider.value = 0;
+    applyDbv(0);
+  });
+
+  const dbmSlider = $('dbmSlider'), dbmVal = $('dbmVal'), dbmReset = $('dbmReset');
+  const applyDbm = margin=>{
+    debugSideMargin = margin;
+    dbmVal.textContent = margin.toFixed(2);
+    const sel = getSelected();
+    if(sel) renderChartCard(sel);
+  };
+  dbmSlider.addEventListener('input', ()=> applyDbm(parseFloat(dbmSlider.value)));
+  dbmReset.addEventListener('click', ()=>{
+    dbmSlider.value = 0;
+    applyDbm(0);
   });
 }
 
