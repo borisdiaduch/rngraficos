@@ -268,19 +268,39 @@
   .ctp-btn.active svg{ filter:none; }
   .footer-hint{ font-size: 10.5px; color: var(--muted); line-height: 1.4; margin-top: 10px; }
   .debug-window{
-    position:fixed; right:16px; bottom:16px; z-index:9999;
-    background:#fff; border:1.5px solid var(--panel-border); border-radius:10px;
-    padding:12px 14px; box-shadow:0 4px 16px rgba(0,0,0,.16);
-    font-size:11px; display:flex; flex-direction:column; gap:10px; width:260px;
+    position:absolute; left:16px; z-index:9;
+    background: var(--panel); border: 1px solid var(--panel-border);
+    border-radius: 10px; box-shadow: 0 6px 20px rgba(43,42,37,0.12);
+    width: 300px; overflow-y:auto;
+    font-size:11px;
   }
-  .debug-window .dbg-header{ font-weight:700; letter-spacing:.04em; color:#b3261e; text-transform:uppercase; font-size:11px; }
-  .debug-window hr{ border:none; border-top:1px solid var(--panel-border); margin:0; width:100%; }
+  @media (max-width: 480px){
+    .debug-window{ width: calc(100vw - 32px); max-width: 440px; }
+  }
+  .debug-window .dbg-header{
+    display:flex; align-items:center; gap:8px;
+    padding: 12px 16px; border-bottom: 1px solid var(--panel-border);
+  }
+  .debug-window .dbg-badge{
+    font-weight:700; letter-spacing:.05em; text-transform:uppercase; font-size:9.5px;
+    color:#8a5a1f; background:#f6e9d4; border:1px solid #ecd8b3;
+    border-radius:20px; padding:2.5px 8px; flex:none;
+  }
+  .debug-window .dbg-headline{ font-size: 12px; color: var(--text); font-weight:500; }
+  .debug-window .dbg-body{ padding: 14px 16px 16px; display:flex; flex-direction:column; gap:12px; }
   .debug-window .field{ margin-bottom:0; }
-  .debug-window .dbw-title{ font-weight:700; letter-spacing:.03em; color:var(--muted); text-transform:uppercase; font-size:10px; }
+  .debug-window .dbw-title{ font-weight:600; letter-spacing:.02em; color:var(--muted); font-size:10.5px; }
   .debug-window .dbw-row{ display:flex; align-items:center; gap:8px; }
-  .debug-window input[type=range]{ flex:1; }
-  .debug-window .dbw-val{ font-variant-numeric:tabular-nums; width:36px; text-align:right; }
-  .debug-window button{ font-size:10px; border:1px solid var(--panel-border); background:var(--bg); border-radius:6px; padding:3px 8px; cursor:pointer; }
+  .debug-window input[type=range]{
+    flex:1; accent-color: var(--accent); height:4px; cursor:pointer;
+  }
+  .debug-window .dbw-val{ font-variant-numeric:tabular-nums; width:36px; text-align:right; color:var(--text); }
+  .debug-window button{
+    font-size:10.5px; border:1px solid var(--panel-border); background:var(--bg);
+    color:var(--text); border-radius:6px; padding:4px 9px; cursor:pointer;
+    transition: background .15s ease, border-color .15s ease;
+  }
+  .debug-window button:hover{ background:#ececea; border-color:#b7b2a4; }
 </style>
 </head>
 <body>
@@ -291,36 +311,47 @@
 <div class="global-toast" id="globalToast"></div>
 
 <div class="debug-window" id="debugWindow">
-  <div class="dbg-header">Debug</div>
-  <div class="field">
-    <label>Ejemplos (debug)</label>
-    <select id="ejemploSelect">
-      <option value="">Elegir ejemplo…</option>
-      <option value="barrasNegativas">Barras con valores negativos</option>
-      <option value="lineasGrupo">Líneas + grupo de texto libre</option>
-      <option value="grupoTexto">Barras + grupo de texto libre</option>
-      <option value="donutSeparadores">Dona con separadores</option>
-    </select>
-    <div class="hint">Carga datos de prueba en el gráfico seleccionado, para debuggear los ajustes de espaciado y estilo.</div>
+  <div class="dbg-header">
+    <span class="dbg-badge">Debug</span>
+    <span class="dbg-headline">Ajustes para depurar el gráfico</span>
   </div>
-  <hr>
-  <div class="dbw-title">Máximo del eje Y</div>
-  <div class="dbw-row">
-    <input type="number" id="dbaMax" placeholder="Automático" style="width:100%; padding:5px 8px; border:1.5px solid var(--panel-border); border-radius:6px; font-size:11px;">
-    <button type="button" id="dbaReset" title="Volver al máximo automático">Reset</button>
-  </div>
-  <hr>
-  <div class="dbw-title">Ancho de barras</div>
-  <div class="dbw-row">
-    <input type="range" id="dbwSlider" min="0.1" max="1" step="0.01" value="0.82">
-    <span class="dbw-val" id="dbwVal">0.82</span>
-    <button type="button" id="dbwReset" title="Volver al ancho por defecto">Reset</button>
-  </div>
-  <div class="dbw-title">Espacio entre barras (misma categoría)</div>
-  <div class="dbw-row">
-    <input type="range" id="dbgSlider" min="0" max="0.6" step="0.01" value="0.05">
-    <span class="dbw-val" id="dbgVal">0.05</span>
-    <button type="button" id="dbgReset" title="Volver al espacio por defecto">Reset</button>
+  <div class="dbg-body">
+    <div class="field">
+      <label>Ejemplos (debug)</label>
+      <select id="ejemploSelect">
+        <option value="">Elegir ejemplo…</option>
+        <option value="barrasNegativas">Barras con valores negativos</option>
+        <option value="lineasGrupo">Líneas + grupo de texto libre</option>
+        <option value="grupoTexto">Barras + grupo de texto libre</option>
+        <option value="donutSeparadores">Dona con separadores</option>
+      </select>
+      <div class="hint">Carga datos de prueba en el gráfico seleccionado, para debuggear los ajustes de espaciado y estilo.</div>
+    </div>
+    <hr>
+    <div class="field" style="gap:8px;">
+      <div class="dbw-title">Máximo del eje Y</div>
+      <div class="dbw-row">
+        <input type="number" id="dbaMax" placeholder="Automático">
+        <button type="button" id="dbaReset" title="Volver al máximo automático">Reset</button>
+      </div>
+    </div>
+    <hr>
+    <div class="field" style="gap:8px;">
+      <div class="dbw-title">Ancho de barras</div>
+      <div class="dbw-row">
+        <input type="range" id="dbwSlider" min="0.1" max="1" step="0.01" value="0.82">
+        <span class="dbw-val" id="dbwVal">0.82</span>
+        <button type="button" id="dbwReset" title="Volver al ancho por defecto">Reset</button>
+      </div>
+    </div>
+    <div class="field" style="gap:8px;">
+      <div class="dbw-title">Espacio entre barras (misma categoría)</div>
+      <div class="dbw-row">
+        <input type="range" id="dbgSlider" min="0" max="0.6" step="0.01" value="0.05">
+        <span class="dbw-val" id="dbgVal">0.05</span>
+        <button type="button" id="dbgReset" title="Volver al espacio por defecto">Reset</button>
+      </div>
+    </div>
   </div>
 </div>
 
@@ -2279,6 +2310,20 @@ document.getElementById('panel-toggle').addEventListener('click', () => {
 $('board').appendChild(createAddTile());
 addChart(true);
 if(document.fonts && document.fonts.ready){ document.fonts.ready.then(renderSelected); }
+
+// ---------- posicionar la ventana Debug justo debajo del panel principal ----------
+(function(){
+  const panel = $('panel'), dbg = $('debugWindow');
+  const GAP = 16;
+  const positionDebugWindow = ()=>{
+    const top = panel.offsetTop + panel.offsetHeight + GAP;
+    dbg.style.top = top + 'px';
+    dbg.style.maxHeight = `calc(100vh - ${top}px - ${GAP}px)`;
+  };
+  if(window.ResizeObserver) new ResizeObserver(positionDebugWindow).observe(panel);
+  window.addEventListener('resize', positionDebugWindow);
+  positionDebugWindow();
+})();
 </script>
 
 </body>
