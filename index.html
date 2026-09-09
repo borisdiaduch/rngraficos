@@ -154,11 +154,8 @@
     display:flex; flex-direction:column;
     transition: width 0.15s ease;
   }
-  .panel.collapsed{ width: auto; }
-
   @media (max-width: 480px){
     .panel{ width: calc(100vw - 32px); max-width: 440px; }
-    .panel.collapsed{ width: calc(100vw - 32px); max-width: 440px; }
   }
 
   .panel-header{
@@ -271,23 +268,28 @@
     position:absolute; left:16px; z-index:9;
     background: var(--panel); border: 1px solid var(--panel-border);
     border-radius: 10px; box-shadow: 0 6px 20px rgba(43,42,37,0.12);
-    width: 300px; overflow-y:auto;
+    width: 300px; overflow:visible;
     font-size:11px;
   }
   @media (max-width: 480px){
     .debug-window{ width: calc(100vw - 32px); max-width: 440px; }
   }
   .debug-window .dbg-header{
-    display:flex; align-items:center; gap:8px;
-    padding: 12px 16px; border-bottom: 1px solid var(--panel-border);
+    display:flex; align-items:center; justify-content:space-between; gap:8px;
+    padding: 10px 16px; cursor:pointer; user-select:none;
   }
-  .debug-window .dbg-badge{
-    font-weight:700; letter-spacing:.05em; text-transform:uppercase; font-size:9.5px;
-    color:#8a5a1f; background:#f6e9d4; border:1px solid #ecd8b3;
-    border-radius:20px; padding:2.5px 8px; flex:none;
+  .debug-window:not(.collapsed) .dbg-header{ border-bottom: 1px solid var(--panel-border); }
+  .debug-window .dbg-title{
+    font-size: 13px; margin: 0; letter-spacing: normal;
+    color: var(--text); white-space: nowrap; font-weight: 500;
   }
-  .debug-window .dbg-headline{ font-size: 12px; color: var(--text); font-weight:500; }
-  .debug-window .dbg-body{ padding: 14px 16px 16px; display:flex; flex-direction:column; gap:12px; }
+  .debug-window .dbg-chevron{
+    width:16px; height:16px; flex:none; color:var(--muted);
+    transition: transform 0.15s ease;
+  }
+  .debug-window.collapsed .dbg-chevron{ transform: rotate(-90deg); }
+  .debug-window.collapsed .dbg-body{ display:none; }
+  .debug-window .dbg-body{ padding: 0 16px 14px 16px; }
   .debug-window .field{ margin-bottom:0; }
   .debug-window .dbw-title{ font-weight:600; letter-spacing:.02em; color:var(--muted); font-size:10.5px; }
   .debug-window .dbw-row{ display:flex; align-items:center; gap:8px; }
@@ -295,12 +297,16 @@
     flex:1; accent-color: var(--accent); height:4px; cursor:pointer;
   }
   .debug-window .dbw-val{ font-variant-numeric:tabular-nums; width:36px; text-align:right; color:var(--text); }
-  .debug-window button{
-    font-size:10.5px; border:1px solid var(--panel-border); background:var(--bg);
-    color:var(--text); border-radius:6px; padding:4px 9px; cursor:pointer;
+  .debug-window .icon-btn{
+    width:26px; height:26px; padding:0; flex:none;
+    display:flex; align-items:center; justify-content:center;
+    border:1px solid var(--panel-border); background:var(--bg);
+    color:var(--text); border-radius:6px; cursor:pointer;
     transition: background .15s ease, border-color .15s ease;
   }
-  .debug-window button:hover{ background:#ececea; border-color:#b7b2a4; }
+  .debug-window .icon-btn:hover{ background:#ececea; border-color:#b7b2a4; }
+  .debug-window .icon-btn svg{ width:14px; height:14px; }
+  .debug-window .subsection-body{ display:flex; flex-direction:column; gap:12px; }
 </style>
 </head>
 <body>
@@ -310,63 +316,99 @@
 </div>
 <div class="global-toast" id="globalToast"></div>
 
-<div class="debug-window" id="debugWindow">
-  <div class="dbg-header">
-    <span class="dbg-badge">Experimental</span>
-    <span class="dbg-headline">Ajustes experimentales del gráfico</span>
+<div class="debug-window collapsed" id="debugWindow">
+  <div class="dbg-header" id="debugWindowToggle">
+    <span class="dbg-title">EXPERIMENTAL</span>
+    <svg class="dbg-chevron" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="2">
+      <path d="M5 7l5 5 5-5" stroke-linecap="round" stroke-linejoin="round"/>
+    </svg>
   </div>
   <div class="dbg-body">
-    <div class="field">
-      <label>Ejemplos (experimental)</label>
-      <select id="ejemploSelect">
-        <option value="">Elegir ejemplo…</option>
-        <option value="barrasNegativas">Barras con valores negativos</option>
-        <option value="lineasGrupo">Líneas + grupo de texto libre</option>
-        <option value="grupoTexto">Barras + grupo de texto libre</option>
-        <option value="donutSeparadores">Dona con separadores</option>
-      </select>
-      <div class="hint">Carga datos de prueba en el gráfico seleccionado, para probar ajustes de espaciado y estilo.</div>
-    </div>
-    <hr>
-    <div class="field" style="gap:8px;">
-      <div class="dbw-title">Máximo del eje Y</div>
-      <div class="dbw-row">
-        <input type="number" id="dbaMax" placeholder="Automático">
-        <button type="button" id="dbaReset" title="Volver al máximo automático">Reset</button>
+    <div class="subsection collapsed" id="dbgEjemplos-section">
+      <div class="subsection-header" id="dbgEjemplos-toggle">
+        <span>Ejemplos</span>
+        <svg class="chevron" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="2">
+          <path d="M5 7l5 5 5-5" stroke-linecap="round" stroke-linejoin="round"/>
+        </svg>
+      </div>
+      <div class="subsection-body">
+        <div class="field" style="gap:8px;">
+          <div class="dbw-title">Ejemplos</div>
+          <select id="ejemploSelect">
+            <option value="">Elegir ejemplo…</option>
+            <option value="barrasNegativas">Barras con valores negativos</option>
+            <option value="lineasGrupo">Líneas + grupo de texto libre</option>
+            <option value="grupoTexto">Barras + grupo de texto libre</option>
+            <option value="donutSeparadores">Dona con separadores</option>
+          </select>
+        </div>
       </div>
     </div>
-    <hr>
-    <div class="field" style="gap:8px;">
-      <div class="dbw-title">Ancho de barras</div>
-      <div class="dbw-row">
-        <input type="range" id="dbwSlider" min="0.1" max="1" step="0.01" value="0.82">
-        <span class="dbw-val" id="dbwVal">0.82</span>
-        <button type="button" id="dbwReset" title="Volver al ancho por defecto">Reset</button>
+    <div class="subsection collapsed" id="dbgEscala-section">
+      <div class="subsection-header" id="dbgEscala-toggle">
+        <span>Escala</span>
+        <svg class="chevron" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="2">
+          <path d="M5 7l5 5 5-5" stroke-linecap="round" stroke-linejoin="round"/>
+        </svg>
+      </div>
+      <div class="subsection-body">
+        <div class="field" style="gap:8px;">
+          <div class="dbw-title">Máximo del eje Y</div>
+          <div class="dbw-row">
+            <input type="number" id="dbaMax" placeholder="Automático">
+            <button type="button" class="icon-btn" id="dbaReset" title="Volver al máximo automático" aria-label="Restablecer"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12a9 9 0 1 1-3-6.7"/><polyline points="21 3 21 9 15 9"/></svg></button>
+          </div>
+        </div>
       </div>
     </div>
-    <div class="field" style="gap:8px;">
-      <div class="dbw-title">Espacio entre barras (misma categoría)</div>
-      <div class="dbw-row">
-        <input type="range" id="dbgSlider" min="0" max="0.6" step="0.01" value="0.05">
-        <span class="dbw-val" id="dbgVal">0.05</span>
-        <button type="button" id="dbgReset" title="Volver al espacio por defecto">Reset</button>
+    <div class="subsection collapsed" id="dbgEstilo-section">
+      <div class="subsection-header" id="dbgEstilo-toggle">
+        <span>Estilo</span>
+        <svg class="chevron" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="2">
+          <path d="M5 7l5 5 5-5" stroke-linecap="round" stroke-linejoin="round"/>
+        </svg>
       </div>
-    </div>
-    <hr>
-    <div class="field" style="gap:8px;">
-      <div class="dbw-title">Altura del gráfico (aire arriba/abajo)</div>
-      <div class="dbw-row">
-        <input type="range" id="dbvSlider" min="0" max="1.5" step="0.05" value="0">
-        <span class="dbw-val" id="dbvVal">0.00</span>
-        <button type="button" id="dbvReset" title="Volver al aire por defecto">Reset</button>
-      </div>
-    </div>
-    <div class="field" style="gap:8px;">
-      <div class="dbw-title">Margen lateral (distancia a los bordes)</div>
-      <div class="dbw-row">
-        <input type="range" id="dbmSlider" min="0" max="1.5" step="0.05" value="0">
-        <span class="dbw-val" id="dbmVal">0.00</span>
-        <button type="button" id="dbmReset" title="Volver al margen por defecto">Reset</button>
+      <div class="subsection-body">
+        <div class="field" style="gap:8px;">
+          <div class="dbw-title">Ancho de barras</div>
+          <div class="dbw-row">
+            <input type="range" id="dbwSlider" min="0.1" max="1" step="0.01" value="0.82">
+            <span class="dbw-val" id="dbwVal">0.82</span>
+            <button type="button" class="icon-btn" id="dbwReset" title="Volver al ancho por defecto" aria-label="Restablecer"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12a9 9 0 1 1-3-6.7"/><polyline points="21 3 21 9 15 9"/></svg></button>
+          </div>
+        </div>
+        <div class="field" style="gap:8px;">
+          <div class="dbw-title">Espacio entre barras (misma categoría)</div>
+          <div class="dbw-row">
+            <input type="range" id="dbgSlider" min="0" max="0.6" step="0.01" value="0.05">
+            <span class="dbw-val" id="dbgVal">0.05</span>
+            <button type="button" class="icon-btn" id="dbgReset" title="Volver al espacio por defecto" aria-label="Restablecer"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12a9 9 0 1 1-3-6.7"/><polyline points="21 3 21 9 15 9"/></svg></button>
+          </div>
+        </div>
+        <div class="field" style="gap:8px;">
+          <div class="dbw-title">Altura del gráfico — aire arriba</div>
+          <div class="dbw-row">
+            <input type="range" id="dbvtSlider" min="-1.5" max="1.5" step="0.05" value="0">
+            <span class="dbw-val" id="dbvtVal">0.00</span>
+            <button type="button" class="icon-btn" id="dbvtReset" title="Volver al aire por defecto" aria-label="Restablecer"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12a9 9 0 1 1-3-6.7"/><polyline points="21 3 21 9 15 9"/></svg></button>
+          </div>
+        </div>
+        <div class="field" style="gap:8px;">
+          <div class="dbw-title">Altura del gráfico — aire abajo</div>
+          <div class="dbw-row">
+            <input type="range" id="dbvbSlider" min="-1.5" max="1.5" step="0.05" value="0">
+            <span class="dbw-val" id="dbvbVal">0.00</span>
+            <button type="button" class="icon-btn" id="dbvbReset" title="Volver al aire por defecto" aria-label="Restablecer"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12a9 9 0 1 1-3-6.7"/><polyline points="21 3 21 9 15 9"/></svg></button>
+          </div>
+        </div>
+        <div class="field" style="gap:8px;">
+          <div class="dbw-title">Margen lateral (distancia a los bordes)</div>
+          <div class="dbw-row">
+            <input type="range" id="dbmSlider" min="-1.5" max="1.5" step="0.05" value="0">
+            <span class="dbw-val" id="dbmVal">0.00</span>
+            <button type="button" class="icon-btn" id="dbmReset" title="Volver al margen por defecto" aria-label="Restablecer"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12a9 9 0 1 1-3-6.7"/><polyline points="21 3 21 9 15 9"/></svg></button>
+          </div>
+        </div>
       </div>
     </div>
   </div>
@@ -374,7 +416,7 @@
 
 <div class="panel" id="panel">
   <div class="panel-header" id="panel-toggle">
-    <div class="brand" title="Desarrollado por Boris Diaduch - v0.1.3">
+    <div class="brand" title="Desarrollado por Boris Diaduch - v0.1.4">
       <svg class="logo" viewBox="0 0 567.1 88.2" xmlns="http://www.w3.org/2000/svg">
         <path d="M40.6,40.5c0,5-1.8,7.2-6.7,7.2h-2v-14.5h2c4.8,0,6.7,2.3,6.7,7.3M71.7,87v-14.5h-.9c-.9,0-2.1-.7-2.5-2.5l-.6-3c-1.8-9-5.3-12-12.1-13.5v-.4c9.1-2.7,12.3-8.2,12.3-15.9,0-13.5-8.6-20.2-30.7-20.2H0v15h2.4c1,0,2.7,1.7,2.7,2.7v35.1c0,1-1.7,2.7-2.7,2.7H0v14.5h37.7v-14.5h-5v-10.3h3.1c3.4,0,5,1.6,5.4,5.8l1.8,19h28.7ZM85.5,14.6h14.7l10.3-8.6V0h-22.9l-2.1,14.6ZM75,87h38.6v-14.5h-2.8c-1,0-2.7-1.7-2.7-2.7v-35.1c0-1,1.7-2.7,2.7-2.7h2.8v-15h-38.6v15h2.8c1,0,2.7,1.7,2.7,2.7v35.1c0,1-1.7,2.7-2.7,2.7h-2.8v14.5ZM161.9,52.5c0,12.5-3.4,18.6-8.9,18.6s-8.9-6.1-8.9-18.6,3.4-18,8.9-18,8.9,5.5,8.9,18M190.2,52c0-23.2-16.4-36.2-37.2-36.2s-37.2,13-37.2,36.2,15.6,36.2,37.2,36.2,37.2-13,37.2-36.2M206,87h30.2v-14.5h-5.5v-20.3h.3l19.2,34.8h24.1v-52.3c0-1,1.7-2.7,2.7-2.7h2v-15h-29.5v15h5.2v16.3h-.3l-17.2-31.3h-31.2v15h2.4c1,0,2.7,1.7,2.7,2.7v35.1c0,1-1.7,2.7-2.7,2.7h-2.4v14.5ZM282.3,87h62.5v-25.4h-16.5l-2.1,9.7h-11.2v-12h15.1v-16.1h-15.1v-10h11l2.3,7.9h15.7v-24.1h-61.7v15h2.4c1,0,2.7,1.7,2.7,2.7v35.1c0,1-1.7,2.7-2.7,2.7h-2.4v14.5ZM382.6,88.2c5.9,0,12.7-1.3,15.5-3.1,1.8,0,2.7,1.9,2.7,1.9h13.5v-19.9c0-1,1.7-2.7,2.7-2.7h1.1v-14.5h-33.5v14.1h3.8v7.1c-.7.2-1.5.3-2.4.3-7.6,0-9.4-7.3-9.4-19.8s4.6-17.8,12.3-17.8,2.4.1,3.2.2l2.7,8.5h17.4v-25.5h-18.2c-3.4-.7-7-1.2-10.8-1.2-21,0-35.3,12.9-35.3,37.1s12.4,35.3,34.7,35.3M461,40.5c0,5-1.8,7.2-6.7,7.2h-2v-14.5h2c4.8,0,6.7,2.3,6.7,7.3M492.1,87v-14.5h-.9c-.9,0-2.1-.7-2.5-2.5l-.6-3c-1.8-9-5.3-12-12.1-13.5v-.4c9.1-2.7,12.3-8.2,12.3-15.9,0-13.5-8.6-20.2-30.7-20.2h-37.2v15h2.4c1,0,2.7,1.7,2.7,2.7v35.1c0,1-1.7,2.7-2.7,2.7h-2.4v14.5h37.7v-14.5h-5v-10.3h3.1c3.4,0,5,1.6,5.4,5.8l1.8,19h28.7ZM538.8,52.5c0,12.5-3.4,18.6-8.9,18.6s-8.9-6.1-8.9-18.6,3.4-18,8.9-18,8.9,5.5,8.9,18M567.1,52c0-23.2-16.4-36.2-37.2-36.2s-37.2,13-37.2,36.2,15.6,36.2,37.2,36.2,37.2-13,37.2-36.2" fill="#160b00"/>
       </svg>
@@ -459,12 +501,11 @@ Viedma; 34; 35</textarea>
         </div>
         <label class="check-field">
           <input type="checkbox" id="usaGrupo">
-          <span>Última columna = grupo/período (texto libre, ej. año o etapa)</span>
+          <span>Última columna = grupo/período</span>
         </label>
         <div class="field">
           <label>Series (si hay más de un valor por categoría)</label>
           <input id="seriesNames" value="2024, 2025" placeholder="2024, 2025">
-          <div class="hint">Nombres separados por coma, en el mismo orden que los valores. Se usan en la leyenda "Referencia" para indicar qué representa cada color.</div>
         </div>
       </div>
     </div>
@@ -599,7 +640,6 @@ Viedma; 34; 35</textarea>
         <div class="field">
           <label>Color por categoría / serie</label>
           <div id="colorOverridesList" class="color-overrides-list"></div>
-          <div class="hint">El primer círculo de cada fila es el color por defecto de la sección; el resto son colores puntuales para destacar una barra.</div>
         </div>
       </div>
     </div>
@@ -1108,6 +1148,7 @@ function themeTextInset(theme){
 
 function drawHeader(ctx, W, titulo, bajada, theme){
   theme = theme || THEMES.diario;
+  bajada = bajada ? bajada.toUpperCase() : bajada;
   const hasBand = !!theme.headerBg;
   const inset = themeTextInset(theme);
   const textX = MARGIN + inset;
@@ -1206,6 +1247,10 @@ function drawFooter(ctx, W, H, fuente, layout){
 }
 
 // ---------- tipos de gráfico ----------
+// "destacar" acepta 'ninguno' | 'max' | 'min' | 'cat:<categoría elegida>' (ver select #destacar)
+function destacarCat(destacar){
+  return (destacar && destacar.indexOf('cat:')===0) ? destacar.slice(4) : null;
+}
 function drawVerticalBars(ctx, area, rows, headers, numSeries, destacar, sufijo, theme, colorOverrides){
   theme = theme || THEMES.diario;
   colorOverrides = colorOverrides || {};
@@ -1215,6 +1260,7 @@ function drawVerticalBars(ctx, area, rows, headers, numSeries, destacar, sufijo,
   const dataMin = Math.min(0, ...rows.flatMap(r=>r.vals));
   const maxSingle = numSeries===1 ? Math.max(...rows.map(r=>r.vals[0])) : null;
   const minSingle = numSeries===1 ? Math.min(...rows.map(r=>r.vals[0])) : null;
+  const destacarCatSel = destacarCat(destacar);
 
   let top = area.top;
   const legendItems = [];
@@ -1236,8 +1282,10 @@ function drawVerticalBars(ctx, area, rows, headers, numSeries, destacar, sufijo,
   const axisLabels = ticks.map(t=> formatAR(t));
   const axisColW = Math.max(...axisLabels.map(l=> ctx.measure(l, axisSize, 'medium'))) + 0.18;
 
-  const barsLeft = area.left + axisColW;
-  const barsWidth = area.width - axisColW;
+  const axisLeft = area.left + axisColW; // referencia fija de la escala/línea base: no se mueve con el margen lateral
+  const sideInset = debugSideMargin||0;
+  const barsLeft = axisLeft + sideInset;
+  const barsWidth = area.width - axisColW - sideInset*2;
   const groupGap = 0.26, barGapInner = debugBarGapInner!=null ? debugBarGapInner : (numSeries>1?0.05:0);
   const groupW = (barsWidth - groupGap*(n-1))/n;
   const barWidthRatio = debugBarWidthRatio!=null ? debugBarWidthRatio : (numSeries>1 ? 0.82 : 0.52); // barras más angostas dentro de su carril, con más aire alrededor
@@ -1259,14 +1307,14 @@ function drawVerticalBars(ctx, area, rows, headers, numSeries, destacar, sufijo,
   ticks.forEach(t=>{
     if(Math.abs(t)<1e-9) return;
     const y = drawableBottom - ((t-axisMin)/axisRange)*drawableH;
-    ctx.line(barsLeft, y, area.left+area.width, y, 0.5*PT2CM, RN.axisGrid);
-    ctx.text(barsLeft-0.10, y+axisSize*PT2CM*0.32, formatAR(t), {sizePt:axisSize, weight:'medium', fillTok:RN.black, align:'right'});
+    ctx.line(axisLeft, y, area.left+area.width, y, 0.5*PT2CM, RN.axisGrid);
+    ctx.text(axisLeft-0.10, y+axisSize*PT2CM*0.32, formatAR(t), {sizePt:axisSize, weight:'medium', fillTok:RN.black, align:'right'});
   });
 
   const catLinesArr = [];
   let maxCatLines = 1;
   rows.forEach(d=>{
-    const catHi = numSeries===1 && ((destacar==='max' && d.vals[0]===maxSingle) || (destacar==='min' && d.vals[0]===minSingle));
+    const catHi = (numSeries===1 && ((destacar==='max' && d.vals[0]===maxSingle) || (destacar==='min' && d.vals[0]===minSingle))) || (destacarCatSel!==null && d.cat===destacarCatSel);
     const lines = wrapNoCut(ctx, d.cat, groupW-0.06, catSize, catHi?'extrabold':'medium');
     if(lines.length>maxCatLines) maxCatLines = lines.length;
     catLinesArr.push(lines);
@@ -1277,12 +1325,12 @@ function drawVerticalBars(ctx, area, rows, headers, numSeries, destacar, sufijo,
     const slotX = barsLeft + gi*(groupW+groupGap);
     const blockW = barW*numSeries + barGapInner*(numSeries-1);
     const gx = slotX + (groupW - blockW)/2; // centra el bloque de barras dentro del carril
-    const catHi = numSeries===1 && ((destacar==='max' && d.vals[0]===maxSingle) || (destacar==='min' && d.vals[0]===minSingle));
+    const catHi = (numSeries===1 && ((destacar==='max' && d.vals[0]===maxSingle) || (destacar==='min' && d.vals[0]===minSingle))) || (destacarCatSel!==null && d.cat===destacarCatSel);
     d.vals.forEach((v,si)=>{
       const bx = gx + si*(barW+barGapInner);
       const bh = Math.abs(v)/axisRange*drawableH;
       const by = v>=0 ? zeroY-bh : zeroY;
-      const isHi = numSeries===1 && ((destacar==='max' && v===maxSingle) || (destacar==='min' && v===minSingle));
+      const isHi = (numSeries===1 && ((destacar==='max' && v===maxSingle) || (destacar==='min' && v===minSingle))) || (destacarCatSel!==null && d.cat===destacarCatSel);
       const override = numSeries>1 ? colorOverrides['s'+si] : colorOverrides[d.cat];
       let tok;
       if(override) tok = override;
@@ -1303,8 +1351,8 @@ function drawVerticalBars(ctx, area, rows, headers, numSeries, destacar, sufijo,
   // el cero se dibuja al final, por encima de las barras
   const zeroTick = ticks.find(t=>Math.abs(t)<1e-9);
   if(zeroTick!==undefined){
-    ctx.line(barsLeft, zeroY, area.left+area.width, zeroY, 0.75*PT2CM, RN.black);
-    ctx.text(barsLeft-0.10, zeroY+axisSize*PT2CM*0.32, formatAR(zeroTick), {sizePt:axisSize, weight:'medium', fillTok:RN.black, align:'right'});
+    ctx.line(axisLeft, zeroY, area.left+area.width, zeroY, 0.75*PT2CM, RN.black);
+    ctx.text(axisLeft-0.10, zeroY+axisSize*PT2CM*0.32, formatAR(zeroTick), {sizePt:axisSize, weight:'medium', fillTok:RN.black, align:'right'});
   }
 
   // fila de grupo/período (ej. años): línea negra bajo cada segmento + línea divisoria entre grupos
@@ -1329,9 +1377,10 @@ function drawVerticalBars(ctx, area, rows, headers, numSeries, destacar, sufijo,
   }
 }
 
-function drawHorizontalBars(ctx, area, rows, headers, numSeries, sufijo, theme, colorOverrides){
+function drawHorizontalBars(ctx, area, rows, headers, numSeries, sufijo, theme, colorOverrides, destacar){
   theme = theme || THEMES.diario;
   colorOverrides = colorOverrides || {};
+  const destacarCatSel = destacarCat(destacar);
   const n = rows.length;
   if(!n) return;
   const dataMax = Math.max(0, ...rows.flatMap(r=>r.vals));
@@ -1380,23 +1429,24 @@ function drawHorizontalBars(ctx, area, rows, headers, numSeries, sufijo, theme, 
   });
 
   rows.forEach((d,gi)=>{
+    const isHi = destacarCatSel!==null && d.cat===destacarCatSel;
     const gy = top + gi*(groupH+rowGap) + rowOffset;
     const rowCenter = gy + groupH/2 - rowOffset;
-    const catLines = wrapNoCut(ctx, d.cat, catLabelW-0.12, catSize, 'medium');
+    const catLines = wrapNoCut(ctx, d.cat, catLabelW-0.12, catSize, isHi?'extrabold':'medium');
     const catLH = catSize*PT2CM*1.15;
     const firstY = rowCenter + 0.06 - (catLines.length-1)*catLH/2;
-    catLines.forEach((line,li)=> ctx.text(area.left, firstY+li*catLH, line, {sizePt:catSize,weight:'medium',fillTok:RN.black,align:'left'}));
+    catLines.forEach((line,li)=> ctx.text(area.left, firstY+li*catLH, line, {sizePt:catSize,weight:isHi?'extrabold':'medium',fillTok:RN.black,align:'left'}));
     d.vals.forEach((v,si)=>{
       const by = gy + si*(barH+barGapInner);
       const bw = Math.abs(v)/axisRange*plotWidth;
       const bx = v>=0 ? zeroX : zeroX-bw;
       const override = numSeries>1 ? colorOverrides['s'+si] : colorOverrides[d.cat];
-      const tok = override || (numSeries>1 ? seriesColorCmyk(si,numSeries,theme) : theme.bar);
+      const tok = override || (numSeries>1 ? seriesColorCmyk(si,numSeries,theme) : (isHi ? theme.barDark : theme.bar));
       ctx.group('bar-group', ()=>{
         ctx.rect(bx, by, bw, barH, tok);
         const labelX = v>=0 ? bx+bw+0.16 : bx-0.16;
         const align = v>=0 ? 'left' : 'right';
-        ctx.text(labelX, by+barH/2+0.06, formatAR(v)+(sufijo?(' '+sufijo):''), {sizePt:valSize,weight:'medium',fillTok:RN.black,align,cls:'val-el'});
+        ctx.text(labelX, by+barH/2+0.06, formatAR(v)+(sufijo?(' '+sufijo):''), {sizePt:valSize,weight:isHi?'extrabold':'medium',fillTok:RN.black,align,cls:'val-el'});
       });
     });
   });
@@ -1419,6 +1469,7 @@ function drawLines(ctx, area, rows, headers, numSeries, sufijo, theme, colorOver
   const dataMin = Math.min(0, ...allVals);
   const maxSingle = numSeries===1 ? Math.max(...rows.map(r=>r.vals[0])) : null;
   const minSingle = numSeries===1 ? Math.min(...rows.map(r=>r.vals[0])) : null;
+  const destacarCatSel = destacarCat(destacar);
   let top = area.top;
   const legendItems = [];
   if(numSeries>1 && headers){
@@ -1434,9 +1485,11 @@ function drawLines(ctx, area, rows, headers, numSeries, sufijo, theme, colorOver
   const axisLabels = ticks.map(t=> formatAR(t));
   const axisColW = Math.max(...axisLabels.map(l=> ctx.measure(l, axisSize, 'medium'))) + 0.18;
 
+  const axisLeft = area.left + axisColW; // referencia fija de la escala/línea base: no se mueve con el margen lateral
+  const sideInset = debugSideMargin||0;
   const inset = 0.30; // para que las etiquetas de los puntos extremos no se salgan del área
-  const plotLeft = area.left + axisColW + inset;
-  const plotWidth = area.width - axisColW - inset*2;
+  const plotLeft = axisLeft + inset + sideInset;
+  const plotWidth = area.width - axisColW - inset*2 - sideInset*2;
   const stepX = plotWidth/(n-1);
   const usableH = area.bottom - top - 0.30;
   const scaleY = v => area.bottom - ((v-minVal)/((maxVal-minVal)||1))*usableH;
@@ -1445,11 +1498,11 @@ function drawLines(ctx, area, rows, headers, numSeries, sufijo, theme, colorOver
   ticks.forEach(t=>{
     const y = scaleY(t);
     const isZero = Math.abs(t)<1e-9;
-    ctx.line(area.left+axisColW, y, area.left+area.width, y, isZero?0.75*PT2CM:0.5*PT2CM, isZero?RN.black:RN.axisGrid);
-    ctx.text(area.left+axisColW-0.10, y+axisSize*PT2CM*0.32, formatAR(t), {sizePt:axisSize, weight:'medium', fillTok:RN.black, align:'right'});
+    ctx.line(axisLeft, y, area.left+area.width, y, isZero?0.75*PT2CM:0.5*PT2CM, isZero?RN.black:RN.axisGrid);
+    ctx.text(axisLeft-0.10, y+axisSize*PT2CM*0.32, formatAR(t), {sizePt:axisSize, weight:'medium', fillTok:RN.black, align:'right'});
   });
   if(sufijo){
-    ctx.text(area.left+axisColW-0.10, scaleY(maxVal)-0.16, sufijo, {sizePt:axisSize, weight:'medium', fillTok:RN.black, align:'right'});
+    ctx.text(axisLeft-0.10, scaleY(maxVal)-0.16, sufijo, {sizePt:axisSize, weight:'medium', fillTok:RN.black, align:'right'});
   }
 
   for(let si=0; si<numSeries; si++){
@@ -1459,7 +1512,7 @@ function drawLines(ctx, area, rows, headers, numSeries, sufijo, theme, colorOver
     ctx.polyline(pts, seriesTok, 0.08);
     pts.forEach((p,i)=>{
       const v = rows[i].vals[si];
-      const isHi = numSeries===1 && ((destacar==='max' && v===maxSingle) || (destacar==='min' && v===minSingle));
+      const isHi = (numSeries===1 && ((destacar==='max' && v===maxSingle) || (destacar==='min' && v===minSingle))) || (destacarCatSel!==null && rows[i].cat===destacarCatSel);
       const tok = override || (isHi ? theme.barDark : seriesTok);
       ctx.circleMark(p[0],p[1],isHi?0.14:0.11,tok);
       const labelY = (v<0 ? p[1]+0.40 : p[1]-0.14) - 2*PT2CM;
@@ -1468,13 +1521,15 @@ function drawLines(ctx, area, rows, headers, numSeries, sufijo, theme, colorOver
   }
   let maxCatLines = 1;
   const catLinesArr = rows.map(r=>{
-    const lines = wrapNoCut(ctx, r.cat, stepX-0.10, 9, 'medium');
+    const catHi = destacarCatSel!==null && r.cat===destacarCatSel;
+    const lines = wrapNoCut(ctx, r.cat, stepX-0.10, 9, catHi?'extrabold':'medium');
     if(lines.length>maxCatLines) maxCatLines = lines.length;
     return lines;
   });
   const catLH = 9*PT2CM*1.18;
   rows.forEach((r,i)=>{
-    catLinesArr[i].forEach((line,li)=> ctx.text(plotLeft+i*stepX, area.bottom+0.35+li*catLH, line, {sizePt:9,weight:'medium',fillTok:RN.black,align:'center'}));
+    const catHi = destacarCatSel!==null && r.cat===destacarCatSel;
+    catLinesArr[i].forEach((line,li)=> ctx.text(plotLeft+i*stepX, area.bottom+0.35+li*catLH, line, {sizePt:9,weight:catHi?'extrabold':'medium',fillTok:RN.black,align:'center'}));
   });
 
   // fila de grupo/período (ej. años): línea negra bajo cada segmento + línea divisoria entre grupos
@@ -1506,6 +1561,7 @@ function drawDonut(ctx, area, rows, sufijo, theme, colorOverrides, destacar){
   if(total<=0) return;
   const maxSingle = Math.max(...rows.map(r=>r.vals[0]));
   const minSingle = Math.min(...rows.map(r=>r.vals[0]));
+  const destacarCatSel = destacarCat(destacar);
   const h = area.bottom-area.top;
   const cx = area.left + area.width/2;
   const cy = area.top + h/2;
@@ -1556,18 +1612,20 @@ function drawDonut(ctx, area, rows, sufijo, theme, colorOverrides, destacar){
   let angle = -Math.PI/2;
   const steps = 28;
   const mids = [];
+  const hiFlags = [];
   rows.forEach((r,i)=>{
     const frac = r.vals[0]/total;
     const a0 = angle, a1 = angle + frac*Math.PI*2;
     const pts = [];
     for(let s=0;s<=steps;s++){ const a=a0+(a1-a0)*(s/steps); pts.push([cx+Math.cos(a)*rOuter, cy+Math.sin(a)*rOuter]); }
     for(let s=steps;s>=0;s--){ const a=a0+(a1-a0)*(s/steps); pts.push([cx+Math.cos(a)*rInner, cy+Math.sin(a)*rInner]); }
-    const isHi = (destacar==='max' && r.vals[0]===maxSingle) || (destacar==='min' && r.vals[0]===minSingle);
+    const isHi = (destacar==='max' && r.vals[0]===maxSingle) || (destacar==='min' && r.vals[0]===minSingle) || (destacarCatSel!==null && r.cat===destacarCatSel);
     const tok = colorOverrides[r.cat] || (isHi ? theme.barDark : seriesColorCmyk(i, rows.length, theme));
     ctx.group('bar-group', ()=>{
       ctx.polygon(pts, tok, RN.white, 1.5*PT2CM, 'bar-el');
     });
     mids.push((a0+a1)/2);
+    hiFlags.push(isHi);
     angle = a1;
   });
 
@@ -1578,11 +1636,12 @@ function drawDonut(ctx, area, rows, sufijo, theme, colorOverrides, destacar){
     const p0 = [cx+Math.cos(a)*(rOuter-0.05), cy+Math.sin(a)*(rOuter-0.05)];
     const p1 = [cx+Math.cos(a)*(rOuter+0.20), cy+Math.sin(a)*(rOuter+0.20)];
     const nameLines = nameLinesArr[i];
+    const isHi = hiFlags[i];
     // el ancla "y" queda entre el nombre (que crece hacia arriba si tiene más de una línea) y el
     // porcentaje (que siempre queda abajo) — las dos extensiones no son simétricas, hay que medirlas por separado
     const above = (nameLines.length-1)*nameLH + nameSize*PT2CM + 0.08;
     const below = pctSize*PT2CM + 0.10;
-    return { r, dir, align: isLeft?'right':'left', p0, p1, y: p1[1], nameLines, above, below };
+    return { r, dir, align: isLeft?'right':'left', p0, p1, y: p1[1], nameLines, above, below, isHi };
   });
 
   ['left','right'].forEach(side=>{
@@ -1602,14 +1661,14 @@ function drawDonut(ctx, area, rows, sufijo, theme, colorOverrides, destacar){
   });
 
   labelData.forEach(l=>{
-    const { dir, align, p0, p1, y, nameLines } = l;
+    const { dir, align, p0, p1, y, nameLines, isHi } = l;
     const p2 = [p1[0] + dir*armLen, y];
     const bend = [p1[0], y];
     ctx.polyline([p0, p1, bend, p2], RN.grayK70, 1*PT2CM);
     const pct = l.r.vals[0]/total*100;
     const tx = p2[0] + dir*0.08;
     const nameTop = y - 0.04 - (nameLines.length-1)*nameLH;
-    nameLines.forEach((line,li)=> ctx.text(tx, nameTop+li*nameLH, line, {sizePt:nameSize, weight:'normal', fillTok:RN.black, align}));
+    nameLines.forEach((line,li)=> ctx.text(tx, nameTop+li*nameLH, line, {sizePt:nameSize, weight:isHi?'extrabold':'normal', fillTok:RN.black, align}));
     ctx.text(tx, y+pctSize*PT2CM*0.95, formatAR(pct)+'%'+(sufijo?(' '+sufijo):''), {sizePt:pctSize, weight:'extrabold', fillTok:RN.black, align});
   });
 }
@@ -1687,10 +1746,9 @@ function drawChart(ctx, model){
   const hasGroup = rows.some(r=>r.group!==undefined);
   if(hasGroup && (resolvedType==='verticales' || resolvedType==='lineas')) bottomReserve += 0.055;
   const chartBottom = H - bottomReserve;
-  const marginX = MARGIN + (debugSideMargin||0);
-  const area = {left:marginX, top:chartTop+(debugChartVPad||0), bottom:chartBottom-(debugChartVPad||0), width:W-marginX*2};
+  const area = {left:MARGIN, top:chartTop+(debugChartTopPad||0), bottom:chartBottom-(debugChartBottomPad||0), width:W-MARGIN*2};
   if(rows.length){
-    if(resolvedType==='horizontales') drawHorizontalBars(ctx, area, rows, headers, numSeries, sufijo, theme, colorOverrides);
+    if(resolvedType==='horizontales') drawHorizontalBars(ctx, area, rows, headers, numSeries, sufijo, theme, colorOverrides, destacar);
     else if(resolvedType==='lineas') drawLines(ctx, area, rows, headers, numSeries, sufijo, theme, colorOverrides, destacar);
     else if(resolvedType==='dona') drawDonut(ctx, area, rows, sufijo, theme, colorOverrides, destacar);
     else drawVerticalBars(ctx, area, rows, headers, numSeries, destacar, sufijo, theme, colorOverrides);
@@ -1714,8 +1772,9 @@ let selectedId = null;
 let debugBarWidthRatio = null; // DEBUG: override manual del ancho/grosor de barras (null = usar el valor por defecto)
 let debugBarGapInner = null; // DEBUG: override manual del espacio entre barras de una misma categoría (null = usar el valor por defecto)
 let debugAxisMax = null; // DEBUG: fuerza el máximo del eje de valores (null = automático, según los datos)
-let debugChartVPad = 0; // EXPERIMENTAL: aire extra arriba/abajo del área de trazado, en cm (0 = comportamiento original)
-let debugSideMargin = 0; // EXPERIMENTAL: margen lateral extra a los costados del gráfico, en cm (0 = comportamiento original)
+let debugChartTopPad = 0; // EXPERIMENTAL: aire extra arriba del área de trazado, en cm (0 = comportamiento original)
+let debugChartBottomPad = 0; // EXPERIMENTAL: aire extra abajo del área de trazado, en cm (0 = comportamiento original)
+let debugSideMargin = 0; // EXPERIMENTAL: separa las barras/líneas de los bordes laterales sin mover la escala, la línea base ni la leyenda "REFERENCIA" (0 = comportamiento original)
 let chartSeq = 0;
 
 function getSelected(){ return boards.find(b=>b.id===selectedId) || null; }
@@ -1823,7 +1882,6 @@ function loadModelIntoPanel(model){
   $('datos').value = model.datos;
   $('seriesNames').value = model.seriesNames;
   $('sufijo').value = model.sufijo;
-  $('destacar').value = model.destacar;
   $('columnas').value = model.columnas;
   $('altoCm').value = model.altoCm;
   $('tipoGrafico').value = model.tipoGrafico;
@@ -1833,6 +1891,7 @@ function loadModelIntoPanel(model){
     b.classList.toggle('active', b.dataset.value===model.tipoGrafico);
   });
   renderColorOverridesUI();
+  renderDestacarOptions();
 }
 
 // ---------- selector visual de color puntual por categoría/serie ----------
@@ -1975,6 +2034,30 @@ function renderColorOverridesUI(){
     row.appendChild(trigger);
     container.appendChild(row);
   });
+}
+
+// ---------- opciones dinámicas del select "Destacar" (Ninguno/Máximo/Mínimo + una por categoría) ----------
+function renderDestacarOptions(){
+  const sel = getSelected();
+  const select = $('destacar');
+  if(!sel) return;
+  const { rows } = computeChartData(sel.model);
+  select.innerHTML = '';
+  [['ninguno','Ninguno'],['max','Máximo'],['min','Mínimo']].forEach(([v,l])=>{
+    const opt = document.createElement('option');
+    opt.value = v; opt.textContent = l;
+    select.appendChild(opt);
+  });
+  rows.forEach(r=>{
+    const opt = document.createElement('option');
+    opt.value = 'cat:'+r.cat;
+    opt.textContent = r.cat;
+    select.appendChild(opt);
+  });
+  const values = Array.from(select.options).map(o=>o.value);
+  const modelVal = sel.model.destacar || 'ninguno';
+  select.value = values.includes(modelVal) ? modelVal : 'ninguno';
+  sel.model.destacar = select.value;
 }
 document.addEventListener('click', closeColorPopover);
 document.addEventListener('scroll', closeColorPopover, true);
@@ -2175,6 +2258,7 @@ async function handleFileUpload(e){
     $('datos').value = tsv;
     renderChartCard(sel);
     renderColorOverridesUI();
+    renderDestacarOptions();
     mostrarToast('✓ Archivo importado — '+rows.length+' filas');
   }catch(err){
     mostrarToast('⚠ No se pudo leer el archivo: '+err.message);
@@ -2249,6 +2333,7 @@ document.querySelectorAll('#chartTypePicker .ctp-btn').forEach(btn=>{
     sel.model[id] = $(id).value;
     renderChartCard(sel);
     if(id==='datos' || id==='seriesNames' || id==='tema') renderColorOverridesUI();
+    if(id==='datos') renderDestacarOptions();
   };
   $(id).addEventListener('input', onChange);
   $(id).addEventListener('change', onChange);
@@ -2312,17 +2397,30 @@ $('usaGrupo').addEventListener('change', ()=>{
     if(sel) renderChartCard(sel);
   });
 
-  const dbvSlider = $('dbvSlider'), dbvVal = $('dbvVal'), dbvReset = $('dbvReset');
-  const applyDbv = pad=>{
-    debugChartVPad = pad;
-    dbvVal.textContent = pad.toFixed(2);
+  const dbvtSlider = $('dbvtSlider'), dbvtVal = $('dbvtVal'), dbvtReset = $('dbvtReset');
+  const applyDbvt = pad=>{
+    debugChartTopPad = pad;
+    dbvtVal.textContent = pad.toFixed(2);
     const sel = getSelected();
     if(sel) renderChartCard(sel);
   };
-  dbvSlider.addEventListener('input', ()=> applyDbv(parseFloat(dbvSlider.value)));
-  dbvReset.addEventListener('click', ()=>{
-    dbvSlider.value = 0;
-    applyDbv(0);
+  dbvtSlider.addEventListener('input', ()=> applyDbvt(parseFloat(dbvtSlider.value)));
+  dbvtReset.addEventListener('click', ()=>{
+    dbvtSlider.value = 0;
+    applyDbvt(0);
+  });
+
+  const dbvbSlider = $('dbvbSlider'), dbvbVal = $('dbvbVal'), dbvbReset = $('dbvbReset');
+  const applyDbvb = pad=>{
+    debugChartBottomPad = pad;
+    dbvbVal.textContent = pad.toFixed(2);
+    const sel = getSelected();
+    if(sel) renderChartCard(sel);
+  };
+  dbvbSlider.addEventListener('input', ()=> applyDbvb(parseFloat(dbvbSlider.value)));
+  dbvbReset.addEventListener('click', ()=>{
+    dbvbSlider.value = 0;
+    applyDbvb(0);
   });
 
   const dbmSlider = $('dbmSlider'), dbmVal = $('dbmVal'), dbmReset = $('dbmReset');
@@ -2342,11 +2440,24 @@ $('usaGrupo').addEventListener('change', ()=>{
 document.getElementById('panel-toggle').addEventListener('click', () => {
   document.getElementById('panel').classList.toggle('collapsed');
 });
+document.getElementById('debugWindowToggle').addEventListener('click', () => {
+  document.getElementById('debugWindow').classList.toggle('collapsed');
+});
 ['formato','contenido','datos','estilo','colores'].forEach(name=>{
   document.getElementById(name+'-toggle').addEventListener('click', () => {
     const section = document.getElementById(name+'-section');
     const wasCollapsed = section.classList.contains('collapsed');
     ['formato','contenido','datos','estilo','colores'].forEach(n=>{
+      document.getElementById(n+'-section').classList.add('collapsed');
+    });
+    if(wasCollapsed) section.classList.remove('collapsed');
+  });
+});
+['dbgEjemplos','dbgEscala','dbgEstilo'].forEach(name=>{
+  document.getElementById(name+'-toggle').addEventListener('click', () => {
+    const section = document.getElementById(name+'-section');
+    const wasCollapsed = section.classList.contains('collapsed');
+    ['dbgEjemplos','dbgEscala','dbgEstilo'].forEach(n=>{
       document.getElementById(n+'-section').classList.add('collapsed');
     });
     if(wasCollapsed) section.classList.remove('collapsed');
@@ -2364,7 +2475,6 @@ if(document.fonts && document.fonts.ready){ document.fonts.ready.then(renderSele
   const positionDebugWindow = ()=>{
     const top = panel.offsetTop + panel.offsetHeight + GAP;
     dbg.style.top = top + 'px';
-    dbg.style.maxHeight = `calc(100vh - ${top}px - ${GAP}px)`;
   };
   if(window.ResizeObserver) new ResizeObserver(positionDebugWindow).observe(panel);
   window.addEventListener('resize', positionDebugWindow);
