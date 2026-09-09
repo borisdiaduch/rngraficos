@@ -279,14 +279,21 @@
   }
   .debug-window .dbg-header{
     display:flex; align-items:center; gap:8px;
-    padding: 12px 16px; border-bottom: 1px solid var(--panel-border);
+    padding: 12px 16px; cursor:pointer; user-select:none;
   }
+  .debug-window:not(.collapsed) .dbg-header{ border-bottom: 1px solid var(--panel-border); }
   .debug-window .dbg-badge{
     font-weight:700; letter-spacing:.05em; text-transform:uppercase; font-size:9.5px;
     color:#8a5a1f; background:#f6e9d4; border:1px solid #ecd8b3;
     border-radius:20px; padding:2.5px 8px; flex:none;
   }
-  .debug-window .dbg-headline{ font-size: 12px; color: var(--text); font-weight:500; }
+  .debug-window .dbg-headline{ font-size: 12px; color: var(--text); font-weight:500; flex:1; }
+  .debug-window .dbg-chevron{
+    width:16px; height:16px; flex:none; color:var(--muted);
+    transition: transform 0.15s ease;
+  }
+  .debug-window.collapsed .dbg-chevron{ transform: rotate(-90deg); }
+  .debug-window.collapsed .dbg-body{ display:none; }
   .debug-window .dbg-body{ padding: 14px 16px 16px; display:flex; flex-direction:column; gap:12px; }
   .debug-window .field{ margin-bottom:0; }
   .debug-window .dbw-title{ font-weight:600; letter-spacing:.02em; color:var(--muted); font-size:10.5px; }
@@ -295,12 +302,15 @@
     flex:1; accent-color: var(--accent); height:4px; cursor:pointer;
   }
   .debug-window .dbw-val{ font-variant-numeric:tabular-nums; width:36px; text-align:right; color:var(--text); }
-  .debug-window button{
-    font-size:10.5px; border:1px solid var(--panel-border); background:var(--bg);
-    color:var(--text); border-radius:6px; padding:4px 9px; cursor:pointer;
+  .debug-window .icon-btn{
+    width:26px; height:26px; padding:0; flex:none;
+    display:flex; align-items:center; justify-content:center;
+    border:1px solid var(--panel-border); background:var(--bg);
+    color:var(--text); border-radius:6px; cursor:pointer;
     transition: background .15s ease, border-color .15s ease;
   }
-  .debug-window button:hover{ background:#ececea; border-color:#b7b2a4; }
+  .debug-window .icon-btn:hover{ background:#ececea; border-color:#b7b2a4; }
+  .debug-window .icon-btn svg{ width:14px; height:14px; }
 </style>
 </head>
 <body>
@@ -310,10 +320,13 @@
 </div>
 <div class="global-toast" id="globalToast"></div>
 
-<div class="debug-window" id="debugWindow">
-  <div class="dbg-header">
+<div class="debug-window collapsed" id="debugWindow">
+  <div class="dbg-header" id="debugWindowToggle">
     <span class="dbg-badge">Experimental</span>
     <span class="dbg-headline">Ajustes experimentales del gráfico</span>
+    <svg class="dbg-chevron" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="2">
+      <path d="M5 7l5 5 5-5" stroke-linecap="round" stroke-linejoin="round"/>
+    </svg>
   </div>
   <div class="dbg-body">
     <div class="field">
@@ -332,7 +345,7 @@
       <div class="dbw-title">Máximo del eje Y</div>
       <div class="dbw-row">
         <input type="number" id="dbaMax" placeholder="Automático">
-        <button type="button" id="dbaReset" title="Volver al máximo automático">Reset</button>
+        <button type="button" class="icon-btn" id="dbaReset" title="Volver al máximo automático" aria-label="Restablecer"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12a9 9 0 1 1-3-6.7"/><polyline points="21 3 21 9 15 9"/></svg></button>
       </div>
     </div>
     <hr>
@@ -341,7 +354,7 @@
       <div class="dbw-row">
         <input type="range" id="dbwSlider" min="0.1" max="1" step="0.01" value="0.82">
         <span class="dbw-val" id="dbwVal">0.82</span>
-        <button type="button" id="dbwReset" title="Volver al ancho por defecto">Reset</button>
+        <button type="button" class="icon-btn" id="dbwReset" title="Volver al ancho por defecto" aria-label="Restablecer"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12a9 9 0 1 1-3-6.7"/><polyline points="21 3 21 9 15 9"/></svg></button>
       </div>
     </div>
     <div class="field" style="gap:8px;">
@@ -349,16 +362,24 @@
       <div class="dbw-row">
         <input type="range" id="dbgSlider" min="0" max="0.6" step="0.01" value="0.05">
         <span class="dbw-val" id="dbgVal">0.05</span>
-        <button type="button" id="dbgReset" title="Volver al espacio por defecto">Reset</button>
+        <button type="button" class="icon-btn" id="dbgReset" title="Volver al espacio por defecto" aria-label="Restablecer"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12a9 9 0 1 1-3-6.7"/><polyline points="21 3 21 9 15 9"/></svg></button>
       </div>
     </div>
     <hr>
     <div class="field" style="gap:8px;">
-      <div class="dbw-title">Altura del gráfico (aire arriba/abajo)</div>
+      <div class="dbw-title">Altura del gráfico — aire arriba</div>
       <div class="dbw-row">
-        <input type="range" id="dbvSlider" min="0" max="1.5" step="0.05" value="0">
-        <span class="dbw-val" id="dbvVal">0.00</span>
-        <button type="button" id="dbvReset" title="Volver al aire por defecto">Reset</button>
+        <input type="range" id="dbvtSlider" min="0" max="1.5" step="0.05" value="0">
+        <span class="dbw-val" id="dbvtVal">0.00</span>
+        <button type="button" class="icon-btn" id="dbvtReset" title="Volver al aire por defecto" aria-label="Restablecer"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12a9 9 0 1 1-3-6.7"/><polyline points="21 3 21 9 15 9"/></svg></button>
+      </div>
+    </div>
+    <div class="field" style="gap:8px;">
+      <div class="dbw-title">Altura del gráfico — aire abajo</div>
+      <div class="dbw-row">
+        <input type="range" id="dbvbSlider" min="0" max="1.5" step="0.05" value="0">
+        <span class="dbw-val" id="dbvbVal">0.00</span>
+        <button type="button" class="icon-btn" id="dbvbReset" title="Volver al aire por defecto" aria-label="Restablecer"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12a9 9 0 1 1-3-6.7"/><polyline points="21 3 21 9 15 9"/></svg></button>
       </div>
     </div>
     <div class="field" style="gap:8px;">
@@ -366,7 +387,7 @@
       <div class="dbw-row">
         <input type="range" id="dbmSlider" min="0" max="1.5" step="0.05" value="0">
         <span class="dbw-val" id="dbmVal">0.00</span>
-        <button type="button" id="dbmReset" title="Volver al margen por defecto">Reset</button>
+        <button type="button" class="icon-btn" id="dbmReset" title="Volver al margen por defecto" aria-label="Restablecer"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12a9 9 0 1 1-3-6.7"/><polyline points="21 3 21 9 15 9"/></svg></button>
       </div>
     </div>
   </div>
@@ -1236,8 +1257,10 @@ function drawVerticalBars(ctx, area, rows, headers, numSeries, destacar, sufijo,
   const axisLabels = ticks.map(t=> formatAR(t));
   const axisColW = Math.max(...axisLabels.map(l=> ctx.measure(l, axisSize, 'medium'))) + 0.18;
 
-  const barsLeft = area.left + axisColW;
-  const barsWidth = area.width - axisColW;
+  const axisLeft = area.left + axisColW; // referencia fija de la escala/línea base: no se mueve con el margen lateral
+  const sideInset = debugSideMargin||0;
+  const barsLeft = axisLeft + sideInset;
+  const barsWidth = area.width - axisColW - sideInset*2;
   const groupGap = 0.26, barGapInner = debugBarGapInner!=null ? debugBarGapInner : (numSeries>1?0.05:0);
   const groupW = (barsWidth - groupGap*(n-1))/n;
   const barWidthRatio = debugBarWidthRatio!=null ? debugBarWidthRatio : (numSeries>1 ? 0.82 : 0.52); // barras más angostas dentro de su carril, con más aire alrededor
@@ -1259,8 +1282,8 @@ function drawVerticalBars(ctx, area, rows, headers, numSeries, destacar, sufijo,
   ticks.forEach(t=>{
     if(Math.abs(t)<1e-9) return;
     const y = drawableBottom - ((t-axisMin)/axisRange)*drawableH;
-    ctx.line(barsLeft, y, area.left+area.width, y, 0.5*PT2CM, RN.axisGrid);
-    ctx.text(barsLeft-0.10, y+axisSize*PT2CM*0.32, formatAR(t), {sizePt:axisSize, weight:'medium', fillTok:RN.black, align:'right'});
+    ctx.line(axisLeft, y, area.left+area.width, y, 0.5*PT2CM, RN.axisGrid);
+    ctx.text(axisLeft-0.10, y+axisSize*PT2CM*0.32, formatAR(t), {sizePt:axisSize, weight:'medium', fillTok:RN.black, align:'right'});
   });
 
   const catLinesArr = [];
@@ -1303,8 +1326,8 @@ function drawVerticalBars(ctx, area, rows, headers, numSeries, destacar, sufijo,
   // el cero se dibuja al final, por encima de las barras
   const zeroTick = ticks.find(t=>Math.abs(t)<1e-9);
   if(zeroTick!==undefined){
-    ctx.line(barsLeft, zeroY, area.left+area.width, zeroY, 0.75*PT2CM, RN.black);
-    ctx.text(barsLeft-0.10, zeroY+axisSize*PT2CM*0.32, formatAR(zeroTick), {sizePt:axisSize, weight:'medium', fillTok:RN.black, align:'right'});
+    ctx.line(axisLeft, zeroY, area.left+area.width, zeroY, 0.75*PT2CM, RN.black);
+    ctx.text(axisLeft-0.10, zeroY+axisSize*PT2CM*0.32, formatAR(zeroTick), {sizePt:axisSize, weight:'medium', fillTok:RN.black, align:'right'});
   }
 
   // fila de grupo/período (ej. años): línea negra bajo cada segmento + línea divisoria entre grupos
@@ -1434,9 +1457,11 @@ function drawLines(ctx, area, rows, headers, numSeries, sufijo, theme, colorOver
   const axisLabels = ticks.map(t=> formatAR(t));
   const axisColW = Math.max(...axisLabels.map(l=> ctx.measure(l, axisSize, 'medium'))) + 0.18;
 
+  const axisLeft = area.left + axisColW; // referencia fija de la escala/línea base: no se mueve con el margen lateral
+  const sideInset = debugSideMargin||0;
   const inset = 0.30; // para que las etiquetas de los puntos extremos no se salgan del área
-  const plotLeft = area.left + axisColW + inset;
-  const plotWidth = area.width - axisColW - inset*2;
+  const plotLeft = axisLeft + inset + sideInset;
+  const plotWidth = area.width - axisColW - inset*2 - sideInset*2;
   const stepX = plotWidth/(n-1);
   const usableH = area.bottom - top - 0.30;
   const scaleY = v => area.bottom - ((v-minVal)/((maxVal-minVal)||1))*usableH;
@@ -1445,11 +1470,11 @@ function drawLines(ctx, area, rows, headers, numSeries, sufijo, theme, colorOver
   ticks.forEach(t=>{
     const y = scaleY(t);
     const isZero = Math.abs(t)<1e-9;
-    ctx.line(area.left+axisColW, y, area.left+area.width, y, isZero?0.75*PT2CM:0.5*PT2CM, isZero?RN.black:RN.axisGrid);
-    ctx.text(area.left+axisColW-0.10, y+axisSize*PT2CM*0.32, formatAR(t), {sizePt:axisSize, weight:'medium', fillTok:RN.black, align:'right'});
+    ctx.line(axisLeft, y, area.left+area.width, y, isZero?0.75*PT2CM:0.5*PT2CM, isZero?RN.black:RN.axisGrid);
+    ctx.text(axisLeft-0.10, y+axisSize*PT2CM*0.32, formatAR(t), {sizePt:axisSize, weight:'medium', fillTok:RN.black, align:'right'});
   });
   if(sufijo){
-    ctx.text(area.left+axisColW-0.10, scaleY(maxVal)-0.16, sufijo, {sizePt:axisSize, weight:'medium', fillTok:RN.black, align:'right'});
+    ctx.text(axisLeft-0.10, scaleY(maxVal)-0.16, sufijo, {sizePt:axisSize, weight:'medium', fillTok:RN.black, align:'right'});
   }
 
   for(let si=0; si<numSeries; si++){
@@ -1687,8 +1712,7 @@ function drawChart(ctx, model){
   const hasGroup = rows.some(r=>r.group!==undefined);
   if(hasGroup && (resolvedType==='verticales' || resolvedType==='lineas')) bottomReserve += 0.055;
   const chartBottom = H - bottomReserve;
-  const marginX = MARGIN + (debugSideMargin||0);
-  const area = {left:marginX, top:chartTop+(debugChartVPad||0), bottom:chartBottom-(debugChartVPad||0), width:W-marginX*2};
+  const area = {left:MARGIN, top:chartTop+(debugChartTopPad||0), bottom:chartBottom-(debugChartBottomPad||0), width:W-MARGIN*2};
   if(rows.length){
     if(resolvedType==='horizontales') drawHorizontalBars(ctx, area, rows, headers, numSeries, sufijo, theme, colorOverrides);
     else if(resolvedType==='lineas') drawLines(ctx, area, rows, headers, numSeries, sufijo, theme, colorOverrides, destacar);
@@ -1714,8 +1738,9 @@ let selectedId = null;
 let debugBarWidthRatio = null; // DEBUG: override manual del ancho/grosor de barras (null = usar el valor por defecto)
 let debugBarGapInner = null; // DEBUG: override manual del espacio entre barras de una misma categoría (null = usar el valor por defecto)
 let debugAxisMax = null; // DEBUG: fuerza el máximo del eje de valores (null = automático, según los datos)
-let debugChartVPad = 0; // EXPERIMENTAL: aire extra arriba/abajo del área de trazado, en cm (0 = comportamiento original)
-let debugSideMargin = 0; // EXPERIMENTAL: margen lateral extra a los costados del gráfico, en cm (0 = comportamiento original)
+let debugChartTopPad = 0; // EXPERIMENTAL: aire extra arriba del área de trazado, en cm (0 = comportamiento original)
+let debugChartBottomPad = 0; // EXPERIMENTAL: aire extra abajo del área de trazado, en cm (0 = comportamiento original)
+let debugSideMargin = 0; // EXPERIMENTAL: separa las barras/líneas de los bordes laterales sin mover la escala, la línea base ni la leyenda "REFERENCIA" (0 = comportamiento original)
 let chartSeq = 0;
 
 function getSelected(){ return boards.find(b=>b.id===selectedId) || null; }
@@ -2312,17 +2337,30 @@ $('usaGrupo').addEventListener('change', ()=>{
     if(sel) renderChartCard(sel);
   });
 
-  const dbvSlider = $('dbvSlider'), dbvVal = $('dbvVal'), dbvReset = $('dbvReset');
-  const applyDbv = pad=>{
-    debugChartVPad = pad;
-    dbvVal.textContent = pad.toFixed(2);
+  const dbvtSlider = $('dbvtSlider'), dbvtVal = $('dbvtVal'), dbvtReset = $('dbvtReset');
+  const applyDbvt = pad=>{
+    debugChartTopPad = pad;
+    dbvtVal.textContent = pad.toFixed(2);
     const sel = getSelected();
     if(sel) renderChartCard(sel);
   };
-  dbvSlider.addEventListener('input', ()=> applyDbv(parseFloat(dbvSlider.value)));
-  dbvReset.addEventListener('click', ()=>{
-    dbvSlider.value = 0;
-    applyDbv(0);
+  dbvtSlider.addEventListener('input', ()=> applyDbvt(parseFloat(dbvtSlider.value)));
+  dbvtReset.addEventListener('click', ()=>{
+    dbvtSlider.value = 0;
+    applyDbvt(0);
+  });
+
+  const dbvbSlider = $('dbvbSlider'), dbvbVal = $('dbvbVal'), dbvbReset = $('dbvbReset');
+  const applyDbvb = pad=>{
+    debugChartBottomPad = pad;
+    dbvbVal.textContent = pad.toFixed(2);
+    const sel = getSelected();
+    if(sel) renderChartCard(sel);
+  };
+  dbvbSlider.addEventListener('input', ()=> applyDbvb(parseFloat(dbvbSlider.value)));
+  dbvbReset.addEventListener('click', ()=>{
+    dbvbSlider.value = 0;
+    applyDbvb(0);
   });
 
   const dbmSlider = $('dbmSlider'), dbmVal = $('dbmVal'), dbmReset = $('dbmReset');
@@ -2341,6 +2379,9 @@ $('usaGrupo').addEventListener('change', ()=>{
 
 document.getElementById('panel-toggle').addEventListener('click', () => {
   document.getElementById('panel').classList.toggle('collapsed');
+});
+document.getElementById('debugWindowToggle').addEventListener('click', () => {
+  document.getElementById('debugWindow').classList.toggle('collapsed');
 });
 ['formato','contenido','datos','estilo','colores'].forEach(name=>{
   document.getElementById(name+'-toggle').addEventListener('click', () => {
