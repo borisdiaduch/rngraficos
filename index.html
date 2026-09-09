@@ -1000,11 +1000,13 @@ function makePdfCtx(doc){
       if(doc.setLineDashPattern) doc.setLineDashPattern([], 0);
     },
     circleMark(cx,cy,r,tok){ doc.setFillColor(frac(tok.c),frac(tok.m),frac(tok.y),frac(tok.k)); doc.circle(cx,cy,r,'F'); },
-    text(x,y,str,{sizePt,weight,fillTok,align,italic}){
-      // sin variante itálica real de Chivo embebida: para "italic" se usa Helvetica-Oblique
-      // (fuente estándar de jsPDF, siempre disponible) como mejor aproximación segura en el PDF
-      if(italic){ doc.setFont('helvetica','italic'); doc.setFontSize(sizePt); }
-      else applyFont(weight,sizePt);
+    text(x,y,str,{sizePt,weight,fillTok,align}){
+      // "italic" no se usa acá a propósito: no hay una variante itálica real de Chivo
+      // embebida, y una fuente estándar de PDF (Helvetica, etc.) no viaja embebida en el
+      // archivo — herramientas de diagramación como Milenium Designer lo rechazan por eso
+      // ("the PDF file does not contain all the fonts embedded"). Se usa siempre Chivo
+      // (la misma fuente embebida que el resto del gráfico), en vertical.
+      applyFont(weight,sizePt);
       doc.setTextColor(frac(fillTok.c),frac(fillTok.m),frac(fillTok.y),frac(fillTok.k));
       const opts={}; if(align==='center') opts.align='center'; else if(align==='right') opts.align='right';
       doc.text(str,x,y,opts);
