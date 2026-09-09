@@ -411,6 +411,20 @@
         </div>
       </div>
     </div>
+    <div class="subsection collapsed" id="dbgEpigrafe-section">
+      <div class="subsection-header" id="dbgEpigrafe-toggle">
+        <span>Epígrafe</span>
+        <svg class="chevron" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="2">
+          <path d="M5 7l5 5 5-5" stroke-linecap="round" stroke-linejoin="round"/>
+        </svg>
+      </div>
+      <div class="subsection-body">
+        <div class="field" style="gap:8px;">
+          <div class="dbw-title">Nota debajo del gráfico</div>
+          <textarea id="epigrafe" rows="2" placeholder="Ej: En 2020 no se hicieron pagos"></textarea>
+        </div>
+      </div>
+    </div>
   </div>
 </div>
 
@@ -1716,11 +1730,11 @@ function makeDefaultModel(){
     datos:'Bariloche; 2372; 2571\nNeuquén; 1121; 1365\nChapelco; 316; 349\nViedma; 34; 35',
     seriesNames:'2024, 2025',
     sufijo:'', destacar:'ninguno', columnas:'2', altoCm:'10', tipoGrafico:'verticales',
-    tema:'diario', colorOverrides:{}, usaGrupo:false
+    tema:'diario', colorOverrides:{}, usaGrupo:false, epigrafe:''
   };
 }
 function makeEmptyModel(){
-  return { titulo:'', bajada:'', fuente:'', datos:'', seriesNames:'', sufijo:'', destacar:'ninguno', columnas:'2', altoCm:'10', tipoGrafico:'verticales', tema:'diario', colorOverrides:{}, usaGrupo:false };
+  return { titulo:'', bajada:'', fuente:'', datos:'', seriesNames:'', sufijo:'', destacar:'ninguno', columnas:'2', altoCm:'10', tipoGrafico:'verticales', tema:'diario', colorOverrides:{}, usaGrupo:false, epigrafe:'' };
 }
 
 function computeChartData(model){
@@ -1738,13 +1752,21 @@ function computeChartData(model){
 }
 
 function drawChart(ctx, model){
-  const {titulo, bajada, fuente, sufijo, destacar, rows, numSeries, headers, W, H, resolvedType, theme, colorOverrides} = model;
+  const {titulo, bajada, fuente, sufijo, destacar, rows, numSeries, headers, W, H, resolvedType, theme, colorOverrides, epigrafe} = model;
   const chartTop = drawHeader(ctx, W, titulo, bajada, theme);
   const footerL = footerLayout(ctx, W, fuente);
   let bottomReserve = {horizontales:0.75, dona:0.60}[resolvedType] || 1.55;
   bottomReserve = Math.max(bottomReserve, footerL.reserve + 0.10);
   const hasGroup = rows.some(r=>r.group!==undefined);
   if(hasGroup && (resolvedType==='verticales' || resolvedType==='lineas')) bottomReserve += 0.055;
+
+  // ---- epígrafe (EXPERIMENTAL): nota libre entre los datos y el pie de la tarjeta ----
+  const epiTxt = epigrafe && epigrafe.trim();
+  const epiSize = 8;
+  const epiLH = epiSize*PT2CM*1.15;
+  const epiLines = epiTxt ? wrapNoCut(ctx, epiTxt, W-MARGIN*2, epiSize, 'normal') : [];
+  if(epiLines.length) bottomReserve += epiLines.length*epiLH + 0.18;
+
   const chartBottom = H - bottomReserve;
   const area = {left:MARGIN, top:chartTop+(debugChartTopPad||0), bottom:chartBottom-(debugChartBottomPad||0), width:W-MARGIN*2};
   if(rows.length){
@@ -1752,6 +1774,15 @@ function drawChart(ctx, model){
     else if(resolvedType==='lineas') drawLines(ctx, area, rows, headers, numSeries, sufijo, theme, colorOverrides, destacar);
     else if(resolvedType==='dona') drawDonut(ctx, area, rows, sufijo, theme, colorOverrides, destacar);
     else drawVerticalBars(ctx, area, rows, headers, numSeries, destacar, sufijo, theme, colorOverrides);
+  }
+  if(epiLines.length){
+    // se ancla desde el pie hacia arriba: así queda pegado arriba del pie sin pisar
+    // las etiquetas/fila de grupo que dibuja cada tipo de gráfico debajo de sus propios datos
+    const epiBaseline = H - footerL.reserve - 0.16;
+    epiLines.forEach((line,i)=>{
+      const y = epiBaseline - (epiLines.length-1-i)*epiLH;
+      ctx.text(MARGIN, y, line, {sizePt:epiSize, weight:'normal', fillTok:RN.grayK70, align:'left'});
+    });
   }
   drawFooter(ctx, W, H, fuente, footerL);
 }
@@ -1960,6 +1991,7 @@ function loadModelIntoPanel(model){
   $('datos').value = model.datos;
   $('seriesNames').value = model.seriesNames;
   $('sufijo').value = model.sufijo;
+  $('epigrafe').value = model.epigrafe || '';
   $('columnas').value = model.columnas;
   $('altoCm').value = model.altoCm;
   $('tipoGrafico').value = model.tipoGrafico;
@@ -2406,7 +2438,7 @@ document.querySelectorAll('#chartTypePicker .ctp-btn').forEach(btn=>{
     renderChartCard(sel);
   });
 });
-['titulo','bajada','datos','fuente','sufijo','destacar','columnas','altoCm','seriesNames','tema'].forEach(id=>{
+['titulo','bajada','datos','fuente','sufijo','destacar','columnas','altoCm','seriesNames','tema','epigrafe'].forEach(id=>{
   const onChange = ()=>{
     const sel = getSelected(); if(!sel) return;
     sel.model[id] = $(id).value;
@@ -2538,11 +2570,11 @@ document.getElementById('debugWindowToggle').addEventListener('click', () => {
     if(wasCollapsed) section.classList.remove('collapsed');
   });
 });
-['dbgEjemplos','dbgEscala','dbgEstilo'].forEach(name=>{
+['dbgEjemplos','dbgEscala','dbgEstilo','dbgEpigrafe'].forEach(name=>{
   document.getElementById(name+'-toggle').addEventListener('click', () => {
     const section = document.getElementById(name+'-section');
     const wasCollapsed = section.classList.contains('collapsed');
-    ['dbgEjemplos','dbgEscala','dbgEstilo'].forEach(n=>{
+    ['dbgEjemplos','dbgEscala','dbgEstilo','dbgEpigrafe'].forEach(n=>{
       document.getElementById(n+'-section').classList.add('collapsed');
     });
     if(wasCollapsed) section.classList.remove('collapsed');
