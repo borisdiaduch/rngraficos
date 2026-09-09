@@ -1777,6 +1777,51 @@ let debugChartBottomPad = 0; // EXPERIMENTAL: aire extra abajo del área de traz
 let debugSideMargin = 0; // EXPERIMENTAL: separa las barras/líneas de los bordes laterales sin mover la escala, la línea base ni la leyenda "REFERENCIA" (0 = comportamiento original)
 let chartSeq = 0;
 
+// ---------- persistencia local (localStorage): no perder el trabajo al recargar ----------
+const STORAGE_KEY = 'rngraficos.boards.v1';
+let saveTimer = null;
+function scheduleSave(){
+  clearTimeout(saveTimer);
+  saveTimer = setTimeout(saveBoardsToStorage, 300);
+}
+function saveBoardsToStorage(){
+  try{
+    const data = { v:1, chartSeq, selectedId, boards: boards.map(b=>({id:b.id, model:b.model})) };
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(data));
+  }catch(e){
+    // localStorage puede fallar (navegación privada, cuota llena, etc.) — no debe romper la app
+  }
+}
+function loadBoardsFromStorage(){
+  try{
+    const raw = localStorage.getItem(STORAGE_KEY);
+    if(!raw) return null;
+    const data = JSON.parse(raw);
+    if(!data || !Array.isArray(data.boards)) return null;
+    return data;
+  }catch(e){
+    return null;
+  }
+}
+// reconstruye las tarjetas guardadas; devuelve false si no había nada válido para restaurar
+function restoreBoardsFromStorage(){
+  const saved = loadBoardsFromStorage();
+  if(!saved) return false;
+  saved.boards.forEach(b=>{
+    if(!b || typeof b.id!=='string' || !b.model || typeof b.model!=='object') return;
+    const el = createChartCardEl(b.id);
+    $('board').insertBefore(el, $('btnAddChart') || null);
+    const chart = {id:b.id, model:{...makeEmptyModel(), ...b.model}, el};
+    boards.push(chart);
+    renderChartCard(chart);
+  });
+  if(!boards.length) return false;
+  chartSeq = typeof saved.chartSeq==='number' ? saved.chartSeq : boards.length;
+  const toSelect = (saved.selectedId && boards.some(b=>b.id===saved.selectedId)) ? saved.selectedId : boards[0].id;
+  selectChart(toSelect);
+  return true;
+}
+
 function getSelected(){ return boards.find(b=>b.id===selectedId) || null; }
 
 let draggedEl = null;
@@ -1839,6 +1884,7 @@ function createAddTile(){
 function syncBoardsOrderFromDom(){
   const order = [...$('board').querySelectorAll('.chart-card')].map(el=>el.dataset.id);
   boards.sort((a,b)=> order.indexOf(a.id) - order.indexOf(b.id));
+  scheduleSave();
 }
 
 function addChart(useDefault){
@@ -1851,6 +1897,7 @@ function addChart(useDefault){
   renderChartCard(chart);
   selectChart(id);
   el.scrollIntoView({behavior:'smooth', inline:'center', block:'nearest'});
+  scheduleSave();
   return chart;
 }
 
@@ -1863,6 +1910,7 @@ function removeChart(id){
     if(boards.length) selectChart(boards[boards.length-1].id);
     else { selectedId=null; addChart(true); }
   }
+  scheduleSave();
 }
 
 function selectChart(id){
@@ -1873,6 +1921,7 @@ function selectChart(id){
   updateLabels();
   const sel = getSelected();
   if(sel) loadModelIntoPanel(sel.model);
+  scheduleSave();
 }
 
 function loadModelIntoPanel(model){
@@ -2083,6 +2132,7 @@ function renderChartCard(chart){
   drawChart(ctx, data);
 
   updateLabels();
+  scheduleSave();
 }
 
 function updateLabels(){
@@ -2471,7 +2521,7 @@ document.getElementById('debugWindowToggle').addEventListener('click', () => {
 });
 
 $('board').appendChild(createAddTile());
-addChart(true);
+if(!restoreBoardsFromStorage()) addChart(true);
 if(document.fonts && document.fonts.ready){ document.fonts.ready.then(renderSelected); }
 
 // ---------- posicionar la ventana Debug justo debajo del panel principal ----------
