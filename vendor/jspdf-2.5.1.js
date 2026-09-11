@@ -1,14 +1,29 @@
 /*
- * PARCHE LOCAL (rngraficos): jsPDF 2.5.1 calcula mal el checksum interno de la tabla
- * "head" al subsetear una fuente TrueType embebida (HeadTable.prototype.encode graba
- * el checkSumAdjustment viejo de la fuente original en vez de 0 antes de calcular los
- * checksums). Eso deja el archivo de fuente embebido con checksums inválidos: los
- * lectores de PDF laxos (navegadores, MuPDF, Ghostscript) lo ignoran y renderizan bien,
- * pero Adobe Illustrator valida esos checksums y por eso marcaba las fuentes Chivo como
- * "no disponibles" pese a estar correctamente embebidas. Esta build vendorizada trae
- * ese único valor corregido a 0 (ver "checkSumAdjustment" cerca de la clase HeadTable).
- * Verificado con pikepdf/fontTools: los checksums del "head" embebido ahora coinciden
- * con los de una fuente TrueType válida.
+ * PARCHES LOCALES (rngraficos) al subsetter TrueType de jsPDF 2.5.1 (clase Directory /
+ * HeadTable, usada para reescribir cada fuente embebida con solo los glifos usados).
+ * Los lectores de PDF laxos (navegadores, MuPDF, Ghostscript) ignoran estos problemas y
+ * renderizan bien; Adobe Illustrator valida el archivo de fuente más estrictamente y por
+ * eso marcaba las fuentes Chivo embebidas como "no disponibles" pese a estar bien
+ * dibujadas.
+ *
+ * 1) checkSumAdjustment de la tabla "head": HeadTable.prototype.encode grababa el
+ *    checkSumAdjustment VIEJO de la fuente original en vez de 0 antes de calcular los
+ *    checksums finales, corrompiendo tanto el checksum de esa tabla en el directorio
+ *    interno como el checkSumAdjustment del archivo completo (la spec de TrueType exige
+ *    que esté en 0 en ese momento del cálculo). Corregido: se graba 0.
+ *
+ * 2) searchRange/entrySelector/rangeShift del directorio sfnt: Directory.prototype.encode
+ *    calculaba entrySelector dividiendo searchRange por log(2) en vez de usar
+ *    floor(log2(numTables)) directamente, y searchRange usaba ese exponente sin elevarlo
+ *    a potencia de 2. Para 10 tablas esto daba entrySelector=69 y searchRange=48 en vez
+ *    de los valores correctos (3 y 128). Un parser que use estos campos como atajo de
+ *    búsqueda binaria para ubicar las tablas (glyf, cmap, etc.) podía terminar buscando
+ *    en offsets equivocados y descartar la fuente como inválida. Corregido para calcular
+ *    ambos valores según la spec de TrueType/OpenType.
+ *
+ * Verificado con pikepdf/fontTools contra una fuente Chivo oficial válida: checksums y
+ * campos del directorio sfnt ahora coinciden exactamente con los de un TTF válido, en
+ * los 5 pesos embebidos (Chivo, ChivoBold, ChivoSemibold, ChivoTitle, ChivoMedium).
  */
 /** @license
  *
@@ -27202,8 +27217,8 @@
       var adjustment, directory, directoryLength, entrySelector, headOffset, log2, offset, rangeShift, searchRange, sum, table, tableCount, tableData, tag;
       tableCount = Object.keys(tables).length;
       log2 = Math.log(2);
-      searchRange = Math.floor(Math.log(tableCount) / log2) * 16;
-      entrySelector = Math.floor(searchRange / log2);
+      entrySelector = Math.floor(Math.log(tableCount) / log2);
+      searchRange = Math.pow(2, entrySelector) * 16;
       rangeShift = tableCount * 16 - searchRange;
       directory = new Data();
       directory.writeInt(this.scalarType);
