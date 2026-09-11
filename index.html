@@ -2253,7 +2253,10 @@ function exportarPDF(){
   if(!sel){ mostrarToast('⚠ No hay ningún gráfico seleccionado'); return; }
   const { jsPDF } = window.jspdf;
   const model = computeChartData(sel.model);
-  const doc = new jsPDF({ unit:'cm', format:[model.W, model.H], orientation: model.W>=model.H?'landscape':'portrait', compress:true });
+  // putOnlyUsedFonts: sin esto, jsPDF mete SIEMPRE las 14 fuentes estándar (Helvetica,
+  // Times, Courier...) en el PDF aunque nunca se usen — herramientas de preprensa como
+  // Milenium Designer las detectan listadas sin embeber y rechazan el archivo entero.
+  const doc = new jsPDF({ unit:'cm', format:[model.W, model.H], orientation: model.W>=model.H?'landscape':'portrait', compress:true, putOnlyUsedFonts:true });
   registerFonts(doc);
   const ctx = makePdfCtx(doc);
   drawChart(ctx, model);
