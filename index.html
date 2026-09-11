@@ -711,18 +711,22 @@ const PT2CM = 0.0352778;
 const MARGIN = 0;
 
 function registerFonts(doc){
+  // El alias que se pasa acá termina siendo el /BaseFont visible en el PDF. Tiene que
+  // coincidir con el nameID 6 (PostScript name) que ya quedó grabado dentro de cada
+  // fuente embebida — si no coinciden, un validador de fuentes más estricto (como el de
+  // Illustrator) puede desconfiar del archivo pese a que el programa embebido sea válido.
   doc.addFileToVFS('Chivo-Regular.ttf', CHIVO_REGULAR_B64);
-  doc.addFont('Chivo-Regular.ttf', 'Chivo', 'normal');
+  doc.addFont('Chivo-Regular.ttf', 'Chivo-Regular', 'normal');
   doc.addFileToVFS('Chivo-Bold.ttf', CHIVO_BOLD_B64);
-  doc.addFont('Chivo-Bold.ttf', 'ChivoBold', 'normal');
+  doc.addFont('Chivo-Bold.ttf', 'Chivo-Bold', 'normal');
   doc.addFileToVFS('Chivo-Semibold.ttf', CHIVO_SEMIBOLD_B64);
-  doc.addFont('Chivo-Semibold.ttf', 'ChivoSemibold', 'normal');
+  doc.addFont('Chivo-Semibold.ttf', 'Chivo-SemiBold', 'normal');
   doc.addFileToVFS('Chivo-ExtraBold.ttf', CHIVO_EXTRABOLD_B64);
-  doc.addFont('Chivo-ExtraBold.ttf', 'ChivoExtraBold', 'normal');
+  doc.addFont('Chivo-ExtraBold.ttf', 'Chivo-ExtraBold', 'normal');
   doc.addFileToVFS('Chivo-TitleBold.ttf', CHIVO_TITLE_BOLD_B64);
-  doc.addFont('Chivo-TitleBold.ttf', 'ChivoTitle', 'bold');
+  doc.addFont('Chivo-TitleBold.ttf', 'Chivo-TitleBold', 'bold');
   doc.addFileToVFS('Chivo-Medium.ttf', CHIVO_MEDIUM_B64);
-  doc.addFont('Chivo-Medium.ttf', 'ChivoMedium', 'normal');
+  doc.addFont('Chivo-Medium.ttf', 'Chivo-Medium', 'normal');
 }
 
 // ---------- tokens de marca (CMYK) ----------
@@ -962,12 +966,12 @@ function makeSvgCtx(svg, elFn){
 function makePdfCtx(doc){
   const frac = v=>v/100;
   function applyFont(weight,sizePt){
-    if(weight==='titlebold') doc.setFont('ChivoTitle','bold');
-    else if(weight==='extrabold') doc.setFont('ChivoExtraBold','normal');
-    else if(weight==='semibold') doc.setFont('ChivoSemibold','normal');
-    else if(weight==='medium') doc.setFont('ChivoMedium','normal');
-    else if(weight==='bold') doc.setFont('ChivoBold','normal');
-    else doc.setFont('Chivo','normal');
+    if(weight==='titlebold') doc.setFont('Chivo-TitleBold','bold');
+    else if(weight==='extrabold') doc.setFont('Chivo-ExtraBold','normal');
+    else if(weight==='semibold') doc.setFont('Chivo-SemiBold','normal');
+    else if(weight==='medium') doc.setFont('Chivo-Medium','normal');
+    else if(weight==='bold') doc.setFont('Chivo-Bold','normal');
+    else doc.setFont('Chivo-Regular','normal');
     doc.setFontSize(sizePt);
   }
   return {
