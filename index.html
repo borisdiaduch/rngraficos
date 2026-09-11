@@ -714,7 +714,7 @@ function registerFonts(doc){
   doc.addFileToVFS('Chivo-Regular.ttf', CHIVO_REGULAR_B64);
   doc.addFont('Chivo-Regular.ttf', 'Chivo', 'normal');
   doc.addFileToVFS('Chivo-Bold.ttf', CHIVO_BOLD_B64);
-  doc.addFont('Chivo-Bold.ttf', 'Chivo', 'bold');
+  doc.addFont('Chivo-Bold.ttf', 'ChivoBold', 'normal');
   doc.addFileToVFS('Chivo-Semibold.ttf', CHIVO_SEMIBOLD_B64);
   doc.addFont('Chivo-Semibold.ttf', 'ChivoSemibold', 'normal');
   doc.addFileToVFS('Chivo-ExtraBold.ttf', CHIVO_EXTRABOLD_B64);
@@ -966,7 +966,7 @@ function makePdfCtx(doc){
     else if(weight==='extrabold') doc.setFont('ChivoExtraBold','normal');
     else if(weight==='semibold') doc.setFont('ChivoSemibold','normal');
     else if(weight==='medium') doc.setFont('ChivoMedium','normal');
-    else if(weight==='bold') doc.setFont('Chivo','bold');
+    else if(weight==='bold') doc.setFont('ChivoBold','normal');
     else doc.setFont('Chivo','normal');
     doc.setFontSize(sizePt);
   }
