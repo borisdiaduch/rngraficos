@@ -117,10 +117,13 @@
     display:none; position:fixed; z-index:200;
     background:#fff; border:1px solid var(--panel-border); border-radius:10px;
     box-shadow:0 10px 28px rgba(43,42,37,0.22); padding:10px;
-    width:168px;
+    width:228px;
   }
   .cor-popover.open{ display:block; }
-  .cor-opts-grid{ display:grid; grid-template-columns:repeat(5, 1fr); gap:6px; }
+  .cor-section{ margin-bottom:9px; }
+  .cor-section-label{ font-size:10px; text-transform:uppercase; letter-spacing:0.04em; color:var(--muted); margin-bottom:5px; }
+  .cor-opts-grid{ display:grid; grid-template-columns:repeat(6, 1fr); gap:6px; }
+  .cor-opts-grid.cor-opts-single{ grid-template-columns:auto; justify-content:start; }
   .cor-opt{
     width:22px; height:22px; border-radius:50%; border:2px solid transparent; padding:0; cursor:pointer;
     box-shadow:inset 0 0 0 1px rgba(0,0,0,0.12);
@@ -128,11 +131,16 @@
   .cor-opt.active{ border-color:var(--accent); }
   .cor-divider{ border-top:1px solid var(--panel-border); margin:9px 0 7px; }
   .cor-cmyk-label{ font-size:10px; text-transform:uppercase; letter-spacing:0.04em; color:var(--muted); margin-bottom:6px; }
-  .cor-cmyk-grid{ display:grid; grid-template-columns:1fr 1fr; gap:6px; margin-bottom:8px; }
+  .cor-cmyk-row{ display:flex; gap:8px; align-items:flex-start; margin-bottom:8px; }
+  .cor-cmyk-grid{ display:grid; grid-template-columns:1fr 1fr; gap:6px; flex:1; min-width:0; }
   .cor-cmyk-grid label{ display:flex; align-items:center; gap:5px; font-size:11px; color:var(--muted); }
   .cor-cmyk-grid input{
     width:100%; padding:4px 5px; border:1px solid var(--panel-border); border-radius:5px;
     font-size:12px; color:var(--text); background:var(--bg);
+  }
+  .cor-cmyk-preview{
+    flex:none; width:38px; height:38px; border-radius:8px; margin-top:1px;
+    box-shadow:inset 0 0 0 1px rgba(0,0,0,0.12);
   }
   .cor-cmyk-apply{
     width:100%; padding:6px; border:none; border-radius:6px; background:var(--accent); color:#fff;
@@ -672,8 +680,6 @@ Viedma; 34; 35</textarea>
           <select id="tema">
             <option value="diario" selected>Diario Río Negro</option>
             <option value="rural">Rural</option>
-            <option value="economico">Económico</option>
-            <option value="energia">Energía</option>
           </select>
         </div>
         <div class="field">
@@ -792,8 +798,6 @@ function tokensEqual(a,b){
 }
 
 // ---------- temas de sección ----------
-// NOTA: los colores de Rural/Económico/Energía son placeholders razonables — pasame los
-// valores reales (hex o CMYK) de cada sección y los ajusto directo.
 const THEMES = {
   diario: {
     name:'Diario Río Negro',
@@ -809,29 +813,29 @@ const THEMES = {
     bar: {c:80, m:15, y:50, k:0},         // verde oscuro (principal)
     barDark: {c:25, m:0, y:40, k:0},      // verde claro (secundario)
   },
-  economico: {
-    name:'Económico',
-    headerBg: null,
-    headerTextTok: RN.black,
-    bar: {c:0, m:45, y:95, k:0},          // naranja (placeholder)
-    barDark: {c:10, m:60, y:100, k:10},
-  },
-  energia: {
-    name:'Energía',
-    headerBg: null,
-    headerTextTok: RN.black,
-    bar: {c:0, m:60, y:90, k:0},          // rojo-naranja (placeholder)
-    barDark: {c:0, m:80, y:90, k:15},
-  },
 };
 
-// ---------- paleta de acento (color puntual por barra/serie) ----------
-const ACCENT_COLORS = {
-  gris:    {c:0,  m:0,  y:0,   k:30},
-  naranja: {c:0,  m:50, y:100, k:0},
-  verde:   {c:70, m:0,  y:75,  k:10},
-  rojo:    {c:0,  m:85, y:75,  k:0},
+// ---------- paleta de acento (color puntual por barra/serie), agrupada por sección ----------
+const CATEGORY_PALETTE = {
+  diario: [
+    {c:30, m:0,  y:0,   k:10},
+    {c:50, m:0,  y:0,   k:20},
+    {c:0,  m:0,  y:0,   k:30},
+    {c:50, m:0,  y:100, k:0},
+    {c:0,  m:100,y:100, k:0},
+    {c:0,  m:25, y:100, k:0},
+  ],
+  rural: [
+    {c:80, m:15, y:50, k:0},
+    {c:25, m:0,  y:40, k:0},
+  ],
+  inmobiliario: [
+    {c:100,m:60, y:0,   k:0},
+    {c:0,  m:100,y:100, k:0},
+    {c:0,  m:25, y:100, k:0},
+  ],
 };
+const CATEGORY_PALETTE_LABELS = { diario:'Diario', rural:'Rural', inmobiliario:'Inmobiliario' };
 
 function seriesColorCmyk(i, total, theme){
   theme = theme || THEMES.diario;
@@ -1862,6 +1866,7 @@ let debugChartBottomPad = 0; // EXPERIMENTAL: aire extra abajo del área de traz
 let debugSideMargin = 0; // EXPERIMENTAL: separa las barras/líneas de los bordes laterales sin mover la escala, la línea base ni la leyenda "REFERENCIA" (0 = comportamiento original)
 let debugEpigrafePos = 0; // EXPERIMENTAL: desplaza el epígrafe verticalmente en cm (+ = abajo, - = arriba; 0 = posición original)
 let debugEpigrafeSize = 8; // EXPERIMENTAL: tamaño de letra del epígrafe, en pt
+let customPaletteColors = []; // colores CMYK guardados por el usuario desde el selector de color
 let chartSeq = 0;
 
 // ---------- persistencia local (localStorage): no perder el trabajo al recargar ----------
@@ -1879,7 +1884,8 @@ function saveBoardsToStorage(){
         barWidthRatio: debugBarWidthRatio, barGapInner: debugBarGapInner, axisMax: debugAxisMax,
         chartTopPad: debugChartTopPad, chartBottomPad: debugChartBottomPad, sideMargin: debugSideMargin,
         epigrafePos: debugEpigrafePos, epigrafeSize: debugEpigrafeSize
-      }
+      },
+      customPalette: customPaletteColors
     };
     localStorage.setItem(STORAGE_KEY, JSON.stringify(data));
   }catch(e){
@@ -1928,6 +1934,9 @@ function restoreBoardsFromStorage(){
   const saved = loadBoardsFromStorage();
   if(!saved) return false;
   applyExperimentalFromStorage(saved.experimental);
+  customPaletteColors = Array.isArray(saved.customPalette)
+    ? saved.customPalette.filter(t=>t && typeof t==='object')
+    : [];
   saved.boards.forEach(b=>{
     if(!b || typeof b.id!=='string' || !b.model || typeof b.model!=='object') return;
     const el = createChartCardEl(b.id);
@@ -2099,31 +2108,66 @@ function loadModelIntoPanel(model){
 let colorPopoverEl = null;
 let colorPopoverCtx = null; // {sel, item}
 
+function addCustomPaletteColor(tok){
+  if(customPaletteColors.some(t=>tokensEqual(t, tok))) return;
+  customPaletteColors.push({...tok});
+  scheduleSave();
+}
+
+function buildOptsGroup(options, current, onPick){
+  const grid = document.createElement('div');
+  grid.className = 'cor-opts-grid';
+  if(options.length===1) grid.classList.add('cor-opts-single');
+  options.forEach(opt=>{
+    const btn = document.createElement('button');
+    btn.type = 'button';
+    btn.className = 'cor-opt';
+    const isActive = opt.key===null ? !current : tokensEqual(current, opt.tok);
+    if(isActive) btn.classList.add('active');
+    btn.style.background = cmykToRgbCss(opt.tok);
+    btn.title = opt.title;
+    btn.addEventListener('click', (e)=>{ e.stopPropagation(); onPick(opt); });
+    grid.appendChild(btn);
+  });
+  return grid;
+}
+
 function getColorPopover(){
   if(colorPopoverEl) return colorPopoverEl;
   const pop = document.createElement('div');
   pop.className = 'cor-popover';
   pop.innerHTML =
-    '<div class="cor-opts-grid"></div>' +
+    '<div class="cor-groups"></div>' +
     '<div class="cor-divider"></div>' +
     '<div class="cor-cmyk-label">Personalizado (CMYK)</div>' +
-    '<div class="cor-cmyk-grid">' +
-      '<label>C<input type="number" min="0" max="100" step="1" class="cor-cmyk-c"></label>' +
-      '<label>M<input type="number" min="0" max="100" step="1" class="cor-cmyk-m"></label>' +
-      '<label>Y<input type="number" min="0" max="100" step="1" class="cor-cmyk-y"></label>' +
-      '<label>K<input type="number" min="0" max="100" step="1" class="cor-cmyk-k"></label>' +
+    '<div class="cor-cmyk-row">' +
+      '<div class="cor-cmyk-grid">' +
+        '<label>C<input type="number" min="0" max="100" step="1" class="cor-cmyk-c"></label>' +
+        '<label>M<input type="number" min="0" max="100" step="1" class="cor-cmyk-m"></label>' +
+        '<label>Y<input type="number" min="0" max="100" step="1" class="cor-cmyk-y"></label>' +
+        '<label>K<input type="number" min="0" max="100" step="1" class="cor-cmyk-k"></label>' +
+      '</div>' +
+      '<div class="cor-cmyk-preview" title="Vista previa"></div>' +
     '</div>' +
     '<button type="button" class="cor-cmyk-apply">Aplicar</button>';
   pop.addEventListener('click', e=> e.stopPropagation());
+
+  const clamp = v => Math.max(0, Math.min(100, Math.round(Number(v)||0)));
+  const readCmyk = () => ({
+    c: clamp(pop.querySelector('.cor-cmyk-c').value),
+    m: clamp(pop.querySelector('.cor-cmyk-m').value),
+    y: clamp(pop.querySelector('.cor-cmyk-y').value),
+    k: clamp(pop.querySelector('.cor-cmyk-k').value),
+  });
+  const updatePreview = () => { pop.querySelector('.cor-cmyk-preview').style.background = cmykToRgbCss(readCmyk()); };
+  pop.querySelectorAll('.cor-cmyk-grid input').forEach(inp=> inp.addEventListener('input', updatePreview));
+
   pop.querySelector('.cor-cmyk-apply').addEventListener('click', ()=>{
     if(!colorPopoverCtx) return;
-    const clamp = v => Math.max(0, Math.min(100, Math.round(Number(v)||0)));
-    const c = clamp(pop.querySelector('.cor-cmyk-c').value);
-    const m = clamp(pop.querySelector('.cor-cmyk-m').value);
-    const y = clamp(pop.querySelector('.cor-cmyk-y').value);
-    const k = clamp(pop.querySelector('.cor-cmyk-k').value);
+    const tok = readCmyk();
     const { sel, item } = colorPopoverCtx;
-    sel.model.colorOverrides[item.key] = {c,m,y,k};
+    sel.model.colorOverrides[item.key] = tok;
+    addCustomPaletteColor(tok);
     renderChartCard(sel);
     renderColorOverridesUI();
     closeColorPopover();
@@ -2144,40 +2188,53 @@ function openColorPopover(triggerEl, sel, item){
   if(isSameTarget){ closeColorPopover(); return; }
   colorPopoverCtx = { sel, item };
 
-  const grid = pop.querySelector('.cor-opts-grid');
-  grid.innerHTML = '';
   const current = sel.model.colorOverrides[item.key];
-  const options = [{key:null, tok:item.defaultTok, title:'Color de la sección'}]
-    .concat(Object.keys(ACCENT_COLORS).map(k=>({key:k, tok:ACCENT_COLORS[k], title:k.charAt(0).toUpperCase()+k.slice(1)})));
-  options.forEach(opt=>{
-    const btn = document.createElement('button');
-    btn.type = 'button';
-    btn.className = 'cor-opt';
-    const isActive = opt.key===null ? !current : tokensEqual(current, opt.tok);
-    if(isActive) btn.classList.add('active');
-    btn.style.background = cmykToRgbCss(opt.tok);
-    btn.title = opt.title;
-    btn.addEventListener('click', (e)=>{
-      e.stopPropagation();
-      if(opt.key===null) delete sel.model.colorOverrides[item.key];
-      else sel.model.colorOverrides[item.key] = {...opt.tok};
-      renderChartCard(sel);
-      renderColorOverridesUI();
-      closeColorPopover();
-    });
-    grid.appendChild(btn);
+  const pick = (opt)=>{
+    if(opt.key===null) delete sel.model.colorOverrides[item.key];
+    else sel.model.colorOverrides[item.key] = {...opt.tok};
+    renderChartCard(sel);
+    renderColorOverridesUI();
+    closeColorPopover();
+  };
+
+  const groups = pop.querySelector('.cor-groups');
+  groups.innerHTML = '';
+
+  const defaultSection = document.createElement('div');
+  defaultSection.className = 'cor-section';
+  defaultSection.innerHTML = '<div class="cor-section-label">Color de la sección</div>';
+  defaultSection.appendChild(buildOptsGroup([{key:null, tok:item.defaultTok, title:'Color de la sección'}], current, pick));
+  groups.appendChild(defaultSection);
+
+  Object.keys(CATEGORY_PALETTE).forEach(key=>{
+    const section = document.createElement('div');
+    section.className = 'cor-section';
+    section.innerHTML = '<div class="cor-section-label">'+CATEGORY_PALETTE_LABELS[key]+'</div>';
+    const options = CATEGORY_PALETTE[key].map(tok=>({key:'palette', tok, title:CATEGORY_PALETTE_LABELS[key]}));
+    section.appendChild(buildOptsGroup(options, current, pick));
+    groups.appendChild(section);
   });
+
+  if(customPaletteColors.length){
+    const section = document.createElement('div');
+    section.className = 'cor-section';
+    section.innerHTML = '<div class="cor-section-label">Personalizados</div>';
+    const options = customPaletteColors.map(tok=>({key:'palette', tok, title:'Personalizado'}));
+    section.appendChild(buildOptsGroup(options, current, pick));
+    groups.appendChild(section);
+  }
 
   const cmykTok = current || item.defaultTok;
   pop.querySelector('.cor-cmyk-c').value = Math.round(cmykTok.c);
   pop.querySelector('.cor-cmyk-m').value = Math.round(cmykTok.m);
   pop.querySelector('.cor-cmyk-y').value = Math.round(cmykTok.y);
   pop.querySelector('.cor-cmyk-k').value = Math.round(cmykTok.k);
+  pop.querySelector('.cor-cmyk-preview').style.background = cmykToRgbCss(cmykTok);
 
   pop.classList.add('open');
   // posicionar con fixed, relativo al viewport (no depende de contenedores con scroll)
   const rect = triggerEl.getBoundingClientRect();
-  const popW = 168;
+  const popW = 228;
   let left = rect.right - popW;
   left = Math.max(8, Math.min(left, window.innerWidth - popW - 8));
   let top = rect.bottom + 6;
