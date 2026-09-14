@@ -131,7 +131,7 @@
   .cor-opt.active{ border-color:var(--accent); }
   .cor-divider{ border-top:1px solid var(--panel-border); margin:9px 0 7px; }
   .cor-cmyk-label{ font-size:10px; text-transform:uppercase; letter-spacing:0.04em; color:var(--muted); margin-bottom:6px; }
-  .cor-cmyk-row{ display:flex; gap:8px; align-items:flex-start; margin-bottom:8px; }
+  .cor-cmyk-row{ display:flex; gap:8px; margin-bottom:8px; }
   .cor-cmyk-grid{ display:grid; grid-template-columns:1fr 1fr; gap:6px; flex:1; min-width:0; }
   .cor-cmyk-grid label{ display:flex; align-items:center; gap:5px; font-size:11px; color:var(--muted); }
   .cor-cmyk-grid input{
@@ -139,7 +139,7 @@
     font-size:12px; color:var(--text); background:var(--bg);
   }
   .cor-cmyk-preview{
-    flex:none; width:38px; height:38px; border-radius:8px; margin-top:1px;
+    flex:none; width:38px; border-radius:8px;
     box-shadow:inset 0 0 0 1px rgba(0,0,0,0.12);
   }
   .cor-cmyk-apply{
@@ -680,6 +680,7 @@ Viedma; 34; 35</textarea>
           <select id="tema">
             <option value="diario" selected>Diario Río Negro</option>
             <option value="rural">Rural</option>
+            <option value="inmobiliario">Inmobiliario</option>
           </select>
         </div>
         <div class="field">
@@ -813,6 +814,13 @@ const THEMES = {
     bar: {c:80, m:15, y:50, k:0},         // verde oscuro (principal)
     barDark: {c:25, m:0, y:40, k:0},      // verde claro (secundario)
   },
+  inmobiliario: {
+    name:'Inmobiliario',
+    headerBg: {c:100, m:60, y:0, k:0},    // azul
+    headerTextTok: {c:0, m:0, y:0, k:0},  // blanco
+    bar: {c:100, m:60, y:0, k:0},         // azul (principal)
+    barDark: {c:50, m:30, y:0, k:0},      // azul claro (secundario)
+  },
 };
 
 // ---------- paleta de acento (color puntual por barra/serie), agrupada por sección ----------
@@ -820,19 +828,24 @@ const CATEGORY_PALETTE = {
   diario: [
     {c:30, m:0,  y:0,   k:10},
     {c:50, m:0,  y:0,   k:20},
+    {c:60, m:0,  y:0,   k:40},
     {c:0,  m:0,  y:0,   k:30},
     {c:50, m:0,  y:100, k:0},
     {c:0,  m:100,y:100, k:0},
     {c:0,  m:25, y:100, k:0},
+    {c:0,  m:0,  y:0,   k:100},
+    {c:0,  m:0,  y:0,   k:60},
   ],
   rural: [
     {c:80, m:15, y:50, k:0},
     {c:25, m:0,  y:40, k:0},
+    {c:0,  m:25, y:100, k:0},
   ],
   inmobiliario: [
-    {c:100,m:60, y:0,   k:0},
+    {c:100,m:60, y:0, k:0},
+    {c:50, m:30, y:0, k:0},
     {c:0,  m:100,y:100, k:0},
-    {c:0,  m:25, y:100, k:0},
+    {c:0,  m:50, y:50, k:0},
   ],
 };
 const CATEGORY_PALETTE_LABELS = { diario:'Diario', rural:'Rural', inmobiliario:'Inmobiliario' };
@@ -2149,7 +2162,7 @@ function getColorPopover(){
       '</div>' +
       '<div class="cor-cmyk-preview" title="Vista previa"></div>' +
     '</div>' +
-    '<button type="button" class="cor-cmyk-apply">Aplicar</button>';
+    '<button type="button" class="cor-cmyk-apply">Agregar</button>';
   pop.addEventListener('click', e=> e.stopPropagation());
 
   const clamp = v => Math.max(0, Math.min(100, Math.round(Number(v)||0)));
@@ -2199,12 +2212,6 @@ function openColorPopover(triggerEl, sel, item){
 
   const groups = pop.querySelector('.cor-groups');
   groups.innerHTML = '';
-
-  const defaultSection = document.createElement('div');
-  defaultSection.className = 'cor-section';
-  defaultSection.innerHTML = '<div class="cor-section-label">Color de la sección</div>';
-  defaultSection.appendChild(buildOptsGroup([{key:null, tok:item.defaultTok, title:'Color de la sección'}], current, pick));
-  groups.appendChild(defaultSection);
 
   Object.keys(CATEGORY_PALETTE).forEach(key=>{
     const section = document.createElement('div');
