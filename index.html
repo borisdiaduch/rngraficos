@@ -287,7 +287,7 @@
     display:flex; gap:4px; padding: 0 0 10px 0; flex:none; position:relative;
   }
   .panel-tab{
-    flex:1; padding:7px 4px; border:none; border-radius:6px; background:#fff;
+    flex:1; padding:7px 4px; border:none; border-radius:6px; background:transparent;
     color:var(--muted); font-size:11.5px; font-weight:600; cursor:pointer;
     text-transform:uppercase; letter-spacing:0.03em; position:relative; z-index:1;
     transition: color .2s ease, background .15s ease;
@@ -1407,7 +1407,7 @@ function drawVerticalBars(ctx, area, rows, headers, numSeries, destacar, sufijo,
   let maxCatLines = 1;
   rows.forEach(d=>{
     const catHi = (numSeries===1 && ((destacar==='max' && d.vals[0]===maxSingle) || (destacar==='min' && d.vals[0]===minSingle))) || (destacarCatSel!==null && d.cat===destacarCatSel);
-    const lines = wrapNoCut(ctx, d.cat, groupW-0.06, catSize, catHi?'extrabold':'medium');
+    const lines = wrapHard(ctx, d.cat, groupW-0.06, catSize, catHi?'extrabold':'medium');
     if(lines.length>maxCatLines) maxCatLines = lines.length;
     catLinesArr.push(lines);
   });
@@ -1533,7 +1533,7 @@ function drawHorizontalBars(ctx, area, rows, headers, numSeries, sufijo, theme, 
     const isHi = destacarCatSel!==null && d.cat===destacarCatSel;
     const gy = top + gi*(groupH+rowGap) + rowOffset;
     const rowCenter = gy + groupH/2 - rowOffset;
-    const catLines = wrapNoCut(ctx, d.cat, catLabelW-0.12, catSize, isHi?'extrabold':'medium');
+    const catLines = wrapHard(ctx, d.cat, catLabelW-0.12, catSize, isHi?'extrabold':'medium');
     const catLH = catSize*PT2CM*1.15;
     const firstY = rowCenter + 0.06 - (catLines.length-1)*catLH/2;
     catLines.forEach((line,li)=> ctx.text(area.left, firstY+li*catLH, line, {sizePt:catSize,weight:isHi?'extrabold':'medium',fillTok:RN.black,align:'left'}));
@@ -1628,7 +1628,7 @@ function drawLines(ctx, area, rows, headers, numSeries, sufijo, theme, colorOver
   let maxCatLines = 1;
   const catLinesArr = rows.map(r=>{
     const catHi = destacarCatSel!==null && r.cat===destacarCatSel;
-    const lines = wrapNoCut(ctx, r.cat, stepX-0.10, 9, catHi?'extrabold':'medium');
+    const lines = wrapHard(ctx, r.cat, stepX-0.10, 9, catHi?'extrabold':'medium');
     if(lines.length>maxCatLines) maxCatLines = lines.length;
     return lines;
   });
@@ -1856,7 +1856,7 @@ function drawChart(ctx, model){
   const epiTxt = epigrafe && epigrafe.trim();
   const epiSize = debugEpigrafeSize || 8;
   const epiLH = epiSize*PT2CM*1.15;
-  const epiLines = epiTxt ? wrapNoCut(ctx, epiTxt, W-MARGIN*2, epiSize, 'normal') : [];
+  const epiLines = epiTxt ? wrapHard(ctx, epiTxt, W-MARGIN*2, epiSize, 'normal') : [];
   if(epiLines.length) bottomReserve += epiLines.length*epiLH + 0.18;
 
   const chartBottom = H - bottomReserve;
