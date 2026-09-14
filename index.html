@@ -284,16 +284,21 @@
 
   /* ---------- pestañas del panel: Gráfico / Personalización ---------- */
   .panel-tabs{
-    display:flex; gap:4px; padding: 0 0 10px 0; flex:none;
+    display:flex; gap:4px; padding: 0 0 10px 0; flex:none; position:relative;
   }
   .panel-tab{
     flex:1; padding:7px 4px; border:none; border-radius:6px; background:transparent;
     color:var(--muted); font-size:11.5px; font-weight:600; cursor:pointer;
-    text-transform:uppercase; letter-spacing:0.03em;
-    transition: background .15s ease, color .15s ease;
+    text-transform:uppercase; letter-spacing:0.03em; position:relative; z-index:1;
+    transition: color .2s ease;
   }
-  .panel-tab:hover{ background:var(--bg); }
-  .panel-tab.active{ background:var(--accent); color:#fff; }
+  .panel-tab:hover{ color:var(--text); }
+  .panel-tab.active{ color:#fff; }
+  .panel-tab-indicator{
+    position:absolute; top:0; left:0; height:100%; border-radius:6px;
+    background:var(--accent); transition: transform .25s cubic-bezier(.4,0,.2,1), width .25s ease;
+    z-index:0;
+  }
   .panel-tab-content{ display:none; }
   .panel-tab-content.active{ display:block; }
   .dbg-hidden{ display:none !important; }
@@ -340,8 +345,9 @@
   <div class="panel-body">
 
     <div class="panel-tabs" id="panelTabs">
+      <span class="panel-tab-indicator" id="panelTabIndicator"></span>
       <button type="button" class="panel-tab active" data-tab="grafico">Gráfico</button>
-      <button type="button" class="panel-tab" data-tab="personalizacion">Personalización</button>
+      <button type="button" class="panel-tab" data-tab="personalizacion">Diseño</button>
     </div>
 
     <div class="panel-tab-content active" id="tab-grafico">
@@ -429,7 +435,7 @@ Viedma; 34; 35</textarea>
 
     <div class="subsection collapsed" id="estilo-section">
       <div class="subsection-header" id="estilo-toggle">
-        <span>Estilo</span>
+        <span>Tipo de gráfico</span>
         <svg class="chevron" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="2">
           <path d="M5 7l5 5 5-5" stroke-linecap="round" stroke-linejoin="round"/>
         </svg>
@@ -537,6 +543,11 @@ Viedma; 34; 35</textarea>
       </div>
     </div>
 
+    
+
+    </div>
+
+    <div class="panel-tab-content" id="tab-personalizacion">
     <div class="subsection collapsed" id="colores-section">
       <div class="subsection-header" id="colores-toggle">
         <span>Colores</span>
@@ -556,47 +567,6 @@ Viedma; 34; 35</textarea>
         <div class="field">
           <label>Color por categoría / serie</label>
           <div id="colorOverridesList" class="color-overrides-list"></div>
-        </div>
-      </div>
-    </div>
-
-    </div>
-
-    <div class="panel-tab-content" id="tab-personalizacion">
-    <div class="subsection collapsed dbg-hidden" id="dbgEjemplos-section">
-      <div class="subsection-header" id="dbgEjemplos-toggle">
-        <span>Gráficos de ejemplo</span>
-        <svg class="chevron" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="2">
-          <path d="M5 7l5 5 5-5" stroke-linecap="round" stroke-linejoin="round"/>
-        </svg>
-      </div>
-      <div class="subsection-body">
-        <div class="field" style="gap:8px;">
-          <div class="dbw-title">Ejemplos</div>
-          <select id="ejemploSelect">
-            <option value="">Elegir ejemplo…</option>
-            <option value="barrasNegativas">Barras con valores negativos</option>
-            <option value="lineasGrupo">Líneas + grupo de texto libre</option>
-            <option value="grupoTexto">Barras + grupo de texto libre</option>
-            <option value="donutSeparadores">Dona con separadores</option>
-          </select>
-        </div>
-      </div>
-    </div>
-    <div class="subsection collapsed" id="dbgEscala-section">
-      <div class="subsection-header" id="dbgEscala-toggle">
-        <span>Escala</span>
-        <svg class="chevron" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="2">
-          <path d="M5 7l5 5 5-5" stroke-linecap="round" stroke-linejoin="round"/>
-        </svg>
-      </div>
-      <div class="subsection-body">
-        <div class="field" style="gap:8px;">
-          <div class="dbw-title">Máximo del eje Y</div>
-          <div class="dbw-row">
-            <input type="number" id="dbaMax" placeholder="Automático">
-            <button type="button" class="icon-btn" id="dbaReset" title="Volver al máximo automático" aria-label="Restablecer"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12a9 9 0 1 1-3-6.7"/><polyline points="21 3 21 9 15 9"/></svg></button>
-          </div>
         </div>
       </div>
     </div>
@@ -650,6 +620,23 @@ Viedma; 34; 35</textarea>
         </div>
       </div>
     </div>
+    <div class="subsection collapsed" id="dbgEscala-section">
+      <div class="subsection-header" id="dbgEscala-toggle">
+        <span>Escala</span>
+        <svg class="chevron" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="2">
+          <path d="M5 7l5 5 5-5" stroke-linecap="round" stroke-linejoin="round"/>
+        </svg>
+      </div>
+      <div class="subsection-body">
+        <div class="field" style="gap:8px;">
+          <div class="dbw-title">Máximo del eje Y</div>
+          <div class="dbw-row">
+            <input type="number" id="dbaMax" placeholder="Automático">
+            <button type="button" class="icon-btn" id="dbaReset" title="Volver al máximo automático" aria-label="Restablecer"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12a9 9 0 1 1-3-6.7"/><polyline points="21 3 21 9 15 9"/></svg></button>
+          </div>
+        </div>
+      </div>
+    </div>
     <div class="subsection collapsed" id="dbgEpigrafe-section">
       <div class="subsection-header" id="dbgEpigrafe-toggle">
         <span>Epígrafe</span>
@@ -677,6 +664,26 @@ Viedma; 34; 35</textarea>
             <span class="dbw-val" id="dbesVal">8.0</span>
             <button type="button" class="icon-btn" id="dbesReset" title="Volver al tamaño por defecto" aria-label="Restablecer"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12a9 9 0 1 1-3-6.7"/><polyline points="21 3 21 9 15 9"/></svg></button>
           </div>
+        </div>
+      </div>
+    </div>
+    <div class="subsection collapsed dbg-hidden" id="dbgEjemplos-section">
+      <div class="subsection-header" id="dbgEjemplos-toggle">
+        <span>Gráficos de ejemplo</span>
+        <svg class="chevron" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="2">
+          <path d="M5 7l5 5 5-5" stroke-linecap="round" stroke-linejoin="round"/>
+        </svg>
+      </div>
+      <div class="subsection-body">
+        <div class="field" style="gap:8px;">
+          <div class="dbw-title">Ejemplos</div>
+          <select id="ejemploSelect">
+            <option value="">Elegir ejemplo…</option>
+            <option value="barrasNegativas">Barras con valores negativos</option>
+            <option value="lineasGrupo">Líneas + grupo de texto libre</option>
+            <option value="grupoTexto">Barras + grupo de texto libre</option>
+            <option value="donutSeparadores">Dona con separadores</option>
+          </select>
         </div>
       </div>
     </div>
@@ -2781,37 +2788,45 @@ $('usaGrupo').addEventListener('change', ()=>{
 document.getElementById('panel-toggle').addEventListener('click', () => {
   document.getElementById('panel').classList.toggle('collapsed');
 });
+function slidePanelTabIndicator(btn){
+  const indicator = document.getElementById('panelTabIndicator');
+  indicator.style.width = btn.offsetWidth+'px';
+  indicator.style.transform = 'translateX('+btn.offsetLeft+'px)';
+}
 document.querySelectorAll('.panel-tab').forEach(btn=>{
   btn.addEventListener('click', () => {
     document.querySelectorAll('.panel-tab').forEach(b=>b.classList.remove('active'));
     document.querySelectorAll('.panel-tab-content').forEach(c=>c.classList.remove('active'));
     btn.classList.add('active');
     document.getElementById('tab-'+btn.dataset.tab).classList.add('active');
+    slidePanelTabIndicator(btn);
   });
 });
-['formato','contenido','datos','estilo','colores'].forEach(name=>{
+slidePanelTabIndicator(document.querySelector('.panel-tab.active'));
+window.addEventListener('resize', () => slidePanelTabIndicator(document.querySelector('.panel-tab.active')));
+['formato','contenido','datos','estilo'].forEach(name=>{
   document.getElementById(name+'-toggle').addEventListener('click', () => {
     const section = document.getElementById(name+'-section');
     const wasCollapsed = section.classList.contains('collapsed');
-    ['formato','contenido','datos','estilo','colores'].forEach(n=>{
+    ['formato','contenido','datos','estilo'].forEach(n=>{
       document.getElementById(n+'-section').classList.add('collapsed');
     });
     if(wasCollapsed) section.classList.remove('collapsed');
   });
 });
-['dbgEjemplos','dbgEscala','dbgEstilo','dbgEpigrafe'].forEach(name=>{
+['colores','dbgEstilo','dbgEscala','dbgEpigrafe','dbgEjemplos'].forEach(name=>{
   document.getElementById(name+'-toggle').addEventListener('click', () => {
     const section = document.getElementById(name+'-section');
     const wasCollapsed = section.classList.contains('collapsed');
-    ['dbgEjemplos','dbgEscala','dbgEstilo','dbgEpigrafe'].forEach(n=>{
+    ['colores','dbgEstilo','dbgEscala','dbgEpigrafe','dbgEjemplos'].forEach(n=>{
       document.getElementById(n+'-section').classList.add('collapsed');
     });
     if(wasCollapsed) section.classList.remove('collapsed');
   });
 });
 
-// ---------- "Gráficos de ejemplo" es una herramienta interna: queda oculta hasta que se
-// escribe "debug" o "ejemplos" en cualquier parte de la página (sin foco en un campo
+// ---------- "Gráficos de ejemplo" es una herramienta interna: se muestra/oculta
+// escribiendo "debug" o "ejemplos" en cualquier parte de la página (sin foco en un campo
 // específico) ----------
 (function(){
   const CODES = ['debug', 'ejemplos'];
@@ -2821,8 +2836,10 @@ document.querySelectorAll('.panel-tab').forEach(btn=>{
     if(e.key.length!==1) return;
     buffer = (buffer + e.key.toLowerCase()).slice(-maxLen);
     if(CODES.some(code=>buffer.endsWith(code))){
-      document.getElementById('dbgEjemplos-section').classList.remove('dbg-hidden');
-      mostrarToast('✓ Ejemplos habilitados');
+      buffer = '';
+      const section = document.getElementById('dbgEjemplos-section');
+      const nowHidden = section.classList.toggle('dbg-hidden');
+      mostrarToast(nowHidden ? '✓ Ejemplos ocultos' : '✓ Ejemplos habilitados');
     }
   });
 })();
