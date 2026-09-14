@@ -177,7 +177,7 @@
 
   .panel-header{
     display:flex; align-items:center; justify-content: space-between;
-    gap: 10px; padding: 10px 16px; cursor: pointer; user-select: none;
+    gap: 10px; padding: 16px 16px 10px; cursor: pointer; user-select: none;
     flex: none;
   }
   .brand{ display:flex; align-items:flex-start; gap: 8px; }
@@ -192,7 +192,7 @@
   }
   .panel.collapsed .chevron{ transform: rotate(-90deg); }
 
-  .panel-body{ padding: 0 16px 14px 16px; overflow-y:auto; }
+  .panel-body{ padding: 0px 16px 16px 16px; overflow-y:auto; }
   .panel.collapsed .panel-body{ display:none; }
 
   fieldset{ border:none; padding:0; margin: 12px 0 10px 0; }
@@ -287,17 +287,17 @@
     display:flex; gap:4px; padding: 0 0 10px 0; flex:none; position:relative;
   }
   .panel-tab{
-    flex:1; padding:7px 4px; border:none; border-radius:6px; background:#ececea;
+    flex:1; padding:7px 4px; border:none; border-radius:6px; background:#fff;
     color:var(--muted); font-size:11.5px; font-weight:600; cursor:pointer;
     text-transform:uppercase; letter-spacing:0.03em; position:relative; z-index:1;
     transition: color .2s ease, background .15s ease;
   }
-  .panel-tab:hover{ color:var(--text); background:#e0ddd3; }
-  .panel-tab.active{ color:#fff; background:transparent; }
+  .panel-tab:hover{ color:var(--text); background:var(--bg); }
+  .panel-tab.active{ color:var(--text); background:transparent; }
   .panel-tab.active:hover{ background:transparent; }
   .panel-tab-indicator{
     position:absolute; left:0; border-radius:6px;
-    background:#55524a; transition: transform .25s cubic-bezier(.4,0,.2,1), width .25s ease;
+    background:#ececea; transition: transform .25s cubic-bezier(.4,0,.2,1), width .25s ease;
     z-index:0;
   }
   .panel-tab-content{ display:none; }
