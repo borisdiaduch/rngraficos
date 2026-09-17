@@ -1,0 +1,522 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Distribución de los principales proyectos de Uranio en Río Negro</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Chivo:wght@400;500;600;700;800&display=swap');
+
+  .rn-uranio *{ box-sizing:border-box; }
+  .rn-uranio{
+    --bg:#f4f2ec;
+    --panel:#ffffff;
+    --border:#dedad0;
+    --text:#2b2a25;
+    --muted:#7a7669;
+    --muted-2:#9c9788;
+    --map-fill:#e7e2d4;
+    --map-fill-hi:#efeade;
+    --map-stroke:#b6ae9c;
+    --black:#141414;
+    --accent:#3f84a4;
+    --accent-dark:#215870;
+    --accent-light:#a9d6e6;
+    --uv:#a9d6e6;
+    --u:#3f84a4;
+    --focus:#215870;
+    font-family:'Chivo', 'Segoe UI', system-ui, -apple-system, sans-serif;
+    color:var(--text);
+    background:var(--bg);
+    -webkit-font-smoothing:antialiased;
+  }
+  .rn-uranio{ padding:20px 14px 26px; }
+  .rn-card{
+    max-width:900px; margin:0 auto;
+    background:var(--panel);
+    border:1px solid var(--border);
+    border-radius:10px;
+    box-shadow:0 2px 6px rgba(43,42,37,0.08), 0 18px 40px rgba(38,42,38,0.06);
+    overflow:hidden;
+  }
+  .rn-head{
+    padding:22px 26px 14px;
+    border-top:3px solid var(--black);
+  }
+  .rn-head h1{
+    margin:0 0 6px;
+    font-size:22px; line-height:1.22; font-weight:800;
+    letter-spacing:-0.005em;
+    text-wrap:balance;
+  }
+  .rn-head p{
+    margin:0; font-size:13px; color:var(--muted); line-height:1.5; max-width:62ch;
+  }
+
+  /* ---------- mapa ---------- */
+  .rn-map-wrap{ position:relative; padding:6px 18px 4px; }
+  .rn-map-wrap svg{ display:block; width:100%; height:auto; overflow:visible; }
+  .rn-province{ fill:var(--map-fill); stroke:var(--map-stroke); stroke-width:2.2; stroke-linejoin:round; transition:fill .15s ease; }
+
+  .rn-pin{ cursor:pointer; }
+  .rn-pin circle.rn-pin-halo{ fill:var(--accent); opacity:0; transition:opacity .18s ease, r .18s ease; }
+  .rn-pin circle.rn-pin-dot{ fill:var(--black); stroke:#fff; stroke-width:2.4; transition:transform .12s ease, fill .12s ease; transform-box:fill-box; transform-origin:center; }
+  .rn-pin text{ fill:#fff; font-family:'Chivo',sans-serif; font-weight:700; font-size:17px; text-anchor:middle; dominant-baseline:central; pointer-events:none; }
+  .rn-pin:hover circle.rn-pin-dot, .rn-pin.is-active circle.rn-pin-dot{ transform:scale(1.14); fill:var(--accent-dark); }
+  .rn-pin.is-active circle.rn-pin-halo{ opacity:.20; r:26; }
+  .rn-pin:focus-visible circle.rn-pin-dot{ outline:none; }
+  .rn-pin:focus-visible circle.rn-pin-halo{ opacity:.28; r:24; }
+  .rn-pin.is-dim{ opacity:.22; }
+  .rn-pin.is-dim:hover circle.rn-pin-dot{ transform:none; fill:var(--black); }
+
+  /* ---------- cartelito / tooltip ---------- */
+  .rn-tooltip{
+    position:absolute; z-index:6; width:222px;
+    background:var(--black); color:#fff;
+    border-radius:8px; padding:12px 14px 13px;
+    box-shadow:0 10px 26px rgba(20,20,20,0.32);
+    opacity:0; transform:translate(-50%,-8px) scale(.97);
+    pointer-events:none; transition:opacity .13s ease, transform .13s ease;
+  }
+  .rn-tooltip.is-open{ opacity:1; transform:translate(-50%,-14px) scale(1); pointer-events:auto; }
+  .rn-tooltip::after{
+    content:''; position:absolute; left:50%; top:100%; width:12px; height:12px;
+    background:var(--black); transform:translate(-50%,-6px) rotate(45deg); border-radius:2px;
+  }
+  /* variante: el pin está cerca del borde superior del mapa, el cartel se abre hacia abajo */
+  .rn-tooltip.below{ transform:translate(-50%,8px) scale(.97); }
+  .rn-tooltip.below.is-open{ transform:translate(-50%,20px) scale(1); }
+  .rn-tooltip.below::after{
+    top:auto; bottom:100%; transform:translate(-50%,6px) rotate(45deg);
+  }
+  .rn-tooltip .tt-ref{
+    display:inline-flex; align-items:center; justify-content:center;
+    width:18px; height:18px; border-radius:50%; background:#fff; color:var(--black);
+    font-size:11px; font-weight:700; margin-right:6px; flex:none;
+  }
+  .rn-tooltip .tt-title{ display:flex; align-items:center; font-size:13.5px; font-weight:700; margin-bottom:8px; }
+  .rn-tooltip .tt-row{ display:flex; justify-content:space-between; gap:10px; font-size:11.5px; padding:3px 0; border-top:1px solid rgba(255,255,255,0.14); }
+  .rn-tooltip .tt-row:first-of-type{ border-top:none; }
+  .rn-tooltip .tt-k{ color:rgba(255,255,255,0.6); }
+  .rn-tooltip .tt-v{ font-weight:600; text-align:right; }
+  .rn-tooltip .tt-close{
+    position:absolute; top:6px; right:7px; width:18px; height:18px; border:none; background:none;
+    color:rgba(255,255,255,0.55); font-size:15px; line-height:1; cursor:pointer; padding:0;
+  }
+  .rn-tooltip .tt-close:hover{ color:#fff; }
+
+  /* ---------- leyenda ---------- */
+  .rn-legend{
+    display:flex; flex-wrap:wrap; align-items:center; gap:10px 16px;
+    padding:10px 26px 16px; font-size:11px;
+  }
+  .rn-legend .lg-title{ font-weight:700; font-size:10.5px; text-transform:uppercase; letter-spacing:.05em; }
+  .rn-legend .lg-div{ width:1px; height:12px; background:var(--muted-2); }
+  .rn-legend .lg-item{ display:flex; align-items:center; gap:6px; font-weight:600; color:var(--text); }
+  .rn-legend .lg-sw{ width:9px; height:9px; border-radius:2px; flex:none; }
+
+  hr.rn-rule{ border:none; border-top:1px solid var(--border); margin:0; }
+
+  /* ---------- toolbar ---------- */
+  .rn-toolbar{
+    display:flex; flex-wrap:wrap; align-items:center; gap:8px;
+    padding:16px 26px 12px;
+  }
+  .rn-toolbar input[type="search"], .rn-toolbar select{
+    font-family:inherit; font-size:12.5px; color:var(--text);
+    border:1px solid var(--border); border-radius:6px; background:var(--bg);
+    padding:7px 10px; height:34px;
+  }
+  .rn-toolbar input[type="search"]{ flex:1 1 160px; min-width:140px; }
+  .rn-toolbar select{ flex:0 0 auto; cursor:pointer; }
+  .rn-toolbar input:focus, .rn-toolbar select:focus{ outline:2px solid var(--accent-light); outline-offset:1px; border-color:var(--accent); }
+  .rn-reset{
+    flex:none; font-family:inherit; font-size:12px; font-weight:600; cursor:pointer;
+    background:var(--bg); color:var(--text); border:1px solid var(--border); border-radius:6px;
+    padding:0 12px; height:34px;
+  }
+  .rn-reset:hover{ background:#ececea; }
+  .rn-count{ flex:1 1 100%; order:5; font-size:11px; color:var(--muted); margin-top:2px; }
+  @media (min-width:640px){ .rn-count{ flex:0 0 auto; order:0; margin-left:auto; margin-top:0; text-align:right; } }
+
+  /* ---------- tabla ---------- */
+  .rn-table-scroll{ overflow-x:auto; padding:0 26px 22px; }
+  table.rn-table{ width:100%; border-collapse:collapse; min-width:560px; font-variant-numeric:tabular-nums; }
+  table.rn-table thead th{
+    text-align:left; font-size:10.5px; text-transform:uppercase; letter-spacing:.045em;
+    color:var(--muted); font-weight:700; padding:0 8px 8px; border-bottom:2px solid var(--black);
+    white-space:nowrap;
+  }
+  table.rn-table thead th:first-child{ padding-left:2px; }
+  .rn-th-btn{
+    display:inline-flex; align-items:center; gap:4px; font:inherit; text-transform:inherit; letter-spacing:inherit;
+    background:none; border:none; color:inherit; cursor:pointer; padding:4px 0;
+  }
+  .rn-th-btn:hover{ color:var(--text); }
+  .rn-th-btn:focus-visible{ outline:2px solid var(--accent-light); outline-offset:2px; border-radius:3px; }
+  .rn-th-btn .arrow{ font-size:9px; opacity:.25; transition:opacity .12s ease, transform .12s ease; }
+  th.is-sorted .rn-th-btn{ color:var(--text); }
+  th.is-sorted .rn-th-btn .arrow{ opacity:1; color:var(--accent-dark); }
+  th.is-sorted.dir-desc .rn-th-btn .arrow{ transform:rotate(180deg); }
+  th.num{ text-align:right; }
+  th.num .rn-th-btn{ flex-direction:row-reverse; }
+
+  table.rn-table tbody td{ padding:10px 8px; border-bottom:1px solid var(--border); font-size:13px; vertical-align:middle; }
+  table.rn-table tbody td:first-child{ padding-left:2px; }
+  table.rn-table tbody tr{ cursor:pointer; transition:background .1s ease; }
+  table.rn-table tbody tr:hover{ background:#f7f5ef; }
+  table.rn-table tbody tr.is-selected{ background:#eef6f9; }
+  table.rn-table tbody tr:focus-visible{ outline:2px solid var(--accent-light); outline-offset:-2px; }
+  td.num{ text-align:right; font-weight:600; }
+  td.proyecto{ font-weight:600; }
+
+  .rn-ref-badge{
+    display:inline-flex; align-items:center; justify-content:center;
+    width:20px; height:20px; border-radius:50%; background:var(--black); color:#fff;
+    font-size:10.5px; font-weight:700; flex:none; transition:background .1s ease, transform .1s ease;
+  }
+  tr:hover .rn-ref-badge, tr.is-selected .rn-ref-badge{ background:var(--accent-dark); }
+
+  .rn-badge-mineral{ display:inline-flex; align-items:center; gap:6px; font-size:12.5px; }
+  .rn-badge-mineral .sw{ width:8px; height:8px; border-radius:2px; flex:none; }
+
+  .rn-etapa{ color:var(--text); }
+
+  .rn-empty{ padding:26px 8px; text-align:center; color:var(--muted); font-size:13px; }
+
+  /* ---------- pie ---------- */
+  .rn-foot{
+    display:flex; flex-wrap:wrap; gap:2px 10px; align-items:baseline;
+    padding:14px 26px 20px; border-top:1px solid var(--border);
+    font-size:10.5px; color:var(--text);
+  }
+  .rn-foot .firma{ font-weight:700; letter-spacing:.01em; }
+  .rn-foot .fuente{ color:var(--muted); }
+
+  @media (max-width:520px){
+    .rn-head{ padding:18px 16px 12px; }
+    .rn-head h1{ font-size:18px; }
+    .rn-legend{ padding:10px 16px 14px; }
+    .rn-toolbar{ padding:14px 16px 10px; }
+    .rn-table-scroll{ padding:0 16px 18px; }
+    .rn-foot{ padding:12px 16px 16px; }
+  }
+  @media (prefers-reduced-motion:reduce){
+    .rn-uranio *{ transition:none !important; animation:none !important; }
+  }
+</style>
+</head>
+<body style="margin:0;background:#f4f2ec;">
+
+<div class="rn-uranio" id="rnUranio">
+  <div class="rn-card">
+
+    <div class="rn-head">
+      <h1>Distribución de los principales proyectos de Uranio en Río Negro</h1>
+      <p>Tocá cada punto del mapa para ver el detalle del yacimiento, u ordená y filtrá la tabla por mineral, etapa o superficie.</p>
+    </div>
+
+    <div class="rn-map-wrap" id="rnMapWrap">
+      <svg id="rnSvg" viewBox="-15 -15 1030 668" role="img" aria-label="Mapa de la provincia de Río Negro con la ubicación de nueve proyectos de uranio">
+        <path class="rn-province" d="M 399.88,0.0 L 451.59,12.49 L 462.42,39.91 L 456.4,51.11 L 443.17,49.87 L 441.97,58.57 L 449.19,75.96 L 461.21,69.75 L 468.43,92.07 L 498.5,104.45 L 517.74,92.07 L 532.17,118.06 L 552.62,131.64 L 583.88,139.04 L 575.47,161.22 L 600.72,173.51 L 619.96,174.74 L 629.59,168.6 L 639.21,163.68 L 651.23,166.14 L 660.85,175.97 L 669.27,182.11 L 680.1,185.8 L 688.51,182.11 L 696.93,173.51 L 716.18,183.34 L 727.0,188.25 L 736.62,182.11 L 739.03,171.05 L 767.89,185.8 L 788.33,182.11 L 806.37,183.34 L 826.82,189.48 L 842.45,199.29 L 870.11,213.99 L 882.14,221.34 L 894.17,222.56 L 895.37,233.56 L 904.99,236.0 L 915.81,242.11 L 925.44,250.65 L 932.65,253.09 L 935.06,454.67 L 949.49,452.28 L 967.53,457.06 L 986.77,476.15 L 1000.0,492.82 L 981.36,507.09 L 969.93,514.22 L 955.5,517.78 L 935.66,516.59 L 913.41,516.0 L 894.17,516.59 L 882.74,514.81 L 876.13,512.44 L 870.11,503.53 L 859.29,499.36 L 857.49,492.82 L 853.88,490.44 L 850.27,496.99 L 835.84,491.04 L 819.6,482.11 L 806.37,474.36 L 791.94,469.0 L 782.92,467.21 L 772.1,470.19 L 768.49,466.01 L 781.72,462.43 L 778.11,456.46 L 770.29,454.07 L 764.88,455.27 L 767.29,461.24 L 758.87,459.45 L 748.05,463.63 L 742.63,474.36 L 740.23,485.09 L 739.63,494.01 L 739.03,513.03 L 740.83,523.12 L 745.04,533.19 L 749.25,547.99 L 752.25,558.04 L 755.86,564.53 L 758.87,575.74 L 754.06,582.23 L 753.46,591.65 L 753.46,598.13 L 754.66,604.59 L 755.86,611.06 L 751.05,611.06 L 752.86,616.93 L 750.45,626.9 L 750.45,636.28 L 14.43,635.11 L 13.83,622.21 L 12.63,615.76 L 17.44,611.64 L 17.44,603.42 L 12.03,599.3 L 11.43,592.83 L 8.42,589.89 L 4.21,582.82 L 9.02,574.57 L 7.82,565.12 L 7.82,557.45 L 2.41,546.81 L 3.01,536.74 L 0.0,531.41 L 6.01,524.89 L 1.2,517.78 L 7.82,511.84 L 8.42,504.71 L 6.01,499.36 L 4.21,495.2 L 20.75,497.58 L 33.67,499.66 L 39.09,497.58 L 46.0,499.36 L 52.92,500.85 L 60.73,507.98 L 71.56,508.87 L 82.68,503.53 L 83.88,499.07 L 90.2,495.5 L 89.9,492.53 L 93.81,490.74 L 96.81,487.76 L 94.41,478.24 L 92.9,472.28 L 89.3,471.08 L 90.2,467.8 L 87.49,463.93 L 86.59,460.64 L 89.3,455.27 L 96.81,455.57 L 100.42,448.1 L 102.53,444.21 L 107.94,441.22 L 112.15,440.03 L 114.85,436.44 L 121.17,435.24 L 126.58,433.44 L 135.3,435.84 L 139.21,434.94 L 142.21,430.15 L 149.43,424.16 L 153.34,422.36 L 163.26,426.86 L 177.69,422.36 L 184.91,424.46 L 190.92,419.97 L 189.12,412.77 L 199.04,404.37 L 200.24,383.93 L 214.67,373.09 L 209.86,358.62 L 208.66,348.97 L 224.29,336.88 L 247.14,329.62 L 269.99,321.15 L 280.82,311.46 L 296.45,292.04 L 318.1,278.67 L 337.34,261.62 L 348.17,245.77 L 361.4,234.78 L 375.83,216.44 L 395.07,207.87 L 405.89,205.42 L 420.32,205.42 L 428.14,204.19 L 409.5,168.6 L 398.68,159.98 L 399.88,0.0 Z"></path>
+        <g id="rnPins"></g>
+      </svg>
+      <div class="rn-tooltip" id="rnTooltip"><button class="tt-close" id="rnTtClose" aria-label="Cerrar">×</button><div id="rnTtBody"></div></div>
+    </div>
+
+    <div class="rn-legend">
+      <span class="lg-title">Referencia</span>
+      <span class="lg-div"></span>
+      <span class="lg-item"><span class="lg-sw" style="background:var(--uv)"></span>Uranio - Vanadio (U&nbsp;-&nbsp;V)</span>
+      <span class="lg-item"><span class="lg-sw" style="background:var(--u)"></span>Uranio (U)</span>
+    </div>
+
+    <hr class="rn-rule">
+
+    <div class="rn-toolbar">
+      <input type="search" id="rnSearch" placeholder="Buscar proyecto…" aria-label="Buscar proyecto">
+      <select id="rnFiltroMineral" aria-label="Filtrar por mineral">
+        <option value="todos">Mineral: todos</option>
+        <option value="U-V">U - V</option>
+        <option value="U">U</option>
+      </select>
+      <select id="rnFiltroEtapa" aria-label="Filtrar por etapa">
+        <option value="todos">Etapa: todas</option>
+      </select>
+      <button class="rn-reset" id="rnReset" type="button">Limpiar filtros</button>
+      <span class="rn-count" id="rnCount"></span>
+    </div>
+
+    <div class="rn-table-scroll">
+      <table class="rn-table">
+        <thead>
+          <tr id="rnThead">
+            <th data-key="ref" style="width:44px;"><button class="rn-th-btn">Ref.<span class="arrow">▲</span></button></th>
+            <th data-key="nombre"><button class="rn-th-btn">Proyecto<span class="arrow">▲</span></button></th>
+            <th data-key="mineral"><button class="rn-th-btn">Mineral<span class="arrow">▲</span></button></th>
+            <th data-key="etapa"><button class="rn-th-btn">Etapa<span class="arrow">▲</span></button></th>
+            <th data-key="ha" class="num"><button class="rn-th-btn">Superficie (ha)<span class="arrow">▲</span></button></th>
+          </tr>
+        </thead>
+        <tbody id="rnTbody"></tbody>
+      </table>
+      <div class="rn-empty" id="rnEmpty" hidden>No hay proyectos que coincidan con el filtro.</div>
+    </div>
+
+    <div class="rn-foot">
+      <span class="firma">"RÍO NEGRO"</span>
+      <span class="fuente">Fuente: Subsecretaría de Hidrocarburos.</span>
+    </div>
+
+  </div>
+</div>
+
+<script>
+(function(){
+  var DATA = [
+    {ref:1, nombre:'Ivana',         mineral:'U-V', etapa:'Evaluación económica preliminar', ha:6777,  x:559.49, y:416.32},
+    {ref:2, nombre:'Anit',          mineral:'U-V', etapa:'Exploración inicial',              ha:13499, x:614.66, y:433.83},
+    {ref:3, nombre:'Santa Bárbara', mineral:'U-V', etapa:'Exploración inicial',              ha:4701,  x:593.53, y:415.61},
+    {ref:4, nombre:'Anit Sur',      mineral:'U-V', etapa:'Prospección',                       ha:38937, x:631.08, y:439.57},
+    {ref:5, nombre:'Ivana Central', mineral:'U-V', etapa:'Exploración inicial',              ha:10468, x:646.08, y:445.88},
+    {ref:6, nombre:'Ivana Norte',   mineral:'U-V', etapa:'Exploración inicial',              ha:3800,  x:647.06, y:452.48},
+    {ref:7, nombre:'Catriel',       mineral:'U',   etapa:'Exploración inicial',              ha:12771, x:458.78, y:59.79},
+    {ref:8, nombre:'Barda',         mineral:'U-V', etapa:'Prospección',                       ha:49958, x:422.66, y:49.74},
+    {ref:9, nombre:'Lucho U',       mineral:'U',   etapa:'Prospección',                       ha:5930,  x:639.51, y:458.65}
+  ];
+
+  var root = document.getElementById('rnUranio');
+  var pinsG = document.getElementById('rnPins');
+  var svg = document.getElementById('rnSvg');
+  var mapWrap = document.getElementById('rnMapWrap');
+  var tooltip = document.getElementById('rnTooltip');
+  var ttBody = document.getElementById('rnTtBody');
+  var tbody = document.getElementById('rnTbody');
+  var emptyEl = document.getElementById('rnEmpty');
+  var countEl = document.getElementById('rnCount');
+  var searchEl = document.getElementById('rnSearch');
+  var selMineral = document.getElementById('rnFiltroMineral');
+  var selEtapa = document.getElementById('rnFiltroEtapa');
+  var resetBtn = document.getElementById('rnReset');
+  var thead = document.getElementById('rnThead');
+
+  var state = { search:'', mineral:'todos', etapa:'todos', sortKey:'ref', sortDir:'asc', selected:null };
+
+  var etapas = [];
+  DATA.forEach(function(d){ if(etapas.indexOf(d.etapa)===-1) etapas.push(d.etapa); });
+  etapas.forEach(function(e){
+    var o = document.createElement('option'); o.value = e; o.textContent = e; selEtapa.appendChild(o);
+  });
+
+  function fmtHa(n){ return n.toLocaleString('es-AR'); }
+  function mineralColor(m){ return m==='U' ? 'var(--u)' : 'var(--uv)'; }
+
+  // ---------- pines del mapa ----------
+  var pinEls = {};
+  DATA.forEach(function(d){
+    var g = document.createElementNS('http://www.w3.org/2000/svg','g');
+    g.setAttribute('class','rn-pin');
+    g.setAttribute('tabindex','0');
+    g.setAttribute('role','button');
+    g.setAttribute('aria-label', 'Proyecto ' + d.ref + ': ' + d.nombre);
+    g.setAttribute('data-ref', d.ref);
+
+    var halo = document.createElementNS('http://www.w3.org/2000/svg','circle');
+    halo.setAttribute('class','rn-pin-halo');
+    halo.setAttribute('cx', d.x); halo.setAttribute('cy', d.y); halo.setAttribute('r', 21);
+
+    var dot = document.createElementNS('http://www.w3.org/2000/svg','circle');
+    dot.setAttribute('class','rn-pin-dot');
+    dot.setAttribute('cx', d.x); dot.setAttribute('cy', d.y); dot.setAttribute('r', 15.5);
+
+    var txt = document.createElementNS('http://www.w3.org/2000/svg','text');
+    txt.setAttribute('x', d.x); txt.setAttribute('y', d.y+1);
+    txt.textContent = d.ref;
+
+    g.appendChild(halo); g.appendChild(dot); g.appendChild(txt);
+    pinsG.appendChild(g);
+    pinEls[d.ref] = g;
+
+    g.addEventListener('click', function(){ selectRef(d.ref, g); });
+    g.addEventListener('keydown', function(ev){
+      if(ev.key==='Enter' || ev.key===' '){ ev.preventDefault(); selectRef(d.ref, g); }
+    });
+  });
+
+  function selectRef(ref, anchorEl){
+    if(state.selected === ref){ closeTooltip(); return; }
+    state.selected = ref;
+    refreshSelectionUI();
+    openTooltip(ref, anchorEl);
+  }
+
+  function closeTooltip(){
+    state.selected = null;
+    tooltip.classList.remove('is-open');
+    refreshSelectionUI();
+  }
+
+  document.getElementById('rnTtClose').addEventListener('click', closeTooltip);
+  document.addEventListener('keydown', function(ev){ if(ev.key==='Escape') closeTooltip(); });
+  mapWrap.addEventListener('click', function(ev){
+    if(ev.target === svg || ev.target.classList.contains('rn-province')) closeTooltip();
+  });
+
+  function openTooltip(ref, anchorEl){
+    var d = DATA.filter(function(x){ return x.ref===ref; })[0];
+    ttBody.innerHTML =
+      '<div class="tt-title"><span class="tt-ref">'+d.ref+'</span>'+d.nombre+'</div>'+
+      '<div class="tt-row"><span class="tt-k">Mineral</span><span class="tt-v">'+d.mineral+'</span></div>'+
+      '<div class="tt-row"><span class="tt-k">Etapa</span><span class="tt-v">'+d.etapa+'</span></div>'+
+      '<div class="tt-row"><span class="tt-k">Superficie</span><span class="tt-v">'+fmtHa(d.ha)+' ha</span></div>';
+    positionTooltip(d, anchorEl);
+    tooltip.classList.add('is-open');
+  }
+
+  function positionTooltip(d, anchorEl){
+    var dotEl = anchorEl.querySelector('.rn-pin-dot');
+    var dotBox = dotEl.getBoundingClientRect();
+    var wrapBox = mapWrap.getBoundingClientRect();
+    var x = dotBox.left + dotBox.width/2 - wrapBox.left;
+    var y = dotBox.top - wrapBox.top;
+    var ttW = 222;
+    var minX = ttW/2 + 6, maxX = wrapBox.width - ttW/2 - 6;
+    var clampedX = Math.max(minX, Math.min(maxX, x));
+    tooltip.style.left = clampedX + 'px';
+    tooltip.style.top = y + 'px';
+    // si el pin está muy arriba, mostramos el cartel hacia abajo en vez de hacia arriba
+    if(y < 70){
+      tooltip.style.transform = '';
+      tooltip.classList.add('below');
+    } else {
+      tooltip.classList.remove('below');
+    }
+  }
+
+  function refreshSelectionUI(){
+    Object.keys(pinEls).forEach(function(ref){
+      pinEls[ref].classList.toggle('is-active', String(state.selected) === ref);
+    });
+    Array.prototype.forEach.call(tbody.querySelectorAll('tr'), function(tr){
+      tr.classList.toggle('is-selected', String(state.selected) === tr.getAttribute('data-ref'));
+    });
+  }
+
+  // ---------- filtros + orden ----------
+  function getFiltered(){
+    var q = state.search.trim().toLowerCase();
+    return DATA.filter(function(d){
+      if(state.mineral!=='todos' && d.mineral!==state.mineral) return false;
+      if(state.etapa!=='todos' && d.etapa!==state.etapa) return false;
+      if(q && d.nombre.toLowerCase().indexOf(q)===-1) return false;
+      return true;
+    });
+  }
+
+  function getSorted(list){
+    var key = state.sortKey, dir = state.sortDir;
+    var sorted = list.slice().sort(function(a,b){
+      var av=a[key], bv=b[key];
+      if(typeof av==='string'){ av=av.toLowerCase(); bv=bv.toLowerCase(); }
+      if(av<bv) return dir==='asc' ? -1 : 1;
+      if(av>bv) return dir==='asc' ? 1 : -1;
+      return a.ref-b.ref;
+    });
+    return sorted;
+  }
+
+  function render(){
+    var filteredRefs = getFiltered().map(function(d){ return d.ref; });
+    var sorted = getSorted(getFiltered());
+
+    // tabla
+    tbody.innerHTML = '';
+    if(sorted.length===0){
+      emptyEl.hidden = false;
+    } else {
+      emptyEl.hidden = true;
+      sorted.forEach(function(d){
+        var tr = document.createElement('tr');
+        tr.setAttribute('data-ref', d.ref);
+        tr.setAttribute('tabindex','0');
+        tr.innerHTML =
+          '<td><span class="rn-ref-badge">'+d.ref+'</span></td>'+
+          '<td class="proyecto">'+d.nombre+'</td>'+
+          '<td><span class="rn-badge-mineral"><span class="sw" style="background:'+mineralColor(d.mineral)+'"></span>'+d.mineral+'</span></td>'+
+          '<td class="rn-etapa">'+d.etapa+'</td>'+
+          '<td class="num">'+fmtHa(d.ha)+'</td>';
+        tr.addEventListener('click', function(){ selectRef(d.ref, pinEls[d.ref]); });
+        tr.addEventListener('keydown', function(ev){
+          if(ev.key==='Enter' || ev.key===' '){ ev.preventDefault(); selectRef(d.ref, pinEls[d.ref]); }
+        });
+        tbody.appendChild(tr);
+      });
+    }
+
+    // pines: atenuar los que no matchean el filtro
+    Object.keys(pinEls).forEach(function(ref){
+      pinEls[ref].classList.toggle('is-dim', filteredRefs.indexOf(Number(ref))===-1);
+    });
+    if(state.selected!==null && filteredRefs.indexOf(state.selected)===-1) closeTooltip();
+
+    // contador
+    var total = DATA.length, shown = sorted.length;
+    countEl.textContent = (shown===total) ? ('Mostrando los '+total+' proyectos') : ('Mostrando '+shown+' de '+total+' proyectos');
+
+    // encabezados
+    Array.prototype.forEach.call(thead.querySelectorAll('th'), function(th){
+      var active = th.getAttribute('data-key')===state.sortKey;
+      th.classList.toggle('is-sorted', active);
+      th.classList.toggle('dir-desc', active && state.sortDir==='desc');
+    });
+
+    refreshSelectionUI();
+  }
+
+  thead.addEventListener('click', function(ev){
+    var th = ev.target.closest('th[data-key]');
+    if(!th) return;
+    var key = th.getAttribute('data-key');
+    if(state.sortKey===key){
+      state.sortDir = state.sortDir==='asc' ? 'desc' : 'asc';
+    } else {
+      state.sortKey = key;
+      state.sortDir = (key==='ha') ? 'desc' : 'asc';
+    }
+    render();
+  });
+
+  searchEl.addEventListener('input', function(){ state.search = searchEl.value; render(); });
+  selMineral.addEventListener('change', function(){ state.mineral = selMineral.value; render(); });
+  selEtapa.addEventListener('change', function(){ state.etapa = selEtapa.value; render(); });
+  resetBtn.addEventListener('click', function(){
+    state.search=''; state.mineral='todos'; state.etapa='todos';
+    state.sortKey='ref'; state.sortDir='asc';
+    searchEl.value=''; selMineral.value='todos'; selEtapa.value='todos';
+    render();
+  });
+
+  window.addEventListener('resize', function(){
+    if(state.selected!==null) positionTooltip(DATA.filter(function(x){return x.ref===state.selected;})[0], pinEls[state.selected]);
+  });
+
+  render();
+
+  // ---------- alto automático si está incrustado en un iframe ----------
+  function postHeight(){
+    try{
+      if(window.parent && window.parent!==window){
+        var h = document.body.scrollHeight;
+        window.parent.postMessage({ rnGraficoHeight: h }, '*');
+      }
+    }catch(e){}
+  }
+  window.addEventListener('load', postHeight);
+  window.addEventListener('resize', postHeight);
+  if(window.ResizeObserver){ new ResizeObserver(postHeight).observe(document.body); }
+  else { setInterval(postHeight, 700); }
+})();
+</script>
+
+</body>
+</html>
