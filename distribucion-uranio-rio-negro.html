@@ -14,17 +14,15 @@
     --border:#dedad0;
     --text:#2b2a25;
     --muted:#7a7669;
-    --muted-2:#9c9788;
     --map-fill:#e7e2d4;
-    --map-fill-hi:#efeade;
     --map-stroke:#b6ae9c;
     --black:#141414;
-    --accent:#3f84a4;
-    --accent-dark:#215870;
-    --accent-light:#a9d6e6;
-    --uv:#a9d6e6;
-    --u:#3f84a4;
-    --focus:#215870;
+    --gray-hover:#3f3e3a;
+    --gray-hover-bg:#eeeeec;
+    --gray-selected-bg:#e3e3e0;
+    --gray-focus:#8f8c82;
+    --uv:#c3bfb3;
+    --u:#3f3e3a;
     font-family:'Chivo', 'Segoe UI', system-ui, -apple-system, sans-serif;
     color:var(--text);
     background:var(--bg);
@@ -42,16 +40,26 @@
   .rn-head{
     padding:22px 26px 14px;
     border-top:3px solid var(--black);
+    position:relative;
   }
   .rn-head h1{
     margin:0 0 6px;
     font-size:22px; line-height:1.22; font-weight:800;
     letter-spacing:-0.005em;
     text-wrap:balance;
+    max-width:calc(100% - 100px);
   }
   .rn-head p{
     margin:0; font-size:13px; color:var(--muted); line-height:1.5; max-width:62ch;
   }
+  .rn-debug-toggle{
+    position:absolute; top:20px; right:22px;
+    font-family:inherit; font-size:10.5px; font-weight:600; letter-spacing:.02em;
+    color:var(--muted); background:none; border:1px solid var(--border); border-radius:14px;
+    padding:5px 11px; cursor:pointer; white-space:nowrap;
+  }
+  .rn-debug-toggle:hover{ color:var(--text); border-color:var(--gray-focus); background:var(--gray-hover-bg); }
+  .rn-uranio.debug-on .rn-debug-toggle{ background:var(--black); color:#fff; border-color:var(--black); }
 
   /* ---------- mapa ---------- */
   .rn-map-wrap{ position:relative; padding:6px 18px 4px; }
@@ -59,15 +67,41 @@
   .rn-province{ fill:var(--map-fill); stroke:var(--map-stroke); stroke-width:2.2; stroke-linejoin:round; transition:fill .15s ease; }
 
   .rn-pin{ cursor:pointer; }
-  .rn-pin circle.rn-pin-halo{ fill:var(--accent); opacity:0; transition:opacity .18s ease, r .18s ease; }
+  .rn-pin circle.rn-pin-halo{ fill:var(--gray-hover); opacity:0; transition:opacity .18s ease, r .18s ease; }
   .rn-pin circle.rn-pin-dot{ fill:var(--black); stroke:#fff; stroke-width:2.4; transition:transform .12s ease, fill .12s ease; transform-box:fill-box; transform-origin:center; }
   .rn-pin text{ fill:#fff; font-family:'Chivo',sans-serif; font-weight:700; font-size:17px; text-anchor:middle; dominant-baseline:central; pointer-events:none; }
-  .rn-pin:hover circle.rn-pin-dot, .rn-pin.is-active circle.rn-pin-dot{ transform:scale(1.14); fill:var(--accent-dark); }
+  .rn-pin:hover circle.rn-pin-dot, .rn-pin.is-active circle.rn-pin-dot{ transform:scale(1.14); fill:var(--gray-hover); }
   .rn-pin.is-active circle.rn-pin-halo{ opacity:.20; r:26; }
   .rn-pin:focus-visible circle.rn-pin-dot{ outline:none; }
   .rn-pin:focus-visible circle.rn-pin-halo{ opacity:.28; r:24; }
-  .rn-pin.is-dim{ opacity:.22; }
-  .rn-pin.is-dim:hover circle.rn-pin-dot{ transform:none; fill:var(--black); }
+
+  /* ---------- modo edición (debug: reubicar pines a mano) ---------- */
+  .rn-uranio.debug-on .rn-map-wrap{ outline:2px dashed var(--gray-focus); outline-offset:4px; border-radius:6px; }
+  .rn-uranio.debug-on .rn-pin{ cursor:grab; }
+  .rn-uranio.debug-on .rn-pin.is-dragging{ cursor:grabbing; }
+  .rn-uranio.debug-on .rn-pin circle.rn-pin-halo{ opacity:.16; }
+  .rn-debug-panel{ display:none; padding:14px 26px 18px; border-top:1px dashed var(--border); }
+  .rn-uranio.debug-on .rn-debug-panel{ display:block; }
+  .rn-debug-panel .dp-head{ display:flex; align-items:center; justify-content:space-between; gap:10px; margin-bottom:10px; }
+  .rn-debug-panel .dp-title{ font-size:10.5px; text-transform:uppercase; letter-spacing:.05em; font-weight:700; color:var(--muted); }
+  .rn-debug-actions{ display:flex; gap:8px; }
+  .rn-debug-btn{
+    font-family:inherit; font-size:11.5px; font-weight:600; cursor:pointer;
+    background:var(--bg); color:var(--text); border:1px solid var(--border); border-radius:6px;
+    padding:6px 11px;
+  }
+  .rn-debug-btn:hover{ background:var(--gray-hover-bg); border-color:var(--gray-focus); }
+  .rn-debug-btn.primary{ background:var(--black); color:#fff; border-color:var(--black); }
+  .rn-debug-btn.primary:hover{ background:var(--gray-hover); }
+  .rn-debug-list{ display:grid; grid-template-columns:repeat(auto-fill,minmax(210px,1fr)); gap:6px 14px; font-size:11.5px; font-variant-numeric:tabular-nums; }
+  .rn-debug-list .dp-row{ display:flex; align-items:center; gap:6px; padding:5px 7px; border:1px solid var(--border); border-radius:6px; background:var(--bg); }
+  .rn-debug-list .dp-ref{
+    display:inline-flex; align-items:center; justify-content:center; width:16px; height:16px; border-radius:50%;
+    background:var(--black); color:#fff; font-size:9px; font-weight:700; flex:none;
+  }
+  .rn-debug-list .dp-name{ flex:1; min-width:0; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+  .rn-debug-list .dp-xy{ color:var(--muted); flex:none; }
+  .rn-debug-copy-hint{ font-size:10.5px; color:var(--muted); margin-top:8px; }
 
   /* ---------- cartelito / tooltip ---------- */
   .rn-tooltip{
@@ -105,42 +139,10 @@
   }
   .rn-tooltip .tt-close:hover{ color:#fff; }
 
-  /* ---------- leyenda ---------- */
-  .rn-legend{
-    display:flex; flex-wrap:wrap; align-items:center; gap:10px 16px;
-    padding:10px 26px 16px; font-size:11px;
-  }
-  .rn-legend .lg-title{ font-weight:700; font-size:10.5px; text-transform:uppercase; letter-spacing:.05em; }
-  .rn-legend .lg-div{ width:1px; height:12px; background:var(--muted-2); }
-  .rn-legend .lg-item{ display:flex; align-items:center; gap:6px; font-weight:600; color:var(--text); }
-  .rn-legend .lg-sw{ width:9px; height:9px; border-radius:2px; flex:none; }
-
   hr.rn-rule{ border:none; border-top:1px solid var(--border); margin:0; }
 
-  /* ---------- toolbar ---------- */
-  .rn-toolbar{
-    display:flex; flex-wrap:wrap; align-items:center; gap:8px;
-    padding:16px 26px 12px;
-  }
-  .rn-toolbar input[type="search"], .rn-toolbar select{
-    font-family:inherit; font-size:12.5px; color:var(--text);
-    border:1px solid var(--border); border-radius:6px; background:var(--bg);
-    padding:7px 10px; height:34px;
-  }
-  .rn-toolbar input[type="search"]{ flex:1 1 160px; min-width:140px; }
-  .rn-toolbar select{ flex:0 0 auto; cursor:pointer; }
-  .rn-toolbar input:focus, .rn-toolbar select:focus{ outline:2px solid var(--accent-light); outline-offset:1px; border-color:var(--accent); }
-  .rn-reset{
-    flex:none; font-family:inherit; font-size:12px; font-weight:600; cursor:pointer;
-    background:var(--bg); color:var(--text); border:1px solid var(--border); border-radius:6px;
-    padding:0 12px; height:34px;
-  }
-  .rn-reset:hover{ background:#ececea; }
-  .rn-count{ flex:1 1 100%; order:5; font-size:11px; color:var(--muted); margin-top:2px; }
-  @media (min-width:640px){ .rn-count{ flex:0 0 auto; order:0; margin-left:auto; margin-top:0; text-align:right; } }
-
   /* ---------- tabla ---------- */
-  .rn-table-scroll{ overflow-x:auto; padding:0 26px 22px; }
+  .rn-table-scroll{ overflow-x:auto; padding:22px 26px 22px; }
   table.rn-table{ width:100%; border-collapse:collapse; min-width:560px; font-variant-numeric:tabular-nums; }
   table.rn-table thead th{
     text-align:left; font-size:10.5px; text-transform:uppercase; letter-spacing:.045em;
@@ -153,10 +155,10 @@
     background:none; border:none; color:inherit; cursor:pointer; padding:4px 0;
   }
   .rn-th-btn:hover{ color:var(--text); }
-  .rn-th-btn:focus-visible{ outline:2px solid var(--accent-light); outline-offset:2px; border-radius:3px; }
+  .rn-th-btn:focus-visible{ outline:2px solid var(--gray-focus); outline-offset:2px; border-radius:3px; }
   .rn-th-btn .arrow{ font-size:9px; opacity:.25; transition:opacity .12s ease, transform .12s ease; }
   th.is-sorted .rn-th-btn{ color:var(--text); }
-  th.is-sorted .rn-th-btn .arrow{ opacity:1; color:var(--accent-dark); }
+  th.is-sorted .rn-th-btn .arrow{ opacity:1; color:var(--gray-hover); }
   th.is-sorted.dir-desc .rn-th-btn .arrow{ transform:rotate(180deg); }
   th.num{ text-align:right; }
   th.num .rn-th-btn{ flex-direction:row-reverse; }
@@ -164,9 +166,9 @@
   table.rn-table tbody td{ padding:10px 8px; border-bottom:1px solid var(--border); font-size:13px; vertical-align:middle; }
   table.rn-table tbody td:first-child{ padding-left:2px; }
   table.rn-table tbody tr{ cursor:pointer; transition:background .1s ease; }
-  table.rn-table tbody tr:hover{ background:#f7f5ef; }
-  table.rn-table tbody tr.is-selected{ background:#eef6f9; }
-  table.rn-table tbody tr:focus-visible{ outline:2px solid var(--accent-light); outline-offset:-2px; }
+  table.rn-table tbody tr:hover{ background:var(--gray-hover-bg); }
+  table.rn-table tbody tr.is-selected{ background:var(--gray-selected-bg); }
+  table.rn-table tbody tr:focus-visible{ outline:2px solid var(--gray-focus); outline-offset:-2px; }
   td.num{ text-align:right; font-weight:600; }
   td.proyecto{ font-weight:600; }
 
@@ -175,7 +177,7 @@
     width:20px; height:20px; border-radius:50%; background:var(--black); color:#fff;
     font-size:10.5px; font-weight:700; flex:none; transition:background .1s ease, transform .1s ease;
   }
-  tr:hover .rn-ref-badge, tr.is-selected .rn-ref-badge{ background:var(--accent-dark); }
+  tr:hover .rn-ref-badge, tr.is-selected .rn-ref-badge{ background:var(--gray-hover); }
 
   .rn-badge-mineral{ display:inline-flex; align-items:center; gap:6px; font-size:12.5px; }
   .rn-badge-mineral .sw{ width:8px; height:8px; border-radius:2px; flex:none; }
@@ -184,22 +186,12 @@
 
   .rn-empty{ padding:26px 8px; text-align:center; color:var(--muted); font-size:13px; }
 
-  /* ---------- pie ---------- */
-  .rn-foot{
-    display:flex; flex-wrap:wrap; gap:2px 10px; align-items:baseline;
-    padding:14px 26px 20px; border-top:1px solid var(--border);
-    font-size:10.5px; color:var(--text);
-  }
-  .rn-foot .firma{ font-weight:700; letter-spacing:.01em; }
-  .rn-foot .fuente{ color:var(--muted); }
-
   @media (max-width:520px){
     .rn-head{ padding:18px 16px 12px; }
-    .rn-head h1{ font-size:18px; }
-    .rn-legend{ padding:10px 16px 14px; }
-    .rn-toolbar{ padding:14px 16px 10px; }
+    .rn-head h1{ font-size:18px; max-width:100%; }
+    .rn-debug-toggle{ position:static; display:inline-block; margin-top:10px; }
     .rn-table-scroll{ padding:0 16px 18px; }
-    .rn-foot{ padding:12px 16px 16px; }
+    .rn-debug-panel{ padding:14px 16px 18px; }
   }
   @media (prefers-reduced-motion:reduce){
     .rn-uranio *{ transition:none !important; animation:none !important; }
@@ -213,7 +205,8 @@
 
     <div class="rn-head">
       <h1>Distribución de los principales proyectos de Uranio en Río Negro</h1>
-      <p>Tocá cada punto del mapa para ver el detalle del yacimiento, u ordená y filtrá la tabla por mineral, etapa o superficie.</p>
+      <p>Tocá cada punto del mapa para ver el detalle del yacimiento, u ordená la tabla por cualquier columna.</p>
+      <button class="rn-debug-toggle" id="rnDebugToggle" type="button" aria-pressed="false">🛠 Ajustar puntos</button>
     </div>
 
     <div class="rn-map-wrap" id="rnMapWrap">
@@ -224,28 +217,7 @@
       <div class="rn-tooltip" id="rnTooltip"><button class="tt-close" id="rnTtClose" aria-label="Cerrar">×</button><div id="rnTtBody"></div></div>
     </div>
 
-    <div class="rn-legend">
-      <span class="lg-title">Referencia</span>
-      <span class="lg-div"></span>
-      <span class="lg-item"><span class="lg-sw" style="background:var(--uv)"></span>Uranio - Vanadio (U&nbsp;-&nbsp;V)</span>
-      <span class="lg-item"><span class="lg-sw" style="background:var(--u)"></span>Uranio (U)</span>
-    </div>
-
     <hr class="rn-rule">
-
-    <div class="rn-toolbar">
-      <input type="search" id="rnSearch" placeholder="Buscar proyecto…" aria-label="Buscar proyecto">
-      <select id="rnFiltroMineral" aria-label="Filtrar por mineral">
-        <option value="todos">Mineral: todos</option>
-        <option value="U-V">U - V</option>
-        <option value="U">U</option>
-      </select>
-      <select id="rnFiltroEtapa" aria-label="Filtrar por etapa">
-        <option value="todos">Etapa: todas</option>
-      </select>
-      <button class="rn-reset" id="rnReset" type="button">Limpiar filtros</button>
-      <span class="rn-count" id="rnCount"></span>
-    </div>
 
     <div class="rn-table-scroll">
       <table class="rn-table">
@@ -260,12 +232,18 @@
         </thead>
         <tbody id="rnTbody"></tbody>
       </table>
-      <div class="rn-empty" id="rnEmpty" hidden>No hay proyectos que coincidan con el filtro.</div>
     </div>
 
-    <div class="rn-foot">
-      <span class="firma">"RÍO NEGRO"</span>
-      <span class="fuente">Fuente: Subsecretaría de Hidrocarburos.</span>
+    <div class="rn-debug-panel" id="rnDebugPanel">
+      <div class="dp-head">
+        <span class="dp-title">Modo edición — posiciones de los puntos</span>
+        <div class="rn-debug-actions">
+          <button class="rn-debug-btn" id="rnDebugReset" type="button">Restablecer</button>
+          <button class="rn-debug-btn primary" id="rnDebugCopy" type="button">Copiar todos los datos</button>
+        </div>
+      </div>
+      <div class="rn-debug-list" id="rnDebugList"></div>
+      <div class="rn-debug-copy-hint">Arrastrá cada punto sobre el mapa para reubicarlo, y usá "Copiar todos los datos" para pegarle las coordenadas nuevas.</div>
     </div>
 
   </div>
@@ -285,6 +263,8 @@
     {ref:9, nombre:'Lucho U',       mineral:'U',   etapa:'Prospección',                       ha:5930,  x:639.51, y:458.65}
   ];
 
+  var ORIGINAL = DATA.map(function(d){ return {ref:d.ref, x:d.x, y:d.y}; });
+
   var root = document.getElementById('rnUranio');
   var pinsG = document.getElementById('rnPins');
   var svg = document.getElementById('rnSvg');
@@ -292,27 +272,39 @@
   var tooltip = document.getElementById('rnTooltip');
   var ttBody = document.getElementById('rnTtBody');
   var tbody = document.getElementById('rnTbody');
-  var emptyEl = document.getElementById('rnEmpty');
-  var countEl = document.getElementById('rnCount');
-  var searchEl = document.getElementById('rnSearch');
-  var selMineral = document.getElementById('rnFiltroMineral');
-  var selEtapa = document.getElementById('rnFiltroEtapa');
-  var resetBtn = document.getElementById('rnReset');
   var thead = document.getElementById('rnThead');
+  var debugToggle = document.getElementById('rnDebugToggle');
+  var debugList = document.getElementById('rnDebugList');
+  var debugCopyBtn = document.getElementById('rnDebugCopy');
+  var debugResetBtn = document.getElementById('rnDebugReset');
 
-  var state = { search:'', mineral:'todos', etapa:'todos', sortKey:'ref', sortDir:'asc', selected:null };
-
-  var etapas = [];
-  DATA.forEach(function(d){ if(etapas.indexOf(d.etapa)===-1) etapas.push(d.etapa); });
-  etapas.forEach(function(e){
-    var o = document.createElement('option'); o.value = e; o.textContent = e; selEtapa.appendChild(o);
-  });
+  var state = { sortKey:'ref', sortDir:'asc', selected:null };
 
   function fmtHa(n){ return n.toLocaleString('es-AR'); }
   function mineralColor(m){ return m==='U' ? 'var(--u)' : 'var(--uv)'; }
+  function byRef(ref){ return DATA.filter(function(x){ return x.ref===ref; })[0]; }
 
-  // ---------- pines del mapa ----------
+  // ---------- pines del mapa (arrastrables en modo edición) ----------
   var pinEls = {};
+  var svgPt = svg.createSVGPoint();
+  function clientToSvg(clientX, clientY){
+    svgPt.x = clientX; svgPt.y = clientY;
+    var ctm = svg.getScreenCTM();
+    if(!ctm) return {x:0,y:0};
+    var p = svgPt.matrixTransform(ctm.inverse());
+    return {x:p.x, y:p.y};
+  }
+
+  function movePin(d){
+    var g = pinEls[d.ref];
+    var halo = g.querySelector('.rn-pin-halo');
+    var dot = g.querySelector('.rn-pin-dot');
+    var txt = g.querySelector('text');
+    halo.setAttribute('cx', d.x); halo.setAttribute('cy', d.y);
+    dot.setAttribute('cx', d.x); dot.setAttribute('cy', d.y);
+    txt.setAttribute('x', d.x); txt.setAttribute('y', d.y+1);
+  }
+
   DATA.forEach(function(d){
     var g = document.createElementNS('http://www.w3.org/2000/svg','g');
     g.setAttribute('class','rn-pin');
@@ -323,21 +315,51 @@
 
     var halo = document.createElementNS('http://www.w3.org/2000/svg','circle');
     halo.setAttribute('class','rn-pin-halo');
-    halo.setAttribute('cx', d.x); halo.setAttribute('cy', d.y); halo.setAttribute('r', 21);
+    halo.setAttribute('r', 21);
 
     var dot = document.createElementNS('http://www.w3.org/2000/svg','circle');
     dot.setAttribute('class','rn-pin-dot');
-    dot.setAttribute('cx', d.x); dot.setAttribute('cy', d.y); dot.setAttribute('r', 15.5);
+    dot.setAttribute('r', 15.5);
 
     var txt = document.createElementNS('http://www.w3.org/2000/svg','text');
-    txt.setAttribute('x', d.x); txt.setAttribute('y', d.y+1);
     txt.textContent = d.ref;
 
     g.appendChild(halo); g.appendChild(dot); g.appendChild(txt);
     pinsG.appendChild(g);
     pinEls[d.ref] = g;
+    movePin(d);
 
-    g.addEventListener('click', function(){ selectRef(d.ref, g); });
+    var dragMoved = false, dragging = false;
+
+    g.addEventListener('pointerdown', function(ev){
+      if(!root.classList.contains('debug-on')) return;
+      dragging = true; dragMoved = false;
+      g.classList.add('is-dragging');
+      g.setPointerCapture(ev.pointerId);
+      ev.preventDefault();
+    });
+    g.addEventListener('pointermove', function(ev){
+      if(!dragging) return;
+      dragMoved = true;
+      var p = clientToSvg(ev.clientX, ev.clientY);
+      d.x = Math.round(p.x*100)/100; d.y = Math.round(p.y*100)/100;
+      movePin(d);
+      if(state.selected === d.ref) positionTooltip(d, g);
+      renderDebugList();
+    });
+    function endDrag(ev){
+      if(!dragging) return;
+      dragging = false;
+      g.classList.remove('is-dragging');
+      try{ g.releasePointerCapture(ev.pointerId); }catch(e){}
+    }
+    g.addEventListener('pointerup', endDrag);
+    g.addEventListener('pointercancel', endDrag);
+
+    g.addEventListener('click', function(){
+      if(dragMoved){ dragMoved = false; return; }
+      selectRef(d.ref, g);
+    });
     g.addEventListener('keydown', function(ev){
       if(ev.key==='Enter' || ev.key===' '){ ev.preventDefault(); selectRef(d.ref, g); }
     });
@@ -363,7 +385,7 @@
   });
 
   function openTooltip(ref, anchorEl){
-    var d = DATA.filter(function(x){ return x.ref===ref; })[0];
+    var d = byRef(ref);
     ttBody.innerHTML =
       '<div class="tt-title"><span class="tt-ref">'+d.ref+'</span>'+d.nombre+'</div>'+
       '<div class="tt-row"><span class="tt-k">Mineral</span><span class="tt-v">'+d.mineral+'</span></div>'+
@@ -402,20 +424,10 @@
     });
   }
 
-  // ---------- filtros + orden ----------
-  function getFiltered(){
-    var q = state.search.trim().toLowerCase();
-    return DATA.filter(function(d){
-      if(state.mineral!=='todos' && d.mineral!==state.mineral) return false;
-      if(state.etapa!=='todos' && d.etapa!==state.etapa) return false;
-      if(q && d.nombre.toLowerCase().indexOf(q)===-1) return false;
-      return true;
-    });
-  }
-
-  function getSorted(list){
+  // ---------- orden de la tabla ----------
+  function getSorted(){
     var key = state.sortKey, dir = state.sortDir;
-    var sorted = list.slice().sort(function(a,b){
+    var sorted = DATA.slice().sort(function(a,b){
       var av=a[key], bv=b[key];
       if(typeof av==='string'){ av=av.toLowerCase(); bv=bv.toLowerCase(); }
       if(av<bv) return dir==='asc' ? -1 : 1;
@@ -426,42 +438,26 @@
   }
 
   function render(){
-    var filteredRefs = getFiltered().map(function(d){ return d.ref; });
-    var sorted = getSorted(getFiltered());
+    var sorted = getSorted();
 
     // tabla
     tbody.innerHTML = '';
-    if(sorted.length===0){
-      emptyEl.hidden = false;
-    } else {
-      emptyEl.hidden = true;
-      sorted.forEach(function(d){
-        var tr = document.createElement('tr');
-        tr.setAttribute('data-ref', d.ref);
-        tr.setAttribute('tabindex','0');
-        tr.innerHTML =
-          '<td><span class="rn-ref-badge">'+d.ref+'</span></td>'+
-          '<td class="proyecto">'+d.nombre+'</td>'+
-          '<td><span class="rn-badge-mineral"><span class="sw" style="background:'+mineralColor(d.mineral)+'"></span>'+d.mineral+'</span></td>'+
-          '<td class="rn-etapa">'+d.etapa+'</td>'+
-          '<td class="num">'+fmtHa(d.ha)+'</td>';
-        tr.addEventListener('click', function(){ selectRef(d.ref, pinEls[d.ref]); });
-        tr.addEventListener('keydown', function(ev){
-          if(ev.key==='Enter' || ev.key===' '){ ev.preventDefault(); selectRef(d.ref, pinEls[d.ref]); }
-        });
-        tbody.appendChild(tr);
+    sorted.forEach(function(d){
+      var tr = document.createElement('tr');
+      tr.setAttribute('data-ref', d.ref);
+      tr.setAttribute('tabindex','0');
+      tr.innerHTML =
+        '<td><span class="rn-ref-badge">'+d.ref+'</span></td>'+
+        '<td class="proyecto">'+d.nombre+'</td>'+
+        '<td><span class="rn-badge-mineral"><span class="sw" style="background:'+mineralColor(d.mineral)+'"></span>'+d.mineral+'</span></td>'+
+        '<td class="rn-etapa">'+d.etapa+'</td>'+
+        '<td class="num">'+fmtHa(d.ha)+'</td>';
+      tr.addEventListener('click', function(){ selectRef(d.ref, pinEls[d.ref]); });
+      tr.addEventListener('keydown', function(ev){
+        if(ev.key==='Enter' || ev.key===' '){ ev.preventDefault(); selectRef(d.ref, pinEls[d.ref]); }
       });
-    }
-
-    // pines: atenuar los que no matchean el filtro
-    Object.keys(pinEls).forEach(function(ref){
-      pinEls[ref].classList.toggle('is-dim', filteredRefs.indexOf(Number(ref))===-1);
+      tbody.appendChild(tr);
     });
-    if(state.selected!==null && filteredRefs.indexOf(state.selected)===-1) closeTooltip();
-
-    // contador
-    var total = DATA.length, shown = sorted.length;
-    countEl.textContent = (shown===total) ? ('Mostrando los '+total+' proyectos') : ('Mostrando '+shown+' de '+total+' proyectos');
 
     // encabezados
     Array.prototype.forEach.call(thead.querySelectorAll('th'), function(th){
@@ -486,21 +482,64 @@
     render();
   });
 
-  searchEl.addEventListener('input', function(){ state.search = searchEl.value; render(); });
-  selMineral.addEventListener('change', function(){ state.mineral = selMineral.value; render(); });
-  selEtapa.addEventListener('change', function(){ state.etapa = selEtapa.value; render(); });
-  resetBtn.addEventListener('click', function(){
-    state.search=''; state.mineral='todos'; state.etapa='todos';
-    state.sortKey='ref'; state.sortDir='asc';
-    searchEl.value=''; selMineral.value='todos'; selEtapa.value='todos';
-    render();
-  });
-
   window.addEventListener('resize', function(){
-    if(state.selected!==null) positionTooltip(DATA.filter(function(x){return x.ref===state.selected;})[0], pinEls[state.selected]);
+    if(state.selected!==null) positionTooltip(byRef(state.selected), pinEls[state.selected]);
   });
 
   render();
+
+  // ---------- modo edición: arrastrar pines + copiar datos ----------
+  function renderDebugList(){
+    debugList.innerHTML = DATA.slice().sort(function(a,b){ return a.ref-b.ref; }).map(function(d){
+      return '<div class="dp-row"><span class="dp-ref">'+d.ref+'</span>'+
+        '<span class="dp-name">'+d.nombre+'</span>'+
+        '<span class="dp-xy">x:'+d.x.toFixed(1)+' y:'+d.y.toFixed(1)+'</span></div>';
+    }).join('');
+  }
+
+  function copyAllData(){
+    var pad = function(s,n){ s=String(s); while(s.length<n) s+=' '; return s; };
+    var lines = DATA.map(function(d){
+      return '    {ref:'+d.ref+', nombre:'+pad("'"+d.nombre+"',",18)+' mineral:'+pad("'"+d.mineral+"',",7)+
+        ' etapa:'+pad("'"+d.etapa+"',",42)+' ha:'+pad(d.ha+',',8)+' x:'+d.x.toFixed(2)+', y:'+d.y.toFixed(2)+'}';
+    });
+    var text = 'var DATA = [\n' + lines.join(',\n') + '\n  ];';
+    var done = function(){
+      var prev = debugCopyBtn.textContent;
+      debugCopyBtn.textContent = '¡Copiado!';
+      setTimeout(function(){ debugCopyBtn.textContent = prev; }, 1400);
+    };
+    if(navigator.clipboard && navigator.clipboard.writeText){
+      navigator.clipboard.writeText(text).then(done, function(){ fallbackCopy(text, done); });
+    } else {
+      fallbackCopy(text, done);
+    }
+  }
+  function fallbackCopy(text, done){
+    var ta = document.createElement('textarea');
+    ta.value = text; ta.style.position = 'fixed'; ta.style.opacity = '0';
+    document.body.appendChild(ta); ta.select();
+    try{ document.execCommand('copy'); }catch(e){}
+    document.body.removeChild(ta);
+    done();
+  }
+
+  debugToggle.addEventListener('click', function(){
+    var on = root.classList.toggle('debug-on');
+    debugToggle.setAttribute('aria-pressed', on ? 'true' : 'false');
+    debugToggle.textContent = on ? '✕ Salir del modo edición' : '🛠 Ajustar puntos';
+    if(on) renderDebugList();
+  });
+  debugCopyBtn.addEventListener('click', copyAllData);
+  debugResetBtn.addEventListener('click', function(){
+    ORIGINAL.forEach(function(o){
+      var d = byRef(o.ref);
+      d.x = o.x; d.y = o.y;
+      movePin(d);
+    });
+    if(state.selected!==null) positionTooltip(byRef(state.selected), pinEls[state.selected]);
+    renderDebugList();
+  });
 
   // ---------- alto automático si está incrustado en un iframe ----------
   function postHeight(){
