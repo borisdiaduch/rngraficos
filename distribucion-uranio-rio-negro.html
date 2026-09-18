@@ -49,20 +49,6 @@
     text-wrap:balance;
     max-width:calc(100% - 100px);
   }
-  .rn-hint{
-    display:inline-flex; align-items:center; justify-content:center;
-    width:22px; height:22px; margin-top:2px; padding:0; border:none; background:none; cursor:pointer;
-  }
-  .rn-hint-dot{
-    width:9px; height:9px; border-radius:50%; background:var(--black);
-    animation: rn-pulse 2s ease-out infinite;
-  }
-  @keyframes rn-pulse{
-    0%{ box-shadow:0 0 0 0 rgba(20,20,20,0.38); }
-    70%{ box-shadow:0 0 0 11px rgba(20,20,20,0); }
-    100%{ box-shadow:0 0 0 0 rgba(20,20,20,0); }
-  }
-  .rn-hint.is-gone{ display:none; }
   .rn-debug-toggle{
     position:absolute; top:20px; right:22px;
     font-family:inherit; font-size:10.5px; font-weight:600; letter-spacing:.02em;
@@ -314,7 +300,6 @@
 
     <div class="rn-head">
       <h1>Distribución de los principales proyectos de uranio en Río Negro</h1>
-      <button class="rn-hint" id="rnHint" type="button" aria-label="Este mapa es interactivo: tocá cada punto para ver el detalle del proyecto"><span class="rn-hint-dot"></span></button>
       <button class="rn-debug-toggle" id="rnDebugToggle" type="button" aria-pressed="false">🛠 Ajustar puntos</button>
     </div>
 
@@ -386,7 +371,7 @@
         <span class="dp-title">Ciudades</span>
         <div class="rn-debug-size">
           <label for="rnCitySize">Tamaño</label>
-          <input type="range" id="rnCitySize" min="3" max="12" step="0.5" value="6.5">
+          <input type="range" id="rnCitySize" min="3" max="14" step="0.5" value="8">
         </div>
       </div>
       <div class="rn-debug-city-list" id="rnDebugCityList"></div>
@@ -411,9 +396,9 @@
     {ref:4, nombre:'Anit Sur',       mineral:'U-V', etapa:'Prospección',                       ha:38937, titular:'Minera Cielo Azul',     x:604.65, y:340.19},
     {ref:5, nombre:'Ivana Central',  mineral:'U-V', etapa:'Exploración inicial',              ha:10468, titular:'Minera Cielo Azul',     x:641.13, y:380.14},
     {ref:6, nombre:'Ivana Norte',    mineral:'U-V', etapa:'Exploración inicial',              ha:3800,  titular:'Minera Cielo Azul',     x:635.05, y:362.77},
-    {ref:7, nombre:'Catriel',        mineral:'U',   etapa:'Exploración inicial',              ha:12771, titular:'Comisión Nacional de Energía Atómica', x:445.06, y:54.47},
-    {ref:8, nombre:'Barda Colorada', mineral:'U-V', etapa:'Prospección',                       ha:49958, titular:'Piche Resources SA',    x:411.62, y:55.42},
-    {ref:9, nombre:'Lucho U',        mineral:'U',   etapa:'Prospección',                       ha:5930,  titular:'Claudio Guillermo Lucero', x:635.92, y:409.67}
+    {ref:7, nombre:'Catriel',        mineral:'U',   etapa:'Exploración inicial',              ha:12771, titular:'Comisión Nacional de Energía Atómica', x:432.68, y:56.70},
+    {ref:8, nombre:'Barda Colorada', mineral:'U-V', etapa:'Prospección',                       ha:49958, titular:'Piche Resources SA',    x:411.79, y:58.15},
+    {ref:9, nombre:'Lucho U',        mineral:'U',   etapa:'Prospección',                       ha:5930,  titular:'Claudio Guillermo Lucero', x:628.59, y:423.28}
   ];
 
   var ORIGINAL = DATA.map(function(d){ return {ref:d.ref, x:d.x, y:d.y}; });
@@ -425,10 +410,10 @@
     {id:4, nombre:'Cipolletti',               capital:false, x:428.46, y:198.82},
     {id:5, nombre:'Valcheta',                 capital:false, x:622.65, y:451.91},
     {id:6, nombre:'San Antonio Oeste',        capital:false, x:762.33, y:456.07},
-    {id:7, nombre:'Catriel',                  capital:false, x:450.00, y:90.00}
+    {id:7, nombre:'Catriel',                  capital:false, x:453.57, y:50.61}
   ];
   var ORIGINAL_CITIES = CITIES.map(function(c){ return {id:c.id, x:c.x, y:c.y}; });
-  var CITY_SIZE_DEFAULT = 6.5;
+  var CITY_SIZE_DEFAULT = 8;
   var citySize = CITY_SIZE_DEFAULT;
 
   var root = document.getElementById('rnUranio');
@@ -572,10 +557,11 @@
 
   // ---------- ciudades de referencia (blancas, más chicas, arrastrables en modo edición) ----------
   var cityEls = {};
-  var CITY_FONT_SIZE = 14;
-  function setCityLabel(label, x, y, name, fontSize){
+  var CITY_FONT_SIZE = 16;
+  function setCityLabel(label, x, y, name, fontSize, bold){
     while(label.firstChild) label.removeChild(label.firstChild);
     label.setAttribute('font-size', fontSize);
+    label.style.fontWeight = bold ? 800 : 600;
     var words = name.split(' ');
     if(name.length <= 13 || words.length < 2){
       label.setAttribute('x', x); label.setAttribute('y', y + 5);
@@ -609,7 +595,7 @@
     } else {
       dot.setAttribute('cx', c.x); dot.setAttribute('cy', c.y); dot.setAttribute('r', half);
     }
-    setCityLabel(label, c.x + half + 6, c.y, c.nombre, CITY_FONT_SIZE);
+    setCityLabel(label, c.x + half + 6, c.y, c.nombre, CITY_FONT_SIZE, c.capital);
     applyPinTransform(el, c.x, c.y);
   }
 
@@ -911,18 +897,6 @@
   });
 
   render();
-
-  // ---------- pulso que indica que el mapa es interactivo ----------
-  (function(){
-    var hint = document.getElementById('rnHint');
-    var dismissed = false;
-    try{ dismissed = localStorage.getItem('rn-uranio-hint-dismissed') === '1'; }catch(e){}
-    if(dismissed){ hint.classList.add('is-gone'); return; }
-    hint.addEventListener('click', function(){
-      hint.classList.add('is-gone');
-      try{ localStorage.setItem('rn-uranio-hint-dismissed', '1'); }catch(e){}
-    });
-  })();
 
   // ---------- modo edición: arrastrar pines/ciudades + copiar datos ----------
   function renderDebugList(){
