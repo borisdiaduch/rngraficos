@@ -21,8 +21,8 @@
     --gray-hover-bg:#eeeeec;
     --gray-selected-bg:#e3e3e0;
     --gray-focus:#8f8c82;
-    --uv:#c3bfb3;
-    --u:#3f3e3a;
+    --uv:#a4d99b;
+    --u:#2f6b3a;
     font-family:'Chivo', 'Segoe UI', system-ui, -apple-system, sans-serif;
     color:var(--text);
     background:var(--bg);
@@ -63,7 +63,22 @@
 
   /* ---------- mapa ---------- */
   .rn-map-wrap{ position:relative; padding:6px 18px 4px; }
-  .rn-map-wrap svg{ display:block; width:100%; height:auto; overflow:visible; }
+  .rn-map-wrap svg{ display:block; width:100%; height:auto; overflow:visible; touch-action:none; user-select:none; -webkit-user-select:none; }
+
+  .rn-zoom-controls{
+    position:absolute; right:10px; bottom:6px; z-index:5;
+    display:flex; flex-direction:column; overflow:hidden;
+    border:1px solid var(--border); border-radius:7px; background:var(--panel);
+    box-shadow:0 2px 6px rgba(20,20,20,0.12);
+  }
+  .rn-zoom-controls button{
+    width:28px; height:28px; border:none; background:none; cursor:pointer;
+    font-size:15px; line-height:1; color:var(--text); font-family:inherit;
+    display:flex; align-items:center; justify-content:center;
+  }
+  .rn-zoom-controls button + button{ border-top:1px solid var(--border); }
+  .rn-zoom-controls button:hover{ background:var(--gray-hover-bg); }
+  .rn-zoom-controls #rnZoomReset{ font-size:12px; }
   .rn-province{ fill:var(--map-fill); stroke:var(--map-stroke); stroke-width:2.2; stroke-linejoin:round; transition:fill .15s ease; }
 
   .rn-pin{ cursor:pointer; }
@@ -76,6 +91,13 @@
   .rn-pin.is-active circle.rn-pin-halo{ opacity:.20; r:26; }
   .rn-pin:focus-visible .rn-pin-dot{ outline:none; }
   .rn-pin:focus-visible circle.rn-pin-halo{ opacity:.28; r:24; }
+
+  /* ---------- ciudades de referencia ---------- */
+  .rn-city-dot{ fill:#fff; stroke:var(--black); stroke-width:1.5; }
+  .rn-city-label{ fill:var(--text); font-family:'Chivo',sans-serif; font-weight:600; pointer-events:none; }
+  .rn-uranio.debug-on .rn-city{ cursor:grab; }
+  .rn-uranio.debug-on .rn-city.is-dragging{ cursor:grabbing; }
+  .rn-uranio.debug-on .rn-city-dot{ stroke:var(--gray-hover); }
 
   /* ---------- modo edición (debug: reubicar pines a mano) ---------- */
   .rn-uranio.debug-on .rn-map-wrap{ outline:2px dashed var(--gray-focus); outline-offset:4px; border-radius:6px; }
@@ -105,41 +127,70 @@
   .rn-debug-list .dp-xy{ color:var(--muted); flex:none; }
   .rn-debug-copy-hint{ font-size:10.5px; color:var(--muted); margin-top:8px; }
 
+  .rn-debug-size{ display:flex; align-items:center; gap:8px; }
+  .rn-debug-size label{ font-size:11px; color:var(--muted); }
+  .rn-debug-size input[type="range"]{ width:110px; accent-color:var(--black); }
+  .rn-debug-city-list{ display:grid; grid-template-columns:repeat(auto-fill,minmax(230px,1fr)); gap:6px 14px; font-size:11.5px; }
+  .rn-debug-city-list .dp-row{ display:flex; align-items:center; gap:6px; padding:5px 7px; border:1px solid var(--border); border-radius:6px; background:var(--bg); }
+  .rn-debug-city-list .dp-shape{ flex:none; width:10px; height:10px; background:#fff; border:1.5px solid var(--black); }
+  .rn-debug-city-list .dp-shape.square{ border-radius:2px; }
+  .rn-debug-city-list .dp-shape.circle{ border-radius:50%; }
+  .rn-debug-city-list input[type="text"]{
+    flex:1; min-width:0; font-family:inherit; font-size:11.5px; color:var(--text);
+    border:1px solid transparent; background:transparent; padding:2px 4px; border-radius:4px;
+  }
+  .rn-debug-city-list input[type="text"]:hover{ border-color:var(--border); }
+  .rn-debug-city-list input[type="text"]:focus{ outline:none; border-color:var(--gray-focus); background:#fff; }
+  .rn-debug-city-list .dp-xy{ color:var(--muted); flex:none; }
+
+  /* ---------- pie ---------- */
+  .rn-foot{
+    display:flex; flex-wrap:wrap; gap:6px 18px; align-items:baseline; justify-content:space-between;
+    padding:14px 26px 20px; border-top:2px solid var(--black);
+  }
+  .rn-foot .firma{ display:inline-flex; align-items:center; flex:none; }
+  .rn-foot .firma svg{ height:15px; width:auto; display:block; }
+  .rn-foot .fuente{ font-size:12.5px; color:var(--text); }
+
   /* ---------- cartelito / tooltip ---------- */
   .rn-tooltip{
     position:absolute; z-index:6; width:222px;
-    background:var(--black); color:#fff;
+    background:var(--panel); color:var(--text);
+    border:1px solid var(--border);
     border-radius:8px; padding:12px 14px 13px;
-    box-shadow:0 10px 26px rgba(20,20,20,0.32);
-    opacity:0; transform:translate(-50%,-8px) scale(.97);
+    box-shadow:0 10px 26px rgba(20,20,20,0.18);
+    opacity:0; transform:translate(-50%, calc(-100% - 8px)) scale(.97);
     pointer-events:none; transition:opacity .13s ease, transform .13s ease;
   }
-  .rn-tooltip.is-open{ opacity:1; transform:translate(-50%,-14px) scale(1); pointer-events:auto; }
+  .rn-tooltip.is-open{ opacity:1; transform:translate(-50%, calc(-100% - 14px)) scale(1); pointer-events:auto; }
   .rn-tooltip::after{
     content:''; position:absolute; left:50%; top:100%; width:12px; height:12px;
-    background:var(--black); transform:translate(-50%,-6px) rotate(45deg); border-radius:2px;
+    background:var(--panel); border-right:1px solid var(--border); border-bottom:1px solid var(--border);
+    transform:translate(-50%,-6px) rotate(45deg); border-radius:2px;
   }
   /* variante: el pin está cerca del borde superior del mapa, el cartel se abre hacia abajo */
   .rn-tooltip.below{ transform:translate(-50%,8px) scale(.97); }
-  .rn-tooltip.below.is-open{ transform:translate(-50%,20px) scale(1); }
+  .rn-tooltip.below.is-open{ transform:translate(-50%,14px) scale(1); }
   .rn-tooltip.below::after{
-    top:auto; bottom:100%; transform:translate(-50%,6px) rotate(45deg);
+    top:auto; bottom:100%; border-right:none; border-bottom:none;
+    border-left:1px solid var(--border); border-top:1px solid var(--border);
+    transform:translate(-50%,6px) rotate(45deg);
   }
   .rn-tooltip .tt-ref{
     display:inline-flex; align-items:center; justify-content:center;
-    width:18px; height:18px; border-radius:50%; background:#fff; color:var(--black);
+    width:18px; height:18px; border-radius:50%; background:var(--black); color:#fff;
     font-size:11px; font-weight:700; margin-right:6px; flex:none;
   }
   .rn-tooltip .tt-title{ display:flex; align-items:center; font-size:13.5px; font-weight:700; margin-bottom:8px; }
-  .rn-tooltip .tt-row{ display:flex; justify-content:space-between; gap:10px; font-size:11.5px; padding:3px 0; border-top:1px solid rgba(255,255,255,0.14); }
+  .rn-tooltip .tt-row{ display:flex; justify-content:space-between; gap:10px; font-size:11.5px; padding:3px 0; border-top:1px solid var(--border); }
   .rn-tooltip .tt-row:first-of-type{ border-top:none; }
-  .rn-tooltip .tt-k{ color:rgba(255,255,255,0.6); }
+  .rn-tooltip .tt-k{ color:var(--muted); }
   .rn-tooltip .tt-v{ font-weight:600; text-align:right; }
   .rn-tooltip .tt-close{
     position:absolute; top:6px; right:7px; width:18px; height:18px; border:none; background:none;
-    color:rgba(255,255,255,0.55); font-size:15px; line-height:1; cursor:pointer; padding:0;
+    color:var(--muted); font-size:15px; line-height:1; cursor:pointer; padding:0;
   }
-  .rn-tooltip .tt-close:hover{ color:#fff; }
+  .rn-tooltip .tt-close:hover{ color:var(--text); }
 
   hr.rn-rule{ border:none; border-top:1px solid var(--border); margin:0; }
 
@@ -148,7 +199,7 @@
   table.rn-table{ width:100%; border-collapse:collapse; min-width:560px; font-variant-numeric:tabular-nums; }
   table.rn-table thead th{
     text-align:left; font-size:10.5px; text-transform:uppercase; letter-spacing:.045em;
-    color:var(--muted); font-weight:700; padding:0 8px 8px; border-bottom:2px solid var(--black);
+    color:var(--muted); font-weight:700; padding:0 6px 8px; border-bottom:2px solid var(--black);
     white-space:nowrap;
   }
   table.rn-table thead th:first-child{ padding-left:2px; }
@@ -162,16 +213,14 @@
   th.is-sorted .rn-th-btn{ color:var(--text); }
   th.is-sorted .rn-th-btn .arrow{ opacity:1; color:var(--gray-hover); }
   th.is-sorted.dir-desc .rn-th-btn .arrow{ transform:rotate(180deg); }
-  th.num{ text-align:right; }
-  th.num .rn-th-btn{ flex-direction:row-reverse; }
 
-  table.rn-table tbody td{ padding:10px 8px; border-bottom:1px solid var(--border); font-size:13px; vertical-align:middle; }
+  table.rn-table tbody td{ padding:10px 6px; border-bottom:1px solid var(--border); font-size:13px; vertical-align:middle; }
   table.rn-table tbody td:first-child{ padding-left:2px; }
   table.rn-table tbody tr{ cursor:pointer; transition:background .1s ease; }
   table.rn-table tbody tr:hover{ background:var(--gray-hover-bg); }
   table.rn-table tbody tr.is-selected{ background:var(--gray-selected-bg); }
   table.rn-table tbody tr:focus-visible{ outline:2px solid var(--gray-focus); outline-offset:-2px; }
-  td.num{ text-align:right; font-weight:600; }
+  td.num{ text-align:left; font-weight:600; }
   td.proyecto{ font-weight:600; }
 
   .rn-ref-badge{
@@ -185,6 +234,19 @@
   .rn-badge-mineral .sw{ width:8px; height:8px; border-radius:2px; flex:none; }
 
   .rn-etapa{ color:var(--text); }
+
+  /* ---------- leyenda de formas ---------- */
+  .rn-legend{
+    display:flex; flex-wrap:wrap; align-items:center; gap:8px 14px;
+    padding:10px 26px 16px; font-size:11.5px;
+  }
+  .rn-legend .lg-title{ font-weight:700; font-size:10.5px; text-transform:uppercase; letter-spacing:.05em; color:var(--muted); }
+  .rn-legend .lg-div{ width:1px; height:12px; background:var(--border); }
+  .rn-legend .lg-item{ display:flex; align-items:center; gap:6px; font-weight:500; color:var(--text); }
+  .rn-legend .lg-shape{ flex:none; width:11px; height:11px; background:var(--black); }
+  .rn-legend .lg-circle{ border-radius:50%; }
+  .rn-legend .lg-square{ border-radius:2px; }
+  .rn-legend .lg-diamond{ width:9px; height:9px; border-radius:1px; transform:rotate(45deg); }
 
   /* ---------- orden en mobile (reemplaza los headers clickeables) ---------- */
   .rn-sort-mobile{ display:none; margin-bottom:12px; }
@@ -202,10 +264,11 @@
     .rn-debug-toggle{ position:static; display:inline-block; margin-top:10px; }
     .rn-table-scroll{ padding:0 16px 18px; overflow-x:visible; }
     .rn-debug-panel{ padding:14px 16px 18px; }
+    .rn-foot{ padding:12px 16px 16px; }
 
     .rn-sort-mobile{ display:block; }
 
-    /* la tabla pasa a una lista de tarjetas: un <tr> por proyecto, un dato por línea */
+    /* la tabla pasa a filas compactas de 2 líneas (no una tarjeta larga por dato) */
     table.rn-table{ min-width:0; }
     table.rn-table thead{
       position:absolute; width:1px; height:1px; overflow:hidden;
@@ -213,21 +276,20 @@
     }
     table.rn-table, table.rn-table tbody{ display:block; width:100%; }
     table.rn-table tbody tr{
-      display:block; width:100%; border:1px solid var(--border); border-radius:8px;
-      padding:4px 12px; margin-bottom:8px;
+      display:grid; width:100%;
+      grid-template-columns:auto 1fr auto; grid-template-areas:"ref name name" "mineral etapa ha";
+      column-gap:9px; row-gap:3px; align-items:center;
+      border:1px solid var(--border); border-radius:8px;
+      padding:8px 10px; margin-bottom:6px;
     }
     table.rn-table tbody tr:last-child{ margin-bottom:0; }
-    table.rn-table tbody td{
-      display:flex; align-items:center; justify-content:space-between; gap:14px;
-      padding:8px 0; border-bottom:1px solid var(--border);
-    }
-    table.rn-table tbody td:first-child{ padding-left:0; }
-    table.rn-table tbody td:last-child{ border-bottom:none; }
-    table.rn-table tbody td::before{
-      content:attr(data-label); font-size:10.5px; text-transform:uppercase; letter-spacing:.045em;
-      color:var(--muted); font-weight:700; flex:none;
-    }
-    td.num{ text-align:left; }
+    table.rn-table tbody td{ padding:0; border-bottom:none; }
+    table.rn-table tbody td:nth-child(1){ grid-area:ref; }
+    table.rn-table tbody td:nth-child(2){ grid-area:name; font-size:13.5px; }
+    table.rn-table tbody td:nth-child(3){ grid-area:mineral; font-size:11px; }
+    table.rn-table tbody td:nth-child(4){ grid-area:etapa; font-size:11px; color:var(--muted); overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+    table.rn-table tbody td:nth-child(5){ grid-area:ha; font-size:11px; text-align:right; }
+    td.num::after{ content:' ha'; font-weight:400; color:var(--muted); }
   }
   @media (prefers-reduced-motion:reduce){
     .rn-uranio *{ transition:none !important; animation:none !important; }
@@ -241,16 +303,30 @@
 
     <div class="rn-head">
       <h1>Distribución de los principales proyectos de Uranio en Río Negro</h1>
-      <p>Tocá cada punto del mapa para ver el detalle del yacimiento, u ordená la tabla por cualquier columna.</p>
+      <p>Mapa interactivo</p>
       <button class="rn-debug-toggle" id="rnDebugToggle" type="button" aria-pressed="false">🛠 Ajustar puntos</button>
     </div>
 
     <div class="rn-map-wrap" id="rnMapWrap">
       <svg id="rnSvg" viewBox="-15 -15 1030 668" role="img" aria-label="Mapa de la provincia de Río Negro con la ubicación de nueve proyectos de uranio">
         <path class="rn-province" d="M 399.88,0.0 L 451.59,12.49 L 462.42,39.91 L 456.4,51.11 L 443.17,49.87 L 441.97,58.57 L 449.19,75.96 L 461.21,69.75 L 468.43,92.07 L 498.5,104.45 L 517.74,92.07 L 532.17,118.06 L 552.62,131.64 L 583.88,139.04 L 575.47,161.22 L 600.72,173.51 L 619.96,174.74 L 629.59,168.6 L 639.21,163.68 L 651.23,166.14 L 660.85,175.97 L 669.27,182.11 L 680.1,185.8 L 688.51,182.11 L 696.93,173.51 L 716.18,183.34 L 727.0,188.25 L 736.62,182.11 L 739.03,171.05 L 767.89,185.8 L 788.33,182.11 L 806.37,183.34 L 826.82,189.48 L 842.45,199.29 L 870.11,213.99 L 882.14,221.34 L 894.17,222.56 L 895.37,233.56 L 904.99,236.0 L 915.81,242.11 L 925.44,250.65 L 932.65,253.09 L 935.06,454.67 L 949.49,452.28 L 967.53,457.06 L 986.77,476.15 L 1000.0,492.82 L 981.36,507.09 L 969.93,514.22 L 955.5,517.78 L 935.66,516.59 L 913.41,516.0 L 894.17,516.59 L 882.74,514.81 L 876.13,512.44 L 870.11,503.53 L 859.29,499.36 L 857.49,492.82 L 853.88,490.44 L 850.27,496.99 L 835.84,491.04 L 819.6,482.11 L 806.37,474.36 L 791.94,469.0 L 782.92,467.21 L 772.1,470.19 L 768.49,466.01 L 781.72,462.43 L 778.11,456.46 L 770.29,454.07 L 764.88,455.27 L 767.29,461.24 L 758.87,459.45 L 748.05,463.63 L 742.63,474.36 L 740.23,485.09 L 739.63,494.01 L 739.03,513.03 L 740.83,523.12 L 745.04,533.19 L 749.25,547.99 L 752.25,558.04 L 755.86,564.53 L 758.87,575.74 L 754.06,582.23 L 753.46,591.65 L 753.46,598.13 L 754.66,604.59 L 755.86,611.06 L 751.05,611.06 L 752.86,616.93 L 750.45,626.9 L 750.45,636.28 L 14.43,635.11 L 13.83,622.21 L 12.63,615.76 L 17.44,611.64 L 17.44,603.42 L 12.03,599.3 L 11.43,592.83 L 8.42,589.89 L 4.21,582.82 L 9.02,574.57 L 7.82,565.12 L 7.82,557.45 L 2.41,546.81 L 3.01,536.74 L 0.0,531.41 L 6.01,524.89 L 1.2,517.78 L 7.82,511.84 L 8.42,504.71 L 6.01,499.36 L 4.21,495.2 L 20.75,497.58 L 33.67,499.66 L 39.09,497.58 L 46.0,499.36 L 52.92,500.85 L 60.73,507.98 L 71.56,508.87 L 82.68,503.53 L 83.88,499.07 L 90.2,495.5 L 89.9,492.53 L 93.81,490.74 L 96.81,487.76 L 94.41,478.24 L 92.9,472.28 L 89.3,471.08 L 90.2,467.8 L 87.49,463.93 L 86.59,460.64 L 89.3,455.27 L 96.81,455.57 L 100.42,448.1 L 102.53,444.21 L 107.94,441.22 L 112.15,440.03 L 114.85,436.44 L 121.17,435.24 L 126.58,433.44 L 135.3,435.84 L 139.21,434.94 L 142.21,430.15 L 149.43,424.16 L 153.34,422.36 L 163.26,426.86 L 177.69,422.36 L 184.91,424.46 L 190.92,419.97 L 189.12,412.77 L 199.04,404.37 L 200.24,383.93 L 214.67,373.09 L 209.86,358.62 L 208.66,348.97 L 224.29,336.88 L 247.14,329.62 L 269.99,321.15 L 280.82,311.46 L 296.45,292.04 L 318.1,278.67 L 337.34,261.62 L 348.17,245.77 L 361.4,234.78 L 375.83,216.44 L 395.07,207.87 L 405.89,205.42 L 420.32,205.42 L 428.14,204.19 L 409.5,168.6 L 398.68,159.98 L 399.88,0.0 Z"></path>
+        <g id="rnCityPins"></g>
         <g id="rnPins"></g>
       </svg>
       <div class="rn-tooltip" id="rnTooltip"><button class="tt-close" id="rnTtClose" aria-label="Cerrar">×</button><div id="rnTtBody"></div></div>
+      <div class="rn-zoom-controls">
+        <button type="button" id="rnZoomIn" aria-label="Acercar">+</button>
+        <button type="button" id="rnZoomOut" aria-label="Alejar">−</button>
+        <button type="button" id="rnZoomReset" aria-label="Restablecer zoom">⤢</button>
+      </div>
+    </div>
+
+    <div class="rn-legend">
+      <span class="lg-title">Referencia</span>
+      <span class="lg-div"></span>
+      <span class="lg-item"><span class="lg-shape lg-diamond"></span>Evaluación económica preliminar</span>
+      <span class="lg-item"><span class="lg-shape lg-circle"></span>Exploración inicial</span>
+      <span class="lg-item"><span class="lg-shape lg-square"></span>Prospección</span>
     </div>
 
     <hr class="rn-rule">
@@ -274,7 +350,7 @@
             <th data-key="nombre"><button class="rn-th-btn">Proyecto<span class="arrow">▲</span></button></th>
             <th data-key="mineral"><button class="rn-th-btn">Mineral<span class="arrow">▲</span></button></th>
             <th data-key="etapa"><button class="rn-th-btn">Etapa<span class="arrow">▲</span></button></th>
-            <th data-key="ha" class="num"><button class="rn-th-btn">Superficie (ha)<span class="arrow">▲</span></button></th>
+            <th data-key="ha"><button class="rn-th-btn">Superficie (ha)<span class="arrow">▲</span></button></th>
           </tr>
         </thead>
         <tbody id="rnTbody"></tbody>
@@ -290,7 +366,24 @@
         </div>
       </div>
       <div class="rn-debug-list" id="rnDebugList"></div>
-      <div class="rn-debug-copy-hint">Arrastrá cada punto sobre el mapa para reubicarlo, y usá "Copiar todos los datos" para pegarle las coordenadas nuevas.</div>
+
+      <hr class="rn-rule" style="margin:14px 0;">
+
+      <div class="dp-head">
+        <span class="dp-title">Ciudades</span>
+        <div class="rn-debug-size">
+          <label for="rnCitySize">Tamaño</label>
+          <input type="range" id="rnCitySize" min="3" max="12" step="0.5" value="6.5">
+        </div>
+      </div>
+      <div class="rn-debug-city-list" id="rnDebugCityList"></div>
+
+      <div class="rn-debug-copy-hint">Arrastrá cada punto (o ciudad) sobre el mapa para reubicarlo, editá el nombre de las ciudades acá abajo, y usá "Copiar todos los datos" para pegarme todo junto.</div>
+    </div>
+
+    <div class="rn-foot">
+      <span class="firma" aria-label="Río Negro"><svg viewBox="0 0 321 50" xmlns="http://www.w3.org/2000/svg" role="img" aria-hidden="true"><path d="M22.984 22.957c0 2.836-1.015 4.082-3.793 4.082H18.06V18.82h1.132c2.72 0 3.793 1.301 3.793 4.137M40.59 49.32v-8.218h-.512c-.504 0-1.191-.399-1.414-1.418l-.34-1.704c-1.02-5.101-3.004-6.8-6.851-7.652v-.226c5.156-1.532 6.965-4.649 6.965-9.012 0-7.656-4.868-11.453-17.38-11.453H0v8.5h1.363c.563 0 1.528.968 1.528 1.535V39.57c0 .567-.965 1.532-1.528 1.532H0v8.218h21.344v-8.218h-2.832v-5.844h1.758c1.921 0 2.828.91 3.054 3.289l1.02 10.773zm7.797-41.047h8.328l5.824-4.875V0H49.58zM42.445 49.32h21.852v-8.218h-1.59c-.562 0-1.531-.965-1.531-1.532V19.672c0-.567.969-1.535 1.531-1.535h1.59v-8.5H42.445v8.5h1.582c.57 0 1.532.968 1.532 1.535V39.57c0 .567-.961 1.532-1.532 1.532h-1.582zm49.18-19.558c0 7.09-1.93 10.543-5.04 10.543-3.112 0-5.034-3.453-5.034-10.543 0-7.086 1.922-10.207 5.035-10.207 3.11 0 5.039 3.12 5.039 10.207m16.016-.282c0-13.156-9.282-20.523-21.055-20.523-11.777 0-21.059 7.367-21.059 20.523C65.527 42.63 74.36 50 86.586 50s21.055-7.371 21.055-20.52m8.98 19.84h17.094v-8.218h-3.113V29.59h.171l10.864 19.73h13.644V19.672c0-.567.961-1.535 1.531-1.535h1.13v-8.5h-16.696v8.5h2.941v9.246h-.167l-9.743-17.746h-17.656v8.5h1.356c.57 0 1.53.968 1.53 1.535V39.57c0 .567-.96 1.532-1.53 1.532h-1.356zm43.176 0h35.379V34.922h-9.34l-1.184 5.496h-6.343v-6.797h8.546v-9.129h-8.546V18.82h6.226l1.3 4.48h8.888V9.638h-34.926v8.5h1.36c.57 0 1.527.968 1.527 1.535V39.57c0 .567-.957 1.532-1.528 1.532h-1.36zm56.762.68c3.34 0 7.195-.738 8.78-1.758 1.016 0 1.524 1.078 1.524 1.078h7.645V38.04c0-.567.96-1.532 1.527-1.532h.621v-8.215h-18.96v7.988h2.152v4.024a4.982 4.982 0 01-1.364.172c-4.297 0-5.316-4.137-5.316-11.223 0-7.938 2.598-10.094 6.957-10.094.453 0 1.363.059 1.813.113l1.527 4.82h9.851V9.638h-10.304c-1.918-.399-3.961-.68-6.11-.68-11.882 0-19.984 7.313-19.984 21.031 0 13.157 7.023 20.012 19.64 20.012m44.368-27.044c0 2.836-1.02 4.082-3.79 4.082h-1.132V18.82h1.133c2.718 0 3.789 1.301 3.789 4.137m17.61 26.363v-8.218h-.513c-.507 0-1.183-.399-1.414-1.418l-.336-1.704c-1.023-5.101-3-6.8-6.851-7.652v-.226c5.148-1.532 6.96-4.649 6.96-9.012 0-7.656-4.866-11.453-17.378-11.453h-21.05v8.5h1.35c.567 0 1.532.968 1.532 1.535V39.57c0 .567-.965 1.532-1.531 1.532h-1.352v8.218h21.332v-8.218h-2.824v-5.844h1.75c1.926 0 2.832.91 3.055 3.289l1.023 10.773zm26.48-19.558c0 7.09-1.922 10.543-5.04 10.543-3.109 0-5.038-3.453-5.038-10.543 0-7.086 1.93-10.207 5.039-10.207 3.117 0 5.039 3.12 5.039 10.207m16.02-.282c0-13.156-9.286-20.523-21.06-20.523-11.777 0-21.058 7.367-21.058 20.523 0 13.149 8.832 20.52 21.059 20.52 12.226 0 21.058-7.371 21.058-20.52" fill="#de0303"></path></svg></span>
+      <span class="fuente">Fuente: Secretaría de Minería de Río Negro.</span>
     </div>
 
   </div>
@@ -312,8 +405,21 @@
 
   var ORIGINAL = DATA.map(function(d){ return {ref:d.ref, x:d.x, y:d.y}; });
 
+  var CITIES = [
+    {id:1, nombre:'Viedma',                   capital:true,  x:975.47, y:467.26},
+    {id:2, nombre:'San Carlos de Bariloche',  capital:false, x:65.79,  y:513.17},
+    {id:3, nombre:'General Roca',             capital:false, x:474.10, y:211.87},
+    {id:4, nombre:'Cipolletti',               capital:false, x:428.46, y:198.82},
+    {id:5, nombre:'Valcheta',                 capital:false, x:622.65, y:451.91},
+    {id:6, nombre:'San Antonio Oeste',        capital:false, x:762.33, y:456.07}
+  ];
+  var ORIGINAL_CITIES = CITIES.map(function(c){ return {id:c.id, x:c.x, y:c.y}; });
+  var CITY_SIZE_DEFAULT = 6.5;
+  var citySize = CITY_SIZE_DEFAULT;
+
   var root = document.getElementById('rnUranio');
   var pinsG = document.getElementById('rnPins');
+  var cityPinsG = document.getElementById('rnCityPins');
   var svg = document.getElementById('rnSvg');
   var mapWrap = document.getElementById('rnMapWrap');
   var tooltip = document.getElementById('rnTooltip');
@@ -325,6 +431,8 @@
   var debugList = document.getElementById('rnDebugList');
   var debugCopyBtn = document.getElementById('rnDebugCopy');
   var debugResetBtn = document.getElementById('rnDebugReset');
+  var debugCityList = document.getElementById('rnDebugCityList');
+  var citySizeInput = document.getElementById('rnCitySize');
 
   var state = { sortKey:'ref', sortDir:'asc', selected:null };
 
@@ -441,6 +549,182 @@
     });
   });
 
+  // ---------- ciudades de referencia (blancas, más chicas, arrastrables en modo edición) ----------
+  var cityEls = {};
+  function moveCity(c){
+    var el = cityEls[c.id];
+    var dot = el.querySelector('.rn-city-dot');
+    var label = el.querySelector('.rn-city-label');
+    var half = citySize;
+    if(c.capital){
+      dot.setAttribute('x', c.x - half); dot.setAttribute('y', c.y - half);
+      dot.setAttribute('width', half*2); dot.setAttribute('height', half*2);
+    } else {
+      dot.setAttribute('cx', c.x); dot.setAttribute('cy', c.y); dot.setAttribute('r', half);
+    }
+    label.setAttribute('x', c.x + half + 5);
+    label.setAttribute('y', c.y + 4);
+  }
+
+  CITIES.forEach(function(c){
+    var g = document.createElementNS('http://www.w3.org/2000/svg','g');
+    g.setAttribute('class','rn-city');
+    g.setAttribute('data-city', c.id);
+
+    var dot = c.capital
+      ? document.createElementNS('http://www.w3.org/2000/svg','rect')
+      : document.createElementNS('http://www.w3.org/2000/svg','circle');
+    dot.setAttribute('class','rn-city-dot');
+    if(c.capital) dot.setAttribute('rx', 1.5);
+
+    var label = document.createElementNS('http://www.w3.org/2000/svg','text');
+    label.setAttribute('class','rn-city-label');
+    label.setAttribute('font-size', 11);
+    label.textContent = c.nombre;
+
+    g.appendChild(dot); g.appendChild(label);
+    cityPinsG.appendChild(g);
+    cityEls[c.id] = g;
+    moveCity(c);
+
+    var dragging = false;
+    g.addEventListener('pointerdown', function(ev){
+      if(!root.classList.contains('debug-on')) return;
+      dragging = true;
+      g.classList.add('is-dragging');
+      g.setPointerCapture(ev.pointerId);
+      ev.preventDefault();
+    });
+    g.addEventListener('pointermove', function(ev){
+      if(!dragging) return;
+      var p = clientToSvg(ev.clientX, ev.clientY);
+      c.x = Math.round(p.x*100)/100; c.y = Math.round(p.y*100)/100;
+      moveCity(c);
+      renderDebugCityList();
+    });
+    function endCityDrag(ev){
+      if(!dragging) return;
+      dragging = false;
+      g.classList.remove('is-dragging');
+      try{ g.releasePointerCapture(ev.pointerId); }catch(e){}
+    }
+    g.addEventListener('pointerup', endCityDrag);
+    g.addEventListener('pointercancel', endCityDrag);
+  });
+
+  function applyCitySize(size){
+    citySize = size;
+    CITIES.forEach(moveCity);
+  }
+
+  // ---------- zoom / paneo del mapa (rueda, pellizco táctil, botones) ----------
+  var BASE_VB = { x:-15, y:-15, w:1030, h:668 };
+  var view = { x:BASE_VB.x, y:BASE_VB.y, w:BASE_VB.w, h:BASE_VB.h };
+  var MIN_W = BASE_VB.w / 4.5;
+  var suppressNextBgClick = false;
+
+  function applyViewBox(){
+    svg.setAttribute('viewBox', view.x+' '+view.y+' '+view.w+' '+view.h);
+    if(state.selected !== null && pinEls[state.selected]) positionTooltip(byRef(state.selected), pinEls[state.selected]);
+  }
+  function clampView(){
+    view.w = Math.max(MIN_W, Math.min(BASE_VB.w, view.w));
+    view.h = view.w * (BASE_VB.h / BASE_VB.w);
+    var maxX = BASE_VB.x + BASE_VB.w - view.w;
+    var maxY = BASE_VB.y + BASE_VB.h - view.h;
+    view.x = Math.max(BASE_VB.x, Math.min(maxX, view.x));
+    view.y = Math.max(BASE_VB.y, Math.min(maxY, view.y));
+  }
+  function zoomAt(fx, fy, factor){
+    var newW = Math.max(MIN_W, Math.min(BASE_VB.w, view.w / factor));
+    var newH = newW * (BASE_VB.h / BASE_VB.w);
+    var t = (fx - view.x) / view.w, u = (fy - view.y) / view.h;
+    view.x = fx - t*newW; view.y = fy - u*newH;
+    view.w = newW; view.h = newH;
+    clampView();
+    applyViewBox();
+  }
+  function panBy(dx, dy){
+    view.x -= dx; view.y -= dy;
+    clampView();
+    applyViewBox();
+  }
+
+  svg.addEventListener('wheel', function(ev){
+    ev.preventDefault();
+    var p = clientToSvg(ev.clientX, ev.clientY);
+    zoomAt(p.x, p.y, Math.pow(1.0018, -ev.deltaY));
+  }, { passive:false });
+
+  var activePointers = {};
+  var pinchStartDist = 0, pinchStartView = null, pinchStartMid = null;
+  var panPointerId = null, panLast = null, panMoved = false;
+
+  svg.addEventListener('pointerdown', function(ev){
+    var t = ev.target;
+    if(t.closest && (t.closest('.rn-pin') || t.closest('.rn-city'))) return;
+    activePointers[ev.pointerId] = {x:ev.clientX, y:ev.clientY};
+    var ids = Object.keys(activePointers);
+    if(ids.length === 2){
+      panPointerId = null;
+      var p1 = activePointers[ids[0]], p2 = activePointers[ids[1]];
+      pinchStartDist = Math.hypot(p2.x-p1.x, p2.y-p1.y);
+      pinchStartMid = clientToSvg((p1.x+p2.x)/2, (p1.y+p2.y)/2);
+      pinchStartView = {x:view.x, y:view.y, w:view.w, h:view.h};
+    } else if(ids.length === 1){
+      panPointerId = ev.pointerId;
+      panLast = {x:ev.clientX, y:ev.clientY};
+      panMoved = false;
+      try{ svg.setPointerCapture(ev.pointerId); }catch(e){}
+    }
+  });
+  svg.addEventListener('pointermove', function(ev){
+    if(!activePointers[ev.pointerId]) return;
+    activePointers[ev.pointerId] = {x:ev.clientX, y:ev.clientY};
+    var ids = Object.keys(activePointers);
+    if(ids.length === 2 && pinchStartView && pinchStartDist > 0){
+      var p1 = activePointers[ids[0]], p2 = activePointers[ids[1]];
+      var dist = Math.hypot(p2.x-p1.x, p2.y-p1.y);
+      var factor = dist / pinchStartDist;
+      var newW = Math.max(MIN_W, Math.min(BASE_VB.w, pinchStartView.w / factor));
+      var newH = newW * (BASE_VB.h / BASE_VB.w);
+      var t = (pinchStartMid.x - pinchStartView.x) / pinchStartView.w;
+      var u = (pinchStartMid.y - pinchStartView.y) / pinchStartView.h;
+      view.x = pinchStartMid.x - t*newW; view.y = pinchStartMid.y - u*newH;
+      view.w = newW; view.h = newH;
+      clampView();
+      applyViewBox();
+    } else if(ev.pointerId === panPointerId && panLast){
+      var dxPx = ev.clientX - panLast.x, dyPx = ev.clientY - panLast.y;
+      if(Math.abs(dxPx) > 2 || Math.abs(dyPx) > 2) panMoved = true;
+      var wrapBox = mapWrap.getBoundingClientRect();
+      var unitsPerPx = view.w / wrapBox.width;
+      panBy(dxPx*unitsPerPx, dyPx*unitsPerPx);
+      panLast = {x:ev.clientX, y:ev.clientY};
+    }
+  });
+  function endMapPointer(ev){
+    delete activePointers[ev.pointerId];
+    if(Object.keys(activePointers).length < 2) pinchStartView = null;
+    if(ev.pointerId === panPointerId){
+      panPointerId = null;
+      if(panMoved) suppressNextBgClick = true;
+    }
+  }
+  svg.addEventListener('pointerup', endMapPointer);
+  svg.addEventListener('pointercancel', endMapPointer);
+
+  document.getElementById('rnZoomIn').addEventListener('click', function(){
+    zoomAt(view.x + view.w/2, view.y + view.h/2, 1.5);
+  });
+  document.getElementById('rnZoomOut').addEventListener('click', function(){
+    zoomAt(view.x + view.w/2, view.y + view.h/2, 1/1.5);
+  });
+  document.getElementById('rnZoomReset').addEventListener('click', function(){
+    view = {x:BASE_VB.x, y:BASE_VB.y, w:BASE_VB.w, h:BASE_VB.h};
+    applyViewBox();
+  });
+
   function selectRef(ref, anchorEl){
     if(state.selected === ref){ closeTooltip(); return; }
     state.selected = ref;
@@ -457,6 +741,7 @@
   document.getElementById('rnTtClose').addEventListener('click', closeTooltip);
   document.addEventListener('keydown', function(ev){ if(ev.key==='Escape') closeTooltip(); });
   mapWrap.addEventListener('click', function(ev){
+    if(suppressNextBgClick){ suppressNextBgClick = false; return; }
     if(ev.target === svg || ev.target.classList.contains('rn-province')) closeTooltip();
   });
 
@@ -476,17 +761,18 @@
     var dotBox = dotEl.getBoundingClientRect();
     var wrapBox = mapWrap.getBoundingClientRect();
     var x = dotBox.left + dotBox.width/2 - wrapBox.left;
-    var y = dotBox.top - wrapBox.top;
+    var dotTop = dotBox.top - wrapBox.top;
+    var dotBottom = dotBox.bottom - wrapBox.top;
     var ttW = 222;
     var minX = ttW/2 + 6, maxX = wrapBox.width - ttW/2 - 6;
     var clampedX = Math.max(minX, Math.min(maxX, x));
     tooltip.style.left = clampedX + 'px';
-    tooltip.style.top = y + 'px';
-    // si el pin está muy arriba, mostramos el cartel hacia abajo en vez de hacia arriba
-    if(y < 70){
-      tooltip.style.transform = '';
+    // si el pin está muy arriba, no entra un cartel por encima: lo mostramos hacia abajo
+    if(dotTop < 90){
+      tooltip.style.top = dotBottom + 'px';
       tooltip.classList.add('below');
     } else {
+      tooltip.style.top = dotTop + 'px';
       tooltip.classList.remove('below');
     }
   }
@@ -577,7 +863,7 @@
 
   render();
 
-  // ---------- modo edición: arrastrar pines + copiar datos ----------
+  // ---------- modo edición: arrastrar pines/ciudades + copiar datos ----------
   function renderDebugList(){
     debugList.innerHTML = DATA.slice().sort(function(a,b){ return a.ref-b.ref; }).map(function(d){
       return '<div class="dp-row"><span class="dp-ref">'+d.ref+'</span>'+
@@ -586,13 +872,35 @@
     }).join('');
   }
 
+  function renderDebugCityList(){
+    debugCityList.innerHTML = CITIES.map(function(c){
+      return '<div class="dp-row"><span class="dp-shape '+(c.capital?'square':'circle')+'"></span>'+
+        '<input type="text" data-city-id="'+c.id+'" value="'+c.nombre.replace(/"/g,'&quot;')+'">'+
+        '<span class="dp-xy">x:'+c.x.toFixed(1)+' y:'+c.y.toFixed(1)+'</span></div>';
+    }).join('');
+    Array.prototype.forEach.call(debugCityList.querySelectorAll('input[data-city-id]'), function(input){
+      input.addEventListener('input', function(){
+        var id = Number(input.getAttribute('data-city-id'));
+        var c = CITIES.filter(function(x){ return x.id===id; })[0];
+        c.nombre = input.value;
+        cityEls[id].querySelector('.rn-city-label').textContent = c.nombre;
+      });
+    });
+  }
+
   function copyAllData(){
     var pad = function(s,n){ s=String(s); while(s.length<n) s+=' '; return s; };
     var lines = DATA.map(function(d){
       return '    {ref:'+d.ref+', nombre:'+pad("'"+d.nombre+"',",18)+' mineral:'+pad("'"+d.mineral+"',",7)+
         ' etapa:'+pad("'"+d.etapa+"',",42)+' ha:'+pad(d.ha+',',8)+' x:'+d.x.toFixed(2)+', y:'+d.y.toFixed(2)+'}';
     });
-    var text = 'var DATA = [\n' + lines.join(',\n') + '\n  ];';
+    var cityLines = CITIES.map(function(c){
+      return '    {id:'+c.id+', nombre:'+pad("'"+c.nombre+"',",28)+' capital:'+pad(c.capital+',',7)+
+        ' x:'+c.x.toFixed(2)+', y:'+c.y.toFixed(2)+'}';
+    });
+    var text = 'var DATA = [\n' + lines.join(',\n') + '\n  ];\n\n' +
+      'var CITIES = [\n' + cityLines.join(',\n') + '\n  ];\n\n' +
+      'var CITY_SIZE = ' + citySize + ';';
     var done = function(){
       var prev = debugCopyBtn.textContent;
       debugCopyBtn.textContent = '¡Copiado!';
@@ -617,7 +925,7 @@
     var on = root.classList.toggle('debug-on');
     debugToggle.setAttribute('aria-pressed', on ? 'true' : 'false');
     debugToggle.textContent = on ? '✕ Salir del modo edición' : '🛠 Ajustar puntos';
-    if(on) renderDebugList();
+    if(on){ renderDebugList(); renderDebugCityList(); }
   });
   debugCopyBtn.addEventListener('click', copyAllData);
   debugResetBtn.addEventListener('click', function(){
@@ -626,8 +934,19 @@
       d.x = o.x; d.y = o.y;
       movePin(d);
     });
+    ORIGINAL_CITIES.forEach(function(o){
+      var c = CITIES.filter(function(x){ return x.id===o.id; })[0];
+      c.x = o.x; c.y = o.y;
+      moveCity(c);
+    });
+    citySizeInput.value = CITY_SIZE_DEFAULT;
+    applyCitySize(CITY_SIZE_DEFAULT);
     if(state.selected!==null) positionTooltip(byRef(state.selected), pinEls[state.selected]);
     renderDebugList();
+    renderDebugCityList();
+  });
+  citySizeInput.addEventListener('input', function(){
+    applyCitySize(Number(citySizeInput.value));
   });
 
   // ---------- alto automático si está incrustado en un iframe ----------
