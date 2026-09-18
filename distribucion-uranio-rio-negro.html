@@ -184,14 +184,48 @@
 
   .rn-etapa{ color:var(--text); }
 
-  .rn-empty{ padding:26px 8px; text-align:center; color:var(--muted); font-size:13px; }
+  /* ---------- orden en mobile (reemplaza los headers clickeables) ---------- */
+  .rn-sort-mobile{ display:none; margin-bottom:12px; }
+  .rn-sort-mobile label{ font-size:10.5px; text-transform:uppercase; letter-spacing:.045em; color:var(--muted); font-weight:700; display:block; margin-bottom:5px; }
+  .rn-sort-mobile select{
+    width:100%; font-family:inherit; font-size:13px; color:var(--text);
+    border:1px solid var(--border); border-radius:6px; background:var(--bg);
+    padding:8px 10px; height:38px;
+  }
+  .rn-sort-mobile select:focus{ outline:2px solid var(--gray-focus); outline-offset:1px; border-color:var(--gray-hover); }
 
-  @media (max-width:520px){
+  @media (max-width:640px){
     .rn-head{ padding:18px 16px 12px; }
     .rn-head h1{ font-size:18px; max-width:100%; }
     .rn-debug-toggle{ position:static; display:inline-block; margin-top:10px; }
-    .rn-table-scroll{ padding:0 16px 18px; }
+    .rn-table-scroll{ padding:0 16px 18px; overflow-x:visible; }
     .rn-debug-panel{ padding:14px 16px 18px; }
+
+    .rn-sort-mobile{ display:block; }
+
+    /* la tabla pasa a una lista de tarjetas: un <tr> por proyecto, un dato por línea */
+    table.rn-table{ min-width:0; }
+    table.rn-table thead{
+      position:absolute; width:1px; height:1px; overflow:hidden;
+      clip:rect(0,0,0,0); white-space:nowrap; border:0; padding:0; margin:-1px;
+    }
+    table.rn-table, table.rn-table tbody{ display:block; width:100%; }
+    table.rn-table tbody tr{
+      display:block; width:100%; border:1px solid var(--border); border-radius:8px;
+      padding:4px 12px; margin-bottom:8px;
+    }
+    table.rn-table tbody tr:last-child{ margin-bottom:0; }
+    table.rn-table tbody td{
+      display:flex; align-items:center; justify-content:space-between; gap:14px;
+      padding:8px 0; border-bottom:1px solid var(--border);
+    }
+    table.rn-table tbody td:first-child{ padding-left:0; }
+    table.rn-table tbody td:last-child{ border-bottom:none; }
+    table.rn-table tbody td::before{
+      content:attr(data-label); font-size:10.5px; text-transform:uppercase; letter-spacing:.045em;
+      color:var(--muted); font-weight:700; flex:none;
+    }
+    td.num{ text-align:left; }
   }
   @media (prefers-reduced-motion:reduce){
     .rn-uranio *{ transition:none !important; animation:none !important; }
@@ -220,6 +254,17 @@
     <hr class="rn-rule">
 
     <div class="rn-table-scroll">
+      <div class="rn-sort-mobile">
+        <label for="rnSortSelect">Ordenar por</label>
+        <select id="rnSortSelect">
+          <option value="ref:asc">Referencia (1 → 9)</option>
+          <option value="nombre:asc">Proyecto (A → Z)</option>
+          <option value="mineral:asc">Mineral</option>
+          <option value="etapa:asc">Etapa</option>
+          <option value="ha:desc">Superficie: mayor a menor</option>
+          <option value="ha:asc">Superficie: menor a mayor</option>
+        </select>
+      </div>
       <table class="rn-table">
         <thead>
           <tr id="rnThead">
@@ -273,6 +318,7 @@
   var ttBody = document.getElementById('rnTtBody');
   var tbody = document.getElementById('rnTbody');
   var thead = document.getElementById('rnThead');
+  var sortSelect = document.getElementById('rnSortSelect');
   var debugToggle = document.getElementById('rnDebugToggle');
   var debugList = document.getElementById('rnDebugList');
   var debugCopyBtn = document.getElementById('rnDebugCopy');
@@ -447,11 +493,11 @@
       tr.setAttribute('data-ref', d.ref);
       tr.setAttribute('tabindex','0');
       tr.innerHTML =
-        '<td><span class="rn-ref-badge">'+d.ref+'</span></td>'+
-        '<td class="proyecto">'+d.nombre+'</td>'+
-        '<td><span class="rn-badge-mineral"><span class="sw" style="background:'+mineralColor(d.mineral)+'"></span>'+d.mineral+'</span></td>'+
-        '<td class="rn-etapa">'+d.etapa+'</td>'+
-        '<td class="num">'+fmtHa(d.ha)+'</td>';
+        '<td data-label="Ref."><span class="rn-ref-badge">'+d.ref+'</span></td>'+
+        '<td class="proyecto" data-label="Proyecto">'+d.nombre+'</td>'+
+        '<td data-label="Mineral"><span class="rn-badge-mineral"><span class="sw" style="background:'+mineralColor(d.mineral)+'"></span>'+d.mineral+'</span></td>'+
+        '<td class="rn-etapa" data-label="Etapa">'+d.etapa+'</td>'+
+        '<td class="num" data-label="Superficie (ha)">'+fmtHa(d.ha)+'</td>';
       tr.addEventListener('click', function(){ selectRef(d.ref, pinEls[d.ref]); });
       tr.addEventListener('keydown', function(ev){
         if(ev.key==='Enter' || ev.key===' '){ ev.preventDefault(); selectRef(d.ref, pinEls[d.ref]); }
@@ -466,20 +512,33 @@
       th.classList.toggle('dir-desc', active && state.sortDir==='desc');
     });
 
+    // select de orden (mobile) — lo sincronizamos con el estado actual
+    var comboValue = state.sortKey + ':' + state.sortDir;
+    if(sortSelect.value !== comboValue){
+      var hasOption = Array.prototype.some.call(sortSelect.options, function(o){ return o.value===comboValue; });
+      sortSelect.value = hasOption ? comboValue : '';
+    }
+
     refreshSelectionUI();
+  }
+
+  function applySort(key, dir){
+    state.sortKey = key;
+    state.sortDir = dir;
+    render();
   }
 
   thead.addEventListener('click', function(ev){
     var th = ev.target.closest('th[data-key]');
     if(!th) return;
     var key = th.getAttribute('data-key');
-    if(state.sortKey===key){
-      state.sortDir = state.sortDir==='asc' ? 'desc' : 'asc';
-    } else {
-      state.sortKey = key;
-      state.sortDir = (key==='ha') ? 'desc' : 'asc';
-    }
-    render();
+    var dir = (state.sortKey===key) ? (state.sortDir==='asc' ? 'desc' : 'asc') : (key==='ha' ? 'desc' : 'asc');
+    applySort(key, dir);
+  });
+
+  sortSelect.addEventListener('change', function(){
+    var parts = sortSelect.value.split(':');
+    if(parts.length===2) applySort(parts[0], parts[1]);
   });
 
   window.addEventListener('resize', function(){
