@@ -198,6 +198,8 @@
   @media (max-width:640px){
     .rn-head{ padding:18px 16px 12px; }
     .rn-head h1{ font-size:18px; }
+    .rn-map-wrap{ padding:6px 8px 2px; }
+    .rn-zoom-controls{ display:none; }
     .rn-table-scroll{ padding:0 16px 18px; overflow-x:visible; }
     .rn-foot{ padding:12px 16px 16px; }
 
@@ -354,8 +356,12 @@
 
   // contrarresta el zoom del mapa para que los pines/ciudades no cambien de tamaño en pantalla
   var zoomInvScale = 1;
+  // en mobile los pines/etiquetas se agrandan un poco extra para que se lean bien
+  var mobileMQ = window.matchMedia('(max-width:640px)');
+  var mobileBoost = mobileMQ.matches ? 1.18 : 1;
   function applyPinTransform(g, x, y){
-    g.setAttribute('transform', 'translate('+x+','+y+') scale('+zoomInvScale+') translate('+(-x)+','+(-y)+')');
+    var s = zoomInvScale * mobileBoost;
+    g.setAttribute('transform', 'translate('+x+','+y+') scale('+s+') translate('+(-x)+','+(-y)+')');
   }
 
   // ---------- pines de proyectos ----------
@@ -735,6 +741,13 @@
   window.addEventListener('resize', function(){
     if(state.selected!==null) positionTooltip(byRef(state.selected), pinEls[state.selected]);
   });
+
+  function handleMobileMQ(ev){
+    mobileBoost = ev.matches ? 1.18 : 1;
+    applyViewBox();
+  }
+  if(mobileMQ.addEventListener) mobileMQ.addEventListener('change', handleMobileMQ);
+  else if(mobileMQ.addListener) mobileMQ.addListener(handleMobileMQ);
 
   render();
 
