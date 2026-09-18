@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Distribución de los principales proyectos de Uranio en Río Negro</title>
+<title>Distribución de los principales proyectos de uranio en Río Negro</title>
 <style>
   @import url('https://fonts.googleapis.com/css2?family=Chivo:wght@400;500;600;700;800&display=swap');
 
@@ -49,9 +49,20 @@
     text-wrap:balance;
     max-width:calc(100% - 100px);
   }
-  .rn-head p{
-    margin:0; font-size:13px; color:var(--muted); line-height:1.5; max-width:62ch;
+  .rn-hint{
+    display:inline-flex; align-items:center; justify-content:center;
+    width:22px; height:22px; margin-top:2px; padding:0; border:none; background:none; cursor:pointer;
   }
+  .rn-hint-dot{
+    width:9px; height:9px; border-radius:50%; background:var(--black);
+    animation: rn-pulse 2s ease-out infinite;
+  }
+  @keyframes rn-pulse{
+    0%{ box-shadow:0 0 0 0 rgba(20,20,20,0.38); }
+    70%{ box-shadow:0 0 0 11px rgba(20,20,20,0); }
+    100%{ box-shadow:0 0 0 0 rgba(20,20,20,0); }
+  }
+  .rn-hint.is-gone{ display:none; }
   .rn-debug-toggle{
     position:absolute; top:20px; right:22px;
     font-family:inherit; font-size:10.5px; font-weight:600; letter-spacing:.02em;
@@ -63,7 +74,8 @@
 
   /* ---------- mapa ---------- */
   .rn-map-wrap{ position:relative; padding:6px 18px 4px; }
-  .rn-map-wrap svg{ display:block; width:100%; height:auto; overflow:visible; touch-action:none; user-select:none; -webkit-user-select:none; }
+  .rn-map-clip{ overflow:hidden; border-radius:2px; }
+  .rn-map-wrap svg{ display:block; width:100%; height:auto; overflow:hidden; touch-action:none; user-select:none; -webkit-user-select:none; }
 
   .rn-zoom-controls{
     position:absolute; right:10px; bottom:6px; z-index:5;
@@ -93,7 +105,7 @@
   .rn-pin:focus-visible circle.rn-pin-halo{ opacity:.28; r:24; }
 
   /* ---------- ciudades de referencia ---------- */
-  .rn-city-dot{ fill:#fff; stroke:var(--black); stroke-width:1.5; }
+  .rn-city-dot{ fill:#fff; stroke:var(--black); stroke-width:3.5; }
   .rn-city-label{ fill:var(--text); font-family:'Chivo',sans-serif; font-weight:600; pointer-events:none; }
   .rn-uranio.debug-on .rn-city{ cursor:grab; }
   .rn-uranio.debug-on .rn-city.is-dragging{ cursor:grabbing; }
@@ -154,7 +166,7 @@
 
   /* ---------- cartelito / tooltip ---------- */
   .rn-tooltip{
-    position:absolute; z-index:6; width:222px;
+    position:absolute; z-index:6; width:244px;
     background:var(--panel); color:var(--text);
     border:1px solid var(--border);
     border-radius:8px; padding:12px 14px 13px;
@@ -196,11 +208,10 @@
 
   /* ---------- tabla ---------- */
   .rn-table-scroll{ overflow-x:auto; padding:22px 26px 22px; }
-  table.rn-table{ width:100%; border-collapse:collapse; min-width:560px; font-variant-numeric:tabular-nums; }
+  table.rn-table{ width:100%; border-collapse:collapse; table-layout:fixed; font-variant-numeric:tabular-nums; }
   table.rn-table thead th{
     text-align:left; font-size:10.5px; text-transform:uppercase; letter-spacing:.045em;
     color:var(--muted); font-weight:700; padding:0 6px 8px; border-bottom:2px solid var(--black);
-    white-space:nowrap;
   }
   table.rn-table thead th:first-child{ padding-left:2px; }
   .rn-th-btn{
@@ -302,17 +313,19 @@
   <div class="rn-card">
 
     <div class="rn-head">
-      <h1>Distribución de los principales proyectos de Uranio en Río Negro</h1>
-      <p>Mapa interactivo</p>
+      <h1>Distribución de los principales proyectos de uranio en Río Negro</h1>
+      <button class="rn-hint" id="rnHint" type="button" aria-label="Este mapa es interactivo: tocá cada punto para ver el detalle del proyecto"><span class="rn-hint-dot"></span></button>
       <button class="rn-debug-toggle" id="rnDebugToggle" type="button" aria-pressed="false">🛠 Ajustar puntos</button>
     </div>
 
     <div class="rn-map-wrap" id="rnMapWrap">
+     <div class="rn-map-clip">
       <svg id="rnSvg" viewBox="-15 -15 1030 668" role="img" aria-label="Mapa de la provincia de Río Negro con la ubicación de nueve proyectos de uranio">
         <path class="rn-province" d="M 399.88,0.0 L 451.59,12.49 L 462.42,39.91 L 456.4,51.11 L 443.17,49.87 L 441.97,58.57 L 449.19,75.96 L 461.21,69.75 L 468.43,92.07 L 498.5,104.45 L 517.74,92.07 L 532.17,118.06 L 552.62,131.64 L 583.88,139.04 L 575.47,161.22 L 600.72,173.51 L 619.96,174.74 L 629.59,168.6 L 639.21,163.68 L 651.23,166.14 L 660.85,175.97 L 669.27,182.11 L 680.1,185.8 L 688.51,182.11 L 696.93,173.51 L 716.18,183.34 L 727.0,188.25 L 736.62,182.11 L 739.03,171.05 L 767.89,185.8 L 788.33,182.11 L 806.37,183.34 L 826.82,189.48 L 842.45,199.29 L 870.11,213.99 L 882.14,221.34 L 894.17,222.56 L 895.37,233.56 L 904.99,236.0 L 915.81,242.11 L 925.44,250.65 L 932.65,253.09 L 935.06,454.67 L 949.49,452.28 L 967.53,457.06 L 986.77,476.15 L 1000.0,492.82 L 981.36,507.09 L 969.93,514.22 L 955.5,517.78 L 935.66,516.59 L 913.41,516.0 L 894.17,516.59 L 882.74,514.81 L 876.13,512.44 L 870.11,503.53 L 859.29,499.36 L 857.49,492.82 L 853.88,490.44 L 850.27,496.99 L 835.84,491.04 L 819.6,482.11 L 806.37,474.36 L 791.94,469.0 L 782.92,467.21 L 772.1,470.19 L 768.49,466.01 L 781.72,462.43 L 778.11,456.46 L 770.29,454.07 L 764.88,455.27 L 767.29,461.24 L 758.87,459.45 L 748.05,463.63 L 742.63,474.36 L 740.23,485.09 L 739.63,494.01 L 739.03,513.03 L 740.83,523.12 L 745.04,533.19 L 749.25,547.99 L 752.25,558.04 L 755.86,564.53 L 758.87,575.74 L 754.06,582.23 L 753.46,591.65 L 753.46,598.13 L 754.66,604.59 L 755.86,611.06 L 751.05,611.06 L 752.86,616.93 L 750.45,626.9 L 750.45,636.28 L 14.43,635.11 L 13.83,622.21 L 12.63,615.76 L 17.44,611.64 L 17.44,603.42 L 12.03,599.3 L 11.43,592.83 L 8.42,589.89 L 4.21,582.82 L 9.02,574.57 L 7.82,565.12 L 7.82,557.45 L 2.41,546.81 L 3.01,536.74 L 0.0,531.41 L 6.01,524.89 L 1.2,517.78 L 7.82,511.84 L 8.42,504.71 L 6.01,499.36 L 4.21,495.2 L 20.75,497.58 L 33.67,499.66 L 39.09,497.58 L 46.0,499.36 L 52.92,500.85 L 60.73,507.98 L 71.56,508.87 L 82.68,503.53 L 83.88,499.07 L 90.2,495.5 L 89.9,492.53 L 93.81,490.74 L 96.81,487.76 L 94.41,478.24 L 92.9,472.28 L 89.3,471.08 L 90.2,467.8 L 87.49,463.93 L 86.59,460.64 L 89.3,455.27 L 96.81,455.57 L 100.42,448.1 L 102.53,444.21 L 107.94,441.22 L 112.15,440.03 L 114.85,436.44 L 121.17,435.24 L 126.58,433.44 L 135.3,435.84 L 139.21,434.94 L 142.21,430.15 L 149.43,424.16 L 153.34,422.36 L 163.26,426.86 L 177.69,422.36 L 184.91,424.46 L 190.92,419.97 L 189.12,412.77 L 199.04,404.37 L 200.24,383.93 L 214.67,373.09 L 209.86,358.62 L 208.66,348.97 L 224.29,336.88 L 247.14,329.62 L 269.99,321.15 L 280.82,311.46 L 296.45,292.04 L 318.1,278.67 L 337.34,261.62 L 348.17,245.77 L 361.4,234.78 L 375.83,216.44 L 395.07,207.87 L 405.89,205.42 L 420.32,205.42 L 428.14,204.19 L 409.5,168.6 L 398.68,159.98 L 399.88,0.0 Z"></path>
         <g id="rnCityPins"></g>
         <g id="rnPins"></g>
       </svg>
+     </div>
       <div class="rn-tooltip" id="rnTooltip"><button class="tt-close" id="rnTtClose" aria-label="Cerrar">×</button><div id="rnTtBody"></div></div>
       <div class="rn-zoom-controls">
         <button type="button" id="rnZoomIn" aria-label="Acercar">+</button>
@@ -346,10 +359,10 @@
       <table class="rn-table">
         <thead>
           <tr id="rnThead">
-            <th data-key="ref" style="width:44px;"><button class="rn-th-btn">Ref.<span class="arrow">▲</span></button></th>
-            <th data-key="nombre"><button class="rn-th-btn">Proyecto<span class="arrow">▲</span></button></th>
-            <th data-key="mineral"><button class="rn-th-btn">Mineral<span class="arrow">▲</span></button></th>
-            <th data-key="etapa"><button class="rn-th-btn">Etapa<span class="arrow">▲</span></button></th>
+            <th data-key="ref" style="width:36px;"><button class="rn-th-btn">Ref.<span class="arrow">▲</span></button></th>
+            <th data-key="nombre" style="width:24%;"><button class="rn-th-btn">Proyecto<span class="arrow">▲</span></button></th>
+            <th data-key="mineral" style="width:14%;"><button class="rn-th-btn">Mineral<span class="arrow">▲</span></button></th>
+            <th data-key="etapa" style="width:32%;"><button class="rn-th-btn">Etapa<span class="arrow">▲</span></button></th>
             <th data-key="ha"><button class="rn-th-btn">Superficie (ha)<span class="arrow">▲</span></button></th>
           </tr>
         </thead>
@@ -382,8 +395,8 @@
     </div>
 
     <div class="rn-foot">
-      <span class="firma" aria-label="Río Negro"><svg viewBox="0 0 321 50" xmlns="http://www.w3.org/2000/svg" role="img" aria-hidden="true"><path d="M22.984 22.957c0 2.836-1.015 4.082-3.793 4.082H18.06V18.82h1.132c2.72 0 3.793 1.301 3.793 4.137M40.59 49.32v-8.218h-.512c-.504 0-1.191-.399-1.414-1.418l-.34-1.704c-1.02-5.101-3.004-6.8-6.851-7.652v-.226c5.156-1.532 6.965-4.649 6.965-9.012 0-7.656-4.868-11.453-17.38-11.453H0v8.5h1.363c.563 0 1.528.968 1.528 1.535V39.57c0 .567-.965 1.532-1.528 1.532H0v8.218h21.344v-8.218h-2.832v-5.844h1.758c1.921 0 2.828.91 3.054 3.289l1.02 10.773zm7.797-41.047h8.328l5.824-4.875V0H49.58zM42.445 49.32h21.852v-8.218h-1.59c-.562 0-1.531-.965-1.531-1.532V19.672c0-.567.969-1.535 1.531-1.535h1.59v-8.5H42.445v8.5h1.582c.57 0 1.532.968 1.532 1.535V39.57c0 .567-.961 1.532-1.532 1.532h-1.582zm49.18-19.558c0 7.09-1.93 10.543-5.04 10.543-3.112 0-5.034-3.453-5.034-10.543 0-7.086 1.922-10.207 5.035-10.207 3.11 0 5.039 3.12 5.039 10.207m16.016-.282c0-13.156-9.282-20.523-21.055-20.523-11.777 0-21.059 7.367-21.059 20.523C65.527 42.63 74.36 50 86.586 50s21.055-7.371 21.055-20.52m8.98 19.84h17.094v-8.218h-3.113V29.59h.171l10.864 19.73h13.644V19.672c0-.567.961-1.535 1.531-1.535h1.13v-8.5h-16.696v8.5h2.941v9.246h-.167l-9.743-17.746h-17.656v8.5h1.356c.57 0 1.53.968 1.53 1.535V39.57c0 .567-.96 1.532-1.53 1.532h-1.356zm43.176 0h35.379V34.922h-9.34l-1.184 5.496h-6.343v-6.797h8.546v-9.129h-8.546V18.82h6.226l1.3 4.48h8.888V9.638h-34.926v8.5h1.36c.57 0 1.527.968 1.527 1.535V39.57c0 .567-.957 1.532-1.528 1.532h-1.36zm56.762.68c3.34 0 7.195-.738 8.78-1.758 1.016 0 1.524 1.078 1.524 1.078h7.645V38.04c0-.567.96-1.532 1.527-1.532h.621v-8.215h-18.96v7.988h2.152v4.024a4.982 4.982 0 01-1.364.172c-4.297 0-5.316-4.137-5.316-11.223 0-7.938 2.598-10.094 6.957-10.094.453 0 1.363.059 1.813.113l1.527 4.82h9.851V9.638h-10.304c-1.918-.399-3.961-.68-6.11-.68-11.882 0-19.984 7.313-19.984 21.031 0 13.157 7.023 20.012 19.64 20.012m44.368-27.044c0 2.836-1.02 4.082-3.79 4.082h-1.132V18.82h1.133c2.718 0 3.789 1.301 3.789 4.137m17.61 26.363v-8.218h-.513c-.507 0-1.183-.399-1.414-1.418l-.336-1.704c-1.023-5.101-3-6.8-6.851-7.652v-.226c5.148-1.532 6.96-4.649 6.96-9.012 0-7.656-4.866-11.453-17.378-11.453h-21.05v8.5h1.35c.567 0 1.532.968 1.532 1.535V39.57c0 .567-.965 1.532-1.531 1.532h-1.352v8.218h21.332v-8.218h-2.824v-5.844h1.75c1.926 0 2.832.91 3.055 3.289l1.023 10.773zm26.48-19.558c0 7.09-1.922 10.543-5.04 10.543-3.109 0-5.038-3.453-5.038-10.543 0-7.086 1.93-10.207 5.039-10.207 3.117 0 5.039 3.12 5.039 10.207m16.02-.282c0-13.156-9.286-20.523-21.06-20.523-11.777 0-21.058 7.367-21.058 20.523 0 13.149 8.832 20.52 21.059 20.52 12.226 0 21.058-7.371 21.058-20.52" fill="#de0303"></path></svg></span>
-      <span class="fuente">Fuente: Secretaría de Minería de Río Negro.</span>
+      <span class="firma" aria-label="Río Negro"><svg viewBox="0 0 321 50" xmlns="http://www.w3.org/2000/svg" role="img" aria-hidden="true"><path d="M22.984 22.957c0 2.836-1.015 4.082-3.793 4.082H18.06V18.82h1.132c2.72 0 3.793 1.301 3.793 4.137M40.59 49.32v-8.218h-.512c-.504 0-1.191-.399-1.414-1.418l-.34-1.704c-1.02-5.101-3.004-6.8-6.851-7.652v-.226c5.156-1.532 6.965-4.649 6.965-9.012 0-7.656-4.868-11.453-17.38-11.453H0v8.5h1.363c.563 0 1.528.968 1.528 1.535V39.57c0 .567-.965 1.532-1.528 1.532H0v8.218h21.344v-8.218h-2.832v-5.844h1.758c1.921 0 2.828.91 3.054 3.289l1.02 10.773zm7.797-41.047h8.328l5.824-4.875V0H49.58zM42.445 49.32h21.852v-8.218h-1.59c-.562 0-1.531-.965-1.531-1.532V19.672c0-.567.969-1.535 1.531-1.535h1.59v-8.5H42.445v8.5h1.582c.57 0 1.532.968 1.532 1.535V39.57c0 .567-.961 1.532-1.532 1.532h-1.582zm49.18-19.558c0 7.09-1.93 10.543-5.04 10.543-3.112 0-5.034-3.453-5.034-10.543 0-7.086 1.922-10.207 5.035-10.207 3.11 0 5.039 3.12 5.039 10.207m16.016-.282c0-13.156-9.282-20.523-21.055-20.523-11.777 0-21.059 7.367-21.059 20.523C65.527 42.63 74.36 50 86.586 50s21.055-7.371 21.055-20.52m8.98 19.84h17.094v-8.218h-3.113V29.59h.171l10.864 19.73h13.644V19.672c0-.567.961-1.535 1.531-1.535h1.13v-8.5h-16.696v8.5h2.941v9.246h-.167l-9.743-17.746h-17.656v8.5h1.356c.57 0 1.53.968 1.53 1.535V39.57c0 .567-.96 1.532-1.53 1.532h-1.356zm43.176 0h35.379V34.922h-9.34l-1.184 5.496h-6.343v-6.797h8.546v-9.129h-8.546V18.82h6.226l1.3 4.48h8.888V9.638h-34.926v8.5h1.36c.57 0 1.527.968 1.527 1.535V39.57c0 .567-.957 1.532-1.528 1.532h-1.36zm56.762.68c3.34 0 7.195-.738 8.78-1.758 1.016 0 1.524 1.078 1.524 1.078h7.645V38.04c0-.567.96-1.532 1.527-1.532h.621v-8.215h-18.96v7.988h2.152v4.024a4.982 4.982 0 01-1.364.172c-4.297 0-5.316-4.137-5.316-11.223 0-7.938 2.598-10.094 6.957-10.094.453 0 1.363.059 1.813.113l1.527 4.82h9.851V9.638h-10.304c-1.918-.399-3.961-.68-6.11-.68-11.882 0-19.984 7.313-19.984 21.031 0 13.157 7.023 20.012 19.64 20.012m44.368-27.044c0 2.836-1.02 4.082-3.79 4.082h-1.132V18.82h1.133c2.718 0 3.789 1.301 3.789 4.137m17.61 26.363v-8.218h-.513c-.507 0-1.183-.399-1.414-1.418l-.336-1.704c-1.023-5.101-3-6.8-6.851-7.652v-.226c5.148-1.532 6.96-4.649 6.96-9.012 0-7.656-4.866-11.453-17.378-11.453h-21.05v8.5h1.35c.567 0 1.532.968 1.532 1.535V39.57c0 .567-.965 1.532-1.531 1.532h-1.352v8.218h21.332v-8.218h-2.824v-5.844h1.75c1.926 0 2.832.91 3.055 3.289l1.023 10.773zm26.48-19.558c0 7.09-1.922 10.543-5.04 10.543-3.109 0-5.038-3.453-5.038-10.543 0-7.086 1.93-10.207 5.039-10.207 3.117 0 5.039 3.12 5.039 10.207m16.02-.282c0-13.156-9.286-20.523-21.06-20.523-11.777 0-21.058 7.367-21.058 20.523 0 13.149 8.832 20.52 21.059 20.52 12.226 0 21.058-7.371 21.058-20.52" fill="#141414"></path></svg></span>
+      <span class="fuente">Fuente: Secretaría de Minería de Río Negro</span>
     </div>
 
   </div>
@@ -392,26 +405,27 @@
 <script>
 (function(){
   var DATA = [
-    {ref:1, nombre:'Ivana',          mineral:'U-V', etapa:'Evaluación económica preliminar', ha:6777,  x:664.57, y:391.43},
-    {ref:2, nombre:'Anit',           mineral:'U-V', etapa:'Exploración inicial',              ha:13499, x:569.91, y:316.74},
-    {ref:3, nombre:'Santa Bárbara',  mineral:'U-V', etapa:'Exploración inicial',              ha:4701,  x:524.75, y:266.37},
-    {ref:4, nombre:'Anit Sur',       mineral:'U-V', etapa:'Prospección',                       ha:38937, x:604.65, y:340.19},
-    {ref:5, nombre:'Ivana Central',  mineral:'U-V', etapa:'Exploración inicial',              ha:10468, x:641.13, y:380.14},
-    {ref:6, nombre:'Ivana Norte',    mineral:'U-V', etapa:'Exploración inicial',              ha:3800,  x:635.05, y:362.77},
-    {ref:7, nombre:'Catriel',        mineral:'U',   etapa:'Exploración inicial',              ha:12771, x:445.06, y:54.47},
-    {ref:8, nombre:'Barda Colorada', mineral:'U-V', etapa:'Prospección',                       ha:49958, x:411.62, y:55.42},
-    {ref:9, nombre:'Lucho U',        mineral:'U',   etapa:'Prospección',                       ha:5930,  x:635.92, y:409.67}
+    {ref:1, nombre:'Ivana',          mineral:'U-V', etapa:'Evaluación económica preliminar', ha:6777,  titular:'Ivana Minerales SA',   x:664.57, y:391.43},
+    {ref:2, nombre:'Anit',           mineral:'U-V', etapa:'Exploración inicial',              ha:13499, titular:'Minera Cielo Azul',     x:569.91, y:316.74},
+    {ref:3, nombre:'Santa Bárbara',  mineral:'U-V', etapa:'Exploración inicial',              ha:4701,  titular:'Minera Cielo Azul',     x:524.75, y:266.37},
+    {ref:4, nombre:'Anit Sur',       mineral:'U-V', etapa:'Prospección',                       ha:38937, titular:'Minera Cielo Azul',     x:604.65, y:340.19},
+    {ref:5, nombre:'Ivana Central',  mineral:'U-V', etapa:'Exploración inicial',              ha:10468, titular:'Minera Cielo Azul',     x:641.13, y:380.14},
+    {ref:6, nombre:'Ivana Norte',    mineral:'U-V', etapa:'Exploración inicial',              ha:3800,  titular:'Minera Cielo Azul',     x:635.05, y:362.77},
+    {ref:7, nombre:'Catriel',        mineral:'U',   etapa:'Exploración inicial',              ha:12771, titular:'Comisión Nacional de Energía Atómica', x:445.06, y:54.47},
+    {ref:8, nombre:'Barda Colorada', mineral:'U-V', etapa:'Prospección',                       ha:49958, titular:'Piche Resources SA',    x:411.62, y:55.42},
+    {ref:9, nombre:'Lucho U',        mineral:'U',   etapa:'Prospección',                       ha:5930,  titular:'Claudio Guillermo Lucero', x:635.92, y:409.67}
   ];
 
   var ORIGINAL = DATA.map(function(d){ return {ref:d.ref, x:d.x, y:d.y}; });
 
   var CITIES = [
-    {id:1, nombre:'Viedma',                   capital:true,  x:975.47, y:467.26},
+    {id:1, nombre:'Viedma',                   capital:true,  x:930.00, y:467.26},
     {id:2, nombre:'San Carlos de Bariloche',  capital:false, x:65.79,  y:513.17},
     {id:3, nombre:'General Roca',             capital:false, x:474.10, y:211.87},
     {id:4, nombre:'Cipolletti',               capital:false, x:428.46, y:198.82},
     {id:5, nombre:'Valcheta',                 capital:false, x:622.65, y:451.91},
-    {id:6, nombre:'San Antonio Oeste',        capital:false, x:762.33, y:456.07}
+    {id:6, nombre:'San Antonio Oeste',        capital:false, x:762.33, y:456.07},
+    {id:7, nombre:'Catriel',                  capital:false, x:450.00, y:90.00}
   ];
   var ORIGINAL_CITIES = CITIES.map(function(c){ return {id:c.id, x:c.x, y:c.y}; });
   var CITY_SIZE_DEFAULT = 6.5;
@@ -468,6 +482,12 @@
     }
   }
 
+  // contrarresta el zoom del mapa para que los pines/ciudades no cambien de tamaño en pantalla
+  var zoomInvScale = 1;
+  function applyPinTransform(g, x, y){
+    g.setAttribute('transform', 'translate('+x+','+y+') scale('+zoomInvScale+') translate('+(-x)+','+(-y)+')');
+  }
+
   function movePin(d){
     var g = pinEls[d.ref];
     var halo = g.querySelector('.rn-pin-halo');
@@ -476,6 +496,7 @@
     halo.setAttribute('cx', d.x); halo.setAttribute('cy', d.y);
     positionDot(dot, d.x, d.y);
     txt.setAttribute('x', d.x); txt.setAttribute('y', d.y+1);
+    applyPinTransform(g, d.x, d.y);
   }
 
   DATA.forEach(function(d){
@@ -551,6 +572,32 @@
 
   // ---------- ciudades de referencia (blancas, más chicas, arrastrables en modo edición) ----------
   var cityEls = {};
+  var CITY_FONT_SIZE = 14;
+  function setCityLabel(label, x, y, name, fontSize){
+    while(label.firstChild) label.removeChild(label.firstChild);
+    label.setAttribute('font-size', fontSize);
+    var words = name.split(' ');
+    if(name.length <= 13 || words.length < 2){
+      label.setAttribute('x', x); label.setAttribute('y', y + 5);
+      label.textContent = name;
+      return;
+    }
+    var best = 1, bestDiff = Infinity, acc = 0;
+    for(var i=0; i<words.length-1; i++){
+      acc += words[i].length + 1;
+      var diff = Math.abs(acc - name.length/2);
+      if(diff < bestDiff){ bestDiff = diff; best = i+1; }
+    }
+    var line1 = words.slice(0,best).join(' ');
+    var line2 = words.slice(best).join(' ');
+    var lh = fontSize * 1.15;
+    var y1 = y - lh/2 + 5;
+    var t1 = document.createElementNS('http://www.w3.org/2000/svg','tspan');
+    t1.setAttribute('x', x); t1.setAttribute('y', y1); t1.textContent = line1;
+    var t2 = document.createElementNS('http://www.w3.org/2000/svg','tspan');
+    t2.setAttribute('x', x); t2.setAttribute('y', y1 + lh); t2.textContent = line2;
+    label.appendChild(t1); label.appendChild(t2);
+  }
   function moveCity(c){
     var el = cityEls[c.id];
     var dot = el.querySelector('.rn-city-dot');
@@ -562,8 +609,8 @@
     } else {
       dot.setAttribute('cx', c.x); dot.setAttribute('cy', c.y); dot.setAttribute('r', half);
     }
-    label.setAttribute('x', c.x + half + 5);
-    label.setAttribute('y', c.y + 4);
+    setCityLabel(label, c.x + half + 6, c.y, c.nombre, CITY_FONT_SIZE);
+    applyPinTransform(el, c.x, c.y);
   }
 
   CITIES.forEach(function(c){
@@ -579,8 +626,6 @@
 
     var label = document.createElementNS('http://www.w3.org/2000/svg','text');
     label.setAttribute('class','rn-city-label');
-    label.setAttribute('font-size', 11);
-    label.textContent = c.nombre;
 
     g.appendChild(dot); g.appendChild(label);
     cityPinsG.appendChild(g);
@@ -625,6 +670,9 @@
 
   function applyViewBox(){
     svg.setAttribute('viewBox', view.x+' '+view.y+' '+view.w+' '+view.h);
+    zoomInvScale = view.w / BASE_VB.w;
+    DATA.forEach(movePin);
+    CITIES.forEach(moveCity);
     if(state.selected !== null && pinEls[state.selected]) positionTooltip(byRef(state.selected), pinEls[state.selected]);
   }
   function clampView(){
@@ -749,6 +797,7 @@
     var d = byRef(ref);
     ttBody.innerHTML =
       '<div class="tt-title"><span class="tt-ref">'+d.ref+'</span>'+d.nombre+'</div>'+
+      '<div class="tt-row"><span class="tt-k">Titular</span><span class="tt-v">'+d.titular+'</span></div>'+
       '<div class="tt-row"><span class="tt-k">Mineral</span><span class="tt-v">'+d.mineral+'</span></div>'+
       '<div class="tt-row"><span class="tt-k">Etapa</span><span class="tt-v">'+d.etapa+'</span></div>'+
       '<div class="tt-row"><span class="tt-k">Superficie</span><span class="tt-v">'+fmtHa(d.ha)+' ha</span></div>';
@@ -763,7 +812,7 @@
     var x = dotBox.left + dotBox.width/2 - wrapBox.left;
     var dotTop = dotBox.top - wrapBox.top;
     var dotBottom = dotBox.bottom - wrapBox.top;
-    var ttW = 222;
+    var ttW = 244;
     var minX = ttW/2 + 6, maxX = wrapBox.width - ttW/2 - 6;
     var clampedX = Math.max(minX, Math.min(maxX, x));
     tooltip.style.left = clampedX + 'px';
@@ -863,6 +912,18 @@
 
   render();
 
+  // ---------- pulso que indica que el mapa es interactivo ----------
+  (function(){
+    var hint = document.getElementById('rnHint');
+    var dismissed = false;
+    try{ dismissed = localStorage.getItem('rn-uranio-hint-dismissed') === '1'; }catch(e){}
+    if(dismissed){ hint.classList.add('is-gone'); return; }
+    hint.addEventListener('click', function(){
+      hint.classList.add('is-gone');
+      try{ localStorage.setItem('rn-uranio-hint-dismissed', '1'); }catch(e){}
+    });
+  })();
+
   // ---------- modo edición: arrastrar pines/ciudades + copiar datos ----------
   function renderDebugList(){
     debugList.innerHTML = DATA.slice().sort(function(a,b){ return a.ref-b.ref; }).map(function(d){
@@ -883,7 +944,7 @@
         var id = Number(input.getAttribute('data-city-id'));
         var c = CITIES.filter(function(x){ return x.id===id; })[0];
         c.nombre = input.value;
-        cityEls[id].querySelector('.rn-city-label').textContent = c.nombre;
+        moveCity(c);
       });
     });
   }
@@ -892,7 +953,8 @@
     var pad = function(s,n){ s=String(s); while(s.length<n) s+=' '; return s; };
     var lines = DATA.map(function(d){
       return '    {ref:'+d.ref+', nombre:'+pad("'"+d.nombre+"',",18)+' mineral:'+pad("'"+d.mineral+"',",7)+
-        ' etapa:'+pad("'"+d.etapa+"',",42)+' ha:'+pad(d.ha+',',8)+' x:'+d.x.toFixed(2)+', y:'+d.y.toFixed(2)+'}';
+        ' etapa:'+pad("'"+d.etapa+"',",42)+' ha:'+pad(d.ha+',',8)+' titular:'+pad("'"+d.titular+"',",38)+
+        ' x:'+d.x.toFixed(2)+', y:'+d.y.toFixed(2)+'}';
     });
     var cityLines = CITIES.map(function(c){
       return '    {id:'+c.id+', nombre:'+pad("'"+c.nombre+"',",28)+' capital:'+pad(c.capital+',',7)+
