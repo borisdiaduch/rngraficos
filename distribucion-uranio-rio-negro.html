@@ -40,23 +40,13 @@
   .rn-head{
     padding:22px 26px 14px;
     border-top:3px solid var(--black);
-    position:relative;
   }
   .rn-head h1{
-    margin:0 0 6px;
+    margin:0;
     font-size:22px; line-height:1.22; font-weight:800;
     letter-spacing:-0.005em;
     text-wrap:balance;
-    max-width:calc(100% - 100px);
   }
-  .rn-debug-toggle{
-    position:absolute; top:20px; right:22px;
-    font-family:inherit; font-size:10.5px; font-weight:600; letter-spacing:.02em;
-    color:var(--muted); background:none; border:1px solid var(--border); border-radius:14px;
-    padding:5px 11px; cursor:pointer; white-space:nowrap;
-  }
-  .rn-debug-toggle:hover{ color:var(--text); border-color:var(--gray-focus); background:var(--gray-hover-bg); }
-  .rn-uranio.debug-on .rn-debug-toggle{ background:var(--black); color:#fff; border-color:var(--black); }
 
   /* ---------- mapa ---------- */
   .rn-map-wrap{ position:relative; padding:6px 18px 4px; }
@@ -77,7 +67,7 @@
   .rn-zoom-controls button + button{ border-top:1px solid var(--border); }
   .rn-zoom-controls button:hover{ background:var(--gray-hover-bg); }
   .rn-zoom-controls #rnZoomReset{ font-size:12px; }
-  .rn-province{ fill:var(--map-fill); stroke:var(--map-stroke); stroke-width:2.2; stroke-linejoin:round; transition:fill .15s ease; }
+  .rn-province{ fill:var(--map-fill); stroke:var(--map-stroke); stroke-width:2.2; stroke-linejoin:round; }
 
   .rn-pin{ cursor:pointer; }
   .rn-pin circle.rn-pin-halo{ fill:var(--gray-hover); opacity:0; transition:opacity .18s ease, r .18s ease; }
@@ -93,53 +83,6 @@
   /* ---------- ciudades de referencia ---------- */
   .rn-city-dot{ fill:#fff; stroke:var(--black); stroke-width:3.5; }
   .rn-city-label{ fill:var(--text); font-family:'Chivo',sans-serif; font-weight:600; pointer-events:none; }
-  .rn-uranio.debug-on .rn-city{ cursor:grab; }
-  .rn-uranio.debug-on .rn-city.is-dragging{ cursor:grabbing; }
-  .rn-uranio.debug-on .rn-city-dot{ stroke:var(--gray-hover); }
-
-  /* ---------- modo edición (debug: reubicar pines a mano) ---------- */
-  .rn-uranio.debug-on .rn-map-wrap{ outline:2px dashed var(--gray-focus); outline-offset:4px; border-radius:6px; }
-  .rn-uranio.debug-on .rn-pin{ cursor:grab; }
-  .rn-uranio.debug-on .rn-pin.is-dragging{ cursor:grabbing; }
-  .rn-uranio.debug-on .rn-pin circle.rn-pin-halo{ opacity:.16; }
-  .rn-debug-panel{ display:none; padding:14px 26px 18px; border-top:1px dashed var(--border); }
-  .rn-uranio.debug-on .rn-debug-panel{ display:block; }
-  .rn-debug-panel .dp-head{ display:flex; align-items:center; justify-content:space-between; gap:10px; margin-bottom:10px; }
-  .rn-debug-panel .dp-title{ font-size:10.5px; text-transform:uppercase; letter-spacing:.05em; font-weight:700; color:var(--muted); }
-  .rn-debug-actions{ display:flex; gap:8px; }
-  .rn-debug-btn{
-    font-family:inherit; font-size:11.5px; font-weight:600; cursor:pointer;
-    background:var(--bg); color:var(--text); border:1px solid var(--border); border-radius:6px;
-    padding:6px 11px;
-  }
-  .rn-debug-btn:hover{ background:var(--gray-hover-bg); border-color:var(--gray-focus); }
-  .rn-debug-btn.primary{ background:var(--black); color:#fff; border-color:var(--black); }
-  .rn-debug-btn.primary:hover{ background:var(--gray-hover); }
-  .rn-debug-list{ display:grid; grid-template-columns:repeat(auto-fill,minmax(210px,1fr)); gap:6px 14px; font-size:11.5px; font-variant-numeric:tabular-nums; }
-  .rn-debug-list .dp-row{ display:flex; align-items:center; gap:6px; padding:5px 7px; border:1px solid var(--border); border-radius:6px; background:var(--bg); }
-  .rn-debug-list .dp-ref{
-    display:inline-flex; align-items:center; justify-content:center; width:16px; height:16px; border-radius:50%;
-    background:var(--black); color:#fff; font-size:9px; font-weight:700; flex:none;
-  }
-  .rn-debug-list .dp-name{ flex:1; min-width:0; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
-  .rn-debug-list .dp-xy{ color:var(--muted); flex:none; }
-  .rn-debug-copy-hint{ font-size:10.5px; color:var(--muted); margin-top:8px; }
-
-  .rn-debug-size{ display:flex; align-items:center; gap:8px; }
-  .rn-debug-size label{ font-size:11px; color:var(--muted); }
-  .rn-debug-size input[type="range"]{ width:110px; accent-color:var(--black); }
-  .rn-debug-city-list{ display:grid; grid-template-columns:repeat(auto-fill,minmax(230px,1fr)); gap:6px 14px; font-size:11.5px; }
-  .rn-debug-city-list .dp-row{ display:flex; align-items:center; gap:6px; padding:5px 7px; border:1px solid var(--border); border-radius:6px; background:var(--bg); }
-  .rn-debug-city-list .dp-shape{ flex:none; width:10px; height:10px; background:#fff; border:1.5px solid var(--black); }
-  .rn-debug-city-list .dp-shape.square{ border-radius:2px; }
-  .rn-debug-city-list .dp-shape.circle{ border-radius:50%; }
-  .rn-debug-city-list input[type="text"]{
-    flex:1; min-width:0; font-family:inherit; font-size:11.5px; color:var(--text);
-    border:1px solid transparent; background:transparent; padding:2px 4px; border-radius:4px;
-  }
-  .rn-debug-city-list input[type="text"]:hover{ border-color:var(--border); }
-  .rn-debug-city-list input[type="text"]:focus{ outline:none; border-color:var(--gray-focus); background:#fff; }
-  .rn-debug-city-list .dp-xy{ color:var(--muted); flex:none; }
 
   /* ---------- pie ---------- */
   .rn-foot{
@@ -179,14 +122,15 @@
     width:18px; height:18px; border-radius:50%; background:var(--black); color:#fff;
     font-size:11px; font-weight:700; margin-right:6px; flex:none;
   }
-  .rn-tooltip .tt-title{ display:flex; align-items:center; font-size:13.5px; font-weight:700; margin-bottom:8px; }
+  .rn-tooltip .tt-title{ display:flex; align-items:center; font-size:13.5px; font-weight:700; margin-bottom:8px; padding-right:20px; }
   .rn-tooltip .tt-row{ display:flex; justify-content:space-between; gap:10px; font-size:11.5px; padding:3px 0; border-top:1px solid var(--border); }
   .rn-tooltip .tt-row:first-of-type{ border-top:none; }
   .rn-tooltip .tt-k{ color:var(--muted); }
   .rn-tooltip .tt-v{ font-weight:600; text-align:right; }
   .rn-tooltip .tt-close{
-    position:absolute; top:6px; right:7px; width:18px; height:18px; border:none; background:none;
-    color:var(--muted); font-size:15px; line-height:1; cursor:pointer; padding:0;
+    position:absolute; top:2px; right:2px; width:26px; height:26px; border:none; background:none;
+    color:var(--muted); font-size:22px; line-height:1; cursor:pointer; padding:0;
+    display:flex; align-items:center; justify-content:center;
   }
   .rn-tooltip .tt-close:hover{ color:var(--text); }
 
@@ -223,7 +167,7 @@
   .rn-ref-badge{
     display:inline-flex; align-items:center; justify-content:center;
     width:20px; height:20px; border-radius:50%; background:var(--black); color:#fff;
-    font-size:10.5px; font-weight:700; flex:none; transition:background .1s ease, transform .1s ease;
+    font-size:10.5px; font-weight:700; flex:none; transition:background .1s ease;
   }
   tr:hover .rn-ref-badge, tr.is-selected .rn-ref-badge{ background:var(--gray-hover); }
 
@@ -257,10 +201,8 @@
 
   @media (max-width:640px){
     .rn-head{ padding:18px 16px 12px; }
-    .rn-head h1{ font-size:18px; max-width:100%; }
-    .rn-debug-toggle{ position:static; display:inline-block; margin-top:10px; }
+    .rn-head h1{ font-size:18px; }
     .rn-table-scroll{ padding:0 16px 18px; overflow-x:visible; }
-    .rn-debug-panel{ padding:14px 16px 18px; }
     .rn-foot{ padding:12px 16px 16px; }
 
     .rn-sort-mobile{ display:block; }
@@ -289,7 +231,7 @@
     td.num::after{ content:' ha'; font-weight:400; color:var(--muted); }
   }
   @media (prefers-reduced-motion:reduce){
-    .rn-uranio *{ transition:none !important; animation:none !important; }
+    .rn-uranio *{ transition:none !important; }
   }
 </style>
 </head>
@@ -300,7 +242,6 @@
 
     <div class="rn-head">
       <h1>Distribución de los principales proyectos de uranio en Río Negro</h1>
-      <button class="rn-debug-toggle" id="rnDebugToggle" type="button" aria-pressed="false">🛠 Ajustar puntos</button>
     </div>
 
     <div class="rn-map-wrap" id="rnMapWrap">
@@ -355,30 +296,6 @@
       </table>
     </div>
 
-    <div class="rn-debug-panel" id="rnDebugPanel">
-      <div class="dp-head">
-        <span class="dp-title">Modo edición — posiciones de los puntos</span>
-        <div class="rn-debug-actions">
-          <button class="rn-debug-btn" id="rnDebugReset" type="button">Restablecer</button>
-          <button class="rn-debug-btn primary" id="rnDebugCopy" type="button">Copiar todos los datos</button>
-        </div>
-      </div>
-      <div class="rn-debug-list" id="rnDebugList"></div>
-
-      <hr class="rn-rule" style="margin:14px 0;">
-
-      <div class="dp-head">
-        <span class="dp-title">Ciudades</span>
-        <div class="rn-debug-size">
-          <label for="rnCitySize">Tamaño</label>
-          <input type="range" id="rnCitySize" min="3" max="14" step="0.5" value="8">
-        </div>
-      </div>
-      <div class="rn-debug-city-list" id="rnDebugCityList"></div>
-
-      <div class="rn-debug-copy-hint">Arrastrá cada punto (o ciudad) sobre el mapa para reubicarlo, editá el nombre de las ciudades acá abajo, y usá "Copiar todos los datos" para pegarme todo junto.</div>
-    </div>
-
     <div class="rn-foot">
       <span class="firma" aria-label="Río Negro"><svg viewBox="0 0 321 50" xmlns="http://www.w3.org/2000/svg" role="img" aria-hidden="true"><path d="M22.984 22.957c0 2.836-1.015 4.082-3.793 4.082H18.06V18.82h1.132c2.72 0 3.793 1.301 3.793 4.137M40.59 49.32v-8.218h-.512c-.504 0-1.191-.399-1.414-1.418l-.34-1.704c-1.02-5.101-3.004-6.8-6.851-7.652v-.226c5.156-1.532 6.965-4.649 6.965-9.012 0-7.656-4.868-11.453-17.38-11.453H0v8.5h1.363c.563 0 1.528.968 1.528 1.535V39.57c0 .567-.965 1.532-1.528 1.532H0v8.218h21.344v-8.218h-2.832v-5.844h1.758c1.921 0 2.828.91 3.054 3.289l1.02 10.773zm7.797-41.047h8.328l5.824-4.875V0H49.58zM42.445 49.32h21.852v-8.218h-1.59c-.562 0-1.531-.965-1.531-1.532V19.672c0-.567.969-1.535 1.531-1.535h1.59v-8.5H42.445v8.5h1.582c.57 0 1.532.968 1.532 1.535V39.57c0 .567-.961 1.532-1.532 1.532h-1.582zm49.18-19.558c0 7.09-1.93 10.543-5.04 10.543-3.112 0-5.034-3.453-5.034-10.543 0-7.086 1.922-10.207 5.035-10.207 3.11 0 5.039 3.12 5.039 10.207m16.016-.282c0-13.156-9.282-20.523-21.055-20.523-11.777 0-21.059 7.367-21.059 20.523C65.527 42.63 74.36 50 86.586 50s21.055-7.371 21.055-20.52m8.98 19.84h17.094v-8.218h-3.113V29.59h.171l10.864 19.73h13.644V19.672c0-.567.961-1.535 1.531-1.535h1.13v-8.5h-16.696v8.5h2.941v9.246h-.167l-9.743-17.746h-17.656v8.5h1.356c.57 0 1.53.968 1.53 1.535V39.57c0 .567-.96 1.532-1.53 1.532h-1.356zm43.176 0h35.379V34.922h-9.34l-1.184 5.496h-6.343v-6.797h8.546v-9.129h-8.546V18.82h6.226l1.3 4.48h8.888V9.638h-34.926v8.5h1.36c.57 0 1.527.968 1.527 1.535V39.57c0 .567-.957 1.532-1.528 1.532h-1.36zm56.762.68c3.34 0 7.195-.738 8.78-1.758 1.016 0 1.524 1.078 1.524 1.078h7.645V38.04c0-.567.96-1.532 1.527-1.532h.621v-8.215h-18.96v7.988h2.152v4.024a4.982 4.982 0 01-1.364.172c-4.297 0-5.316-4.137-5.316-11.223 0-7.938 2.598-10.094 6.957-10.094.453 0 1.363.059 1.813.113l1.527 4.82h9.851V9.638h-10.304c-1.918-.399-3.961-.68-6.11-.68-11.882 0-19.984 7.313-19.984 21.031 0 13.157 7.023 20.012 19.64 20.012m44.368-27.044c0 2.836-1.02 4.082-3.79 4.082h-1.132V18.82h1.133c2.718 0 3.789 1.301 3.789 4.137m17.61 26.363v-8.218h-.513c-.507 0-1.183-.399-1.414-1.418l-.336-1.704c-1.023-5.101-3-6.8-6.851-7.652v-.226c5.148-1.532 6.96-4.649 6.96-9.012 0-7.656-4.866-11.453-17.378-11.453h-21.05v8.5h1.35c.567 0 1.532.968 1.532 1.535V39.57c0 .567-.965 1.532-1.531 1.532h-1.352v8.218h21.332v-8.218h-2.824v-5.844h1.75c1.926 0 2.832.91 3.055 3.289l1.023 10.773zm26.48-19.558c0 7.09-1.922 10.543-5.04 10.543-3.109 0-5.038-3.453-5.038-10.543 0-7.086 1.93-10.207 5.039-10.207 3.117 0 5.039 3.12 5.039 10.207m16.02-.282c0-13.156-9.286-20.523-21.06-20.523-11.777 0-21.058 7.367-21.058 20.523 0 13.149 8.832 20.52 21.059 20.52 12.226 0 21.058-7.371 21.058-20.52" fill="#141414"></path></svg></span>
       <span class="fuente">Fuente: Secretaría de Minería de Río Negro</span>
@@ -401,20 +318,17 @@
     {ref:9, nombre:'Lucho U',        mineral:'U',   etapa:'Prospección',                       ha:5930,  titular:'Claudio Guillermo Lucero', x:628.59, y:423.28}
   ];
 
-  var ORIGINAL = DATA.map(function(d){ return {ref:d.ref, x:d.x, y:d.y}; });
-
   var CITIES = [
-    {id:1, nombre:'Viedma',                   capital:true,  x:930.00, y:467.26},
-    {id:2, nombre:'San Carlos de Bariloche',  capital:false, x:65.79,  y:513.17},
-    {id:3, nombre:'General Roca',             capital:false, x:474.10, y:211.87},
-    {id:4, nombre:'Cipolletti',               capital:false, x:428.46, y:198.82},
-    {id:5, nombre:'Valcheta',                 capital:false, x:622.65, y:451.91},
-    {id:6, nombre:'San Antonio Oeste',        capital:false, x:762.33, y:456.07},
-    {id:7, nombre:'Catriel',                  capital:false, x:453.57, y:50.61}
+    {id:1, nombre:'Viedma',                  capital:true,  x:930.00, y:467.26},
+    {id:2, nombre:'San Carlos de Bariloche', capital:false, x:65.79,  y:513.17},
+    {id:3, nombre:'General Roca',            capital:false, x:474.10, y:211.87},
+    {id:4, nombre:'Cipolletti',              capital:false, x:428.46, y:198.82},
+    {id:5, nombre:'Valcheta',                capital:false, x:622.65, y:451.91},
+    {id:6, nombre:'San Antonio Oeste',       capital:false, x:762.33, y:456.07},
+    {id:7, nombre:'Catriel',                 capital:false, x:453.57, y:50.61}
   ];
-  var ORIGINAL_CITIES = CITIES.map(function(c){ return {id:c.id, x:c.x, y:c.y}; });
-  var CITY_SIZE_DEFAULT = 8;
-  var citySize = CITY_SIZE_DEFAULT;
+  var CITY_SIZE = 10;
+  var CITY_FONT_SIZE = 16;
 
   var root = document.getElementById('rnUranio');
   var pinsG = document.getElementById('rnPins');
@@ -426,12 +340,6 @@
   var tbody = document.getElementById('rnTbody');
   var thead = document.getElementById('rnThead');
   var sortSelect = document.getElementById('rnSortSelect');
-  var debugToggle = document.getElementById('rnDebugToggle');
-  var debugList = document.getElementById('rnDebugList');
-  var debugCopyBtn = document.getElementById('rnDebugCopy');
-  var debugResetBtn = document.getElementById('rnDebugReset');
-  var debugCityList = document.getElementById('rnDebugCityList');
-  var citySizeInput = document.getElementById('rnCitySize');
 
   var state = { sortKey:'ref', sortDir:'asc', selected:null };
 
@@ -439,8 +347,6 @@
   function mineralColor(m){ return m==='U' ? 'var(--u)' : 'var(--uv)'; }
   function byRef(ref){ return DATA.filter(function(x){ return x.ref===ref; })[0]; }
 
-  // ---------- pines del mapa (arrastrables en modo edición) ----------
-  var pinEls = {};
   var svgPt = svg.createSVGPoint();
   function clientToSvg(clientX, clientY){
     svgPt.x = clientX; svgPt.y = clientY;
@@ -450,7 +356,14 @@
     return {x:p.x, y:p.y};
   }
 
-  // la forma del pin encierra la etapa del proyecto (como en el mapa minero de origen):
+  // contrarresta el zoom del mapa para que los pines/ciudades no cambien de tamaño en pantalla
+  var zoomInvScale = 1;
+  function applyPinTransform(g, x, y){
+    g.setAttribute('transform', 'translate('+x+','+y+') scale('+zoomInvScale+') translate('+(-x)+','+(-y)+')');
+  }
+
+  // ---------- pines de proyectos ----------
+  // la forma encierra la etapa (como en el mapa minero de origen):
   // cuadrado = Prospección, círculo = Exploración, rombo = Evaluación económica preliminar (PEA)
   function shapeForEtapa(etapa){
     if(etapa === 'Prospección') return 'square';
@@ -467,12 +380,6 @@
     }
   }
 
-  // contrarresta el zoom del mapa para que los pines/ciudades no cambien de tamaño en pantalla
-  var zoomInvScale = 1;
-  function applyPinTransform(g, x, y){
-    g.setAttribute('transform', 'translate('+x+','+y+') scale('+zoomInvScale+') translate('+(-x)+','+(-y)+')');
-  }
-
   function movePin(d){
     var g = pinEls[d.ref];
     var halo = g.querySelector('.rn-pin-halo');
@@ -484,6 +391,7 @@
     applyPinTransform(g, d.x, d.y);
   }
 
+  var pinEls = {};
   DATA.forEach(function(d){
     var g = document.createElementNS('http://www.w3.org/2000/svg','g');
     g.setAttribute('class','rn-pin');
@@ -519,45 +427,13 @@
     pinEls[d.ref] = g;
     movePin(d);
 
-    var dragMoved = false, dragging = false;
-
-    g.addEventListener('pointerdown', function(ev){
-      if(!root.classList.contains('debug-on')) return;
-      dragging = true; dragMoved = false;
-      g.classList.add('is-dragging');
-      g.setPointerCapture(ev.pointerId);
-      ev.preventDefault();
-    });
-    g.addEventListener('pointermove', function(ev){
-      if(!dragging) return;
-      dragMoved = true;
-      var p = clientToSvg(ev.clientX, ev.clientY);
-      d.x = Math.round(p.x*100)/100; d.y = Math.round(p.y*100)/100;
-      movePin(d);
-      if(state.selected === d.ref) positionTooltip(d, g);
-      renderDebugList();
-    });
-    function endDrag(ev){
-      if(!dragging) return;
-      dragging = false;
-      g.classList.remove('is-dragging');
-      try{ g.releasePointerCapture(ev.pointerId); }catch(e){}
-    }
-    g.addEventListener('pointerup', endDrag);
-    g.addEventListener('pointercancel', endDrag);
-
-    g.addEventListener('click', function(){
-      if(dragMoved){ dragMoved = false; return; }
-      selectRef(d.ref, g);
-    });
+    g.addEventListener('click', function(){ selectRef(d.ref, g); });
     g.addEventListener('keydown', function(ev){
       if(ev.key==='Enter' || ev.key===' '){ ev.preventDefault(); selectRef(d.ref, g); }
     });
   });
 
-  // ---------- ciudades de referencia (blancas, más chicas, arrastrables en modo edición) ----------
-  var cityEls = {};
-  var CITY_FONT_SIZE = 16;
+  // ---------- ciudades de referencia (blancas, filete negro, solo texto) ----------
   function setCityLabel(label, x, y, name, fontSize, bold){
     while(label.firstChild) label.removeChild(label.firstChild);
     label.setAttribute('font-size', fontSize);
@@ -588,21 +464,20 @@
     var el = cityEls[c.id];
     var dot = el.querySelector('.rn-city-dot');
     var label = el.querySelector('.rn-city-label');
-    var half = citySize;
     if(c.capital){
-      dot.setAttribute('x', c.x - half); dot.setAttribute('y', c.y - half);
-      dot.setAttribute('width', half*2); dot.setAttribute('height', half*2);
+      dot.setAttribute('x', c.x - CITY_SIZE); dot.setAttribute('y', c.y - CITY_SIZE);
+      dot.setAttribute('width', CITY_SIZE*2); dot.setAttribute('height', CITY_SIZE*2);
     } else {
-      dot.setAttribute('cx', c.x); dot.setAttribute('cy', c.y); dot.setAttribute('r', half);
+      dot.setAttribute('cx', c.x); dot.setAttribute('cy', c.y); dot.setAttribute('r', CITY_SIZE);
     }
-    setCityLabel(label, c.x + half + 6, c.y, c.nombre, CITY_FONT_SIZE, c.capital);
+    setCityLabel(label, c.x + CITY_SIZE + 6, c.y, c.nombre, CITY_FONT_SIZE, c.capital);
     applyPinTransform(el, c.x, c.y);
   }
 
+  var cityEls = {};
   CITIES.forEach(function(c){
     var g = document.createElementNS('http://www.w3.org/2000/svg','g');
     g.setAttribute('class','rn-city');
-    g.setAttribute('data-city', c.id);
 
     var dot = c.capital
       ? document.createElementNS('http://www.w3.org/2000/svg','rect')
@@ -617,36 +492,7 @@
     cityPinsG.appendChild(g);
     cityEls[c.id] = g;
     moveCity(c);
-
-    var dragging = false;
-    g.addEventListener('pointerdown', function(ev){
-      if(!root.classList.contains('debug-on')) return;
-      dragging = true;
-      g.classList.add('is-dragging');
-      g.setPointerCapture(ev.pointerId);
-      ev.preventDefault();
-    });
-    g.addEventListener('pointermove', function(ev){
-      if(!dragging) return;
-      var p = clientToSvg(ev.clientX, ev.clientY);
-      c.x = Math.round(p.x*100)/100; c.y = Math.round(p.y*100)/100;
-      moveCity(c);
-      renderDebugCityList();
-    });
-    function endCityDrag(ev){
-      if(!dragging) return;
-      dragging = false;
-      g.classList.remove('is-dragging');
-      try{ g.releasePointerCapture(ev.pointerId); }catch(e){}
-    }
-    g.addEventListener('pointerup', endCityDrag);
-    g.addEventListener('pointercancel', endCityDrag);
   });
-
-  function applyCitySize(size){
-    citySize = size;
-    CITIES.forEach(moveCity);
-  }
 
   // ---------- zoom / paneo del mapa (rueda, pellizco táctil, botones) ----------
   var BASE_VB = { x:-15, y:-15, w:1030, h:668 };
@@ -696,7 +542,7 @@
 
   svg.addEventListener('pointerdown', function(ev){
     var t = ev.target;
-    if(t.closest && (t.closest('.rn-pin') || t.closest('.rn-city'))) return;
+    if(t.closest && t.closest('.rn-pin')) return;
     activePointers[ev.pointerId] = {x:ev.clientX, y:ev.clientY};
     var ids = Object.keys(activePointers);
     if(ids.length === 2){
@@ -759,6 +605,7 @@
     applyViewBox();
   });
 
+  // ---------- cartelito ----------
   function selectRef(ref, anchorEl){
     if(state.selected === ref){ closeTooltip(); return; }
     state.selected = ref;
@@ -821,23 +668,21 @@
     });
   }
 
-  // ---------- orden de la tabla ----------
+  // ---------- tabla: orden ----------
   function getSorted(){
     var key = state.sortKey, dir = state.sortDir;
-    var sorted = DATA.slice().sort(function(a,b){
+    return DATA.slice().sort(function(a,b){
       var av=a[key], bv=b[key];
       if(typeof av==='string'){ av=av.toLowerCase(); bv=bv.toLowerCase(); }
       if(av<bv) return dir==='asc' ? -1 : 1;
       if(av>bv) return dir==='asc' ? 1 : -1;
       return a.ref-b.ref;
     });
-    return sorted;
   }
 
   function render(){
     var sorted = getSorted();
 
-    // tabla
     tbody.innerHTML = '';
     sorted.forEach(function(d){
       var tr = document.createElement('tr');
@@ -856,7 +701,6 @@
       tbody.appendChild(tr);
     });
 
-    // encabezados
     Array.prototype.forEach.call(thead.querySelectorAll('th'), function(th){
       var active = th.getAttribute('data-key')===state.sortKey;
       th.classList.toggle('is-sorted', active);
@@ -897,93 +741,6 @@
   });
 
   render();
-
-  // ---------- modo edición: arrastrar pines/ciudades + copiar datos ----------
-  function renderDebugList(){
-    debugList.innerHTML = DATA.slice().sort(function(a,b){ return a.ref-b.ref; }).map(function(d){
-      return '<div class="dp-row"><span class="dp-ref">'+d.ref+'</span>'+
-        '<span class="dp-name">'+d.nombre+'</span>'+
-        '<span class="dp-xy">x:'+d.x.toFixed(1)+' y:'+d.y.toFixed(1)+'</span></div>';
-    }).join('');
-  }
-
-  function renderDebugCityList(){
-    debugCityList.innerHTML = CITIES.map(function(c){
-      return '<div class="dp-row"><span class="dp-shape '+(c.capital?'square':'circle')+'"></span>'+
-        '<input type="text" data-city-id="'+c.id+'" value="'+c.nombre.replace(/"/g,'&quot;')+'">'+
-        '<span class="dp-xy">x:'+c.x.toFixed(1)+' y:'+c.y.toFixed(1)+'</span></div>';
-    }).join('');
-    Array.prototype.forEach.call(debugCityList.querySelectorAll('input[data-city-id]'), function(input){
-      input.addEventListener('input', function(){
-        var id = Number(input.getAttribute('data-city-id'));
-        var c = CITIES.filter(function(x){ return x.id===id; })[0];
-        c.nombre = input.value;
-        moveCity(c);
-      });
-    });
-  }
-
-  function copyAllData(){
-    var pad = function(s,n){ s=String(s); while(s.length<n) s+=' '; return s; };
-    var lines = DATA.map(function(d){
-      return '    {ref:'+d.ref+', nombre:'+pad("'"+d.nombre+"',",18)+' mineral:'+pad("'"+d.mineral+"',",7)+
-        ' etapa:'+pad("'"+d.etapa+"',",42)+' ha:'+pad(d.ha+',',8)+' titular:'+pad("'"+d.titular+"',",38)+
-        ' x:'+d.x.toFixed(2)+', y:'+d.y.toFixed(2)+'}';
-    });
-    var cityLines = CITIES.map(function(c){
-      return '    {id:'+c.id+', nombre:'+pad("'"+c.nombre+"',",28)+' capital:'+pad(c.capital+',',7)+
-        ' x:'+c.x.toFixed(2)+', y:'+c.y.toFixed(2)+'}';
-    });
-    var text = 'var DATA = [\n' + lines.join(',\n') + '\n  ];\n\n' +
-      'var CITIES = [\n' + cityLines.join(',\n') + '\n  ];\n\n' +
-      'var CITY_SIZE = ' + citySize + ';';
-    var done = function(){
-      var prev = debugCopyBtn.textContent;
-      debugCopyBtn.textContent = '¡Copiado!';
-      setTimeout(function(){ debugCopyBtn.textContent = prev; }, 1400);
-    };
-    if(navigator.clipboard && navigator.clipboard.writeText){
-      navigator.clipboard.writeText(text).then(done, function(){ fallbackCopy(text, done); });
-    } else {
-      fallbackCopy(text, done);
-    }
-  }
-  function fallbackCopy(text, done){
-    var ta = document.createElement('textarea');
-    ta.value = text; ta.style.position = 'fixed'; ta.style.opacity = '0';
-    document.body.appendChild(ta); ta.select();
-    try{ document.execCommand('copy'); }catch(e){}
-    document.body.removeChild(ta);
-    done();
-  }
-
-  debugToggle.addEventListener('click', function(){
-    var on = root.classList.toggle('debug-on');
-    debugToggle.setAttribute('aria-pressed', on ? 'true' : 'false');
-    debugToggle.textContent = on ? '✕ Salir del modo edición' : '🛠 Ajustar puntos';
-    if(on){ renderDebugList(); renderDebugCityList(); }
-  });
-  debugCopyBtn.addEventListener('click', copyAllData);
-  debugResetBtn.addEventListener('click', function(){
-    ORIGINAL.forEach(function(o){
-      var d = byRef(o.ref);
-      d.x = o.x; d.y = o.y;
-      movePin(d);
-    });
-    ORIGINAL_CITIES.forEach(function(o){
-      var c = CITIES.filter(function(x){ return x.id===o.id; })[0];
-      c.x = o.x; c.y = o.y;
-      moveCity(c);
-    });
-    citySizeInput.value = CITY_SIZE_DEFAULT;
-    applyCitySize(CITY_SIZE_DEFAULT);
-    if(state.selected!==null) positionTooltip(byRef(state.selected), pinEls[state.selected]);
-    renderDebugList();
-    renderDebugCityList();
-  });
-  citySizeInput.addEventListener('input', function(){
-    applyCitySize(Number(citySizeInput.value));
-  });
 
   // ---------- alto automático si está incrustado en un iframe ----------
   function postHeight(){
