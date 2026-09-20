@@ -46,33 +46,19 @@
 
   /* ---------- mapa ---------- */
   .rn-map-wrap{ position:relative; /* padding:6px 18px 4px; */ }
-  .rn-map-clip{ overflow:hidden; border-radius:2px; }
+  .rn-map-clip{ overflow:hidden; /* border-radius:2px; */ padding-bottom:10px; }
   .rn-map-wrap svg{ display:block; width:100%; height:auto; overflow:hidden; touch-action:none; user-select:none; -webkit-user-select:none; }
 
-  .rn-zoom-controls{
-    position:absolute; right:10px; bottom:6px; z-index:5;
-    display:flex; flex-direction:column; overflow:hidden;
-    border:1px solid var(--border); border-radius:7px; background:var(--panel);
-    box-shadow:0 2px 6px rgba(20,20,20,0.12);
-  }
-  .rn-zoom-controls button{
-    width:28px; height:28px; border:none; background:none; cursor:pointer;
-    font-size:15px; line-height:1; color:var(--text); font-family:inherit;
-    display:flex; align-items:center; justify-content:center;
-  }
-  .rn-zoom-controls button + button{ border-top:1px solid var(--border); }
-  .rn-zoom-controls button:hover{ background:var(--gray-hover-bg); }
-  .rn-zoom-controls #rnZoomReset{ font-size:12px; }
   .rn-minimap{
-    position:absolute; top:8px; right:8px; z-index:5; width:72px;
-    background:rgba(255,255,255,.88); border:1px solid var(--border); border-radius:5px;
-    padding:4px; box-shadow:0 2px 6px rgba(20,20,20,0.12);
+    position:absolute; top:8px; /* right:8px; */ z-index:5; width:100px;
+    /* background:rgba(255,255,255,.88); */ /* border:1px solid var(--border); */ border-radius:5px;
+    padding:4px; /* box-shadow:0 2px 6px rgba(20,20,20,0.12); */
     opacity:0; transform:translateY(-3px); pointer-events:none;
     transition:opacity .15s ease, transform .15s ease;
   }
   .rn-minimap.is-visible{ opacity:1; transform:translateY(0); }
   .rn-minimap svg{ display:block; width:100%; height:auto; }
-  .rn-minimap-province{ fill:var(--map-fill); stroke:var(--map-stroke); stroke-width:4; }
+  .rn-minimap-province{ fill:#d3d3d3; stroke:#5b5b5b; stroke-width:4; }
   .rn-minimap-view{ fill:var(--black); fill-opacity:.12; stroke:var(--black); stroke-width:5; }
   .rn-province{ fill:var(--map-fill); stroke:var(--map-stroke); stroke-width:2.2; stroke-linejoin:round; }
   .rn-areas{ pointer-events:none; }
@@ -143,8 +129,6 @@
   }
   .rn-tooltip .tt-close:hover{ color:var(--text); }
 
-  hr.rn-rule{ border:none; border-top:1px solid var(--border); margin:0; }
-
   /* ---------- tabla ---------- */
   .rn-table-scroll{ overflow-x:auto; /* padding:22px 26px 22px; */ }
   table.rn-table{ width:100%; border-collapse:collapse; table-layout:fixed; font-variant-numeric:tabular-nums; }
@@ -212,7 +196,6 @@
     .rn-head{ padding:18px 16px 12px; }
     .rn-head h1{ font-size:18px; }
     .rn-map-wrap{ padding:6px 8px 2px; }
-    .rn-zoom-controls{ display:none; }
     .rn-table-scroll{ padding:0 16px 18px; overflow-x:visible; }
     .rn-foot{ padding:12px 16px 16px; }
 
@@ -294,14 +277,7 @@
           <rect class="rn-minimap-view" id="rnMinimapRect"></rect>
         </svg>
       </div>
-      <div class="rn-zoom-controls">
-        <button type="button" id="rnZoomIn" aria-label="Acercar">+</button>
-        <button type="button" id="rnZoomOut" aria-label="Alejar">−</button>
-        <button type="button" id="rnZoomReset" aria-label="Restablecer zoom">⤢</button>
-      </div>
     </div>
-
-    <hr class="rn-rule">
 
     <div class="rn-table-scroll">
       <div class="rn-sort-mobile">
@@ -360,7 +336,7 @@
     {id:6, nombre:'San Antonio Oeste',       capital:false, x:762.33, y:456.07},
     {id:7, nombre:'Catriel',                 capital:false, x:453.57, y:50.61}
   ];
-  var CITY_SIZE = 10;
+  var CITY_SIZE = 8;
   var CITY_FONT_SIZE = 16;
 
   var root = document.getElementById('rnUranio');
@@ -640,17 +616,6 @@
   }
   svg.addEventListener('pointerup', endMapPointer);
   svg.addEventListener('pointercancel', endMapPointer);
-
-  document.getElementById('rnZoomIn').addEventListener('click', function(){
-    zoomAt(view.x + view.w/2, view.y + view.h/2, 1.5);
-  });
-  document.getElementById('rnZoomOut').addEventListener('click', function(){
-    zoomAt(view.x + view.w/2, view.y + view.h/2, 1/1.5);
-  });
-  document.getElementById('rnZoomReset').addEventListener('click', function(){
-    view = {x:BASE_VB.x, y:BASE_VB.y, w:BASE_VB.w, h:BASE_VB.h};
-    applyViewBox();
-  });
 
   // ---------- cartelito ----------
   function selectRef(ref, anchorEl){
