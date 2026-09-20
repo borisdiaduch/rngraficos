@@ -44,20 +44,6 @@
     text-wrap:balance;
   }
 
-  /* ---------- TEMPORAL: barra de modo debug para reubicar pines/ciudades ---------- */
-  .rn-debug-bar{
-    display:flex; flex-wrap:wrap; align-items:center; justify-content:space-between; gap:8px;
-    background:#fff3cd; border:1px dashed #b98900; border-radius:6px;
-    padding:8px 10px; margin-bottom:10px; font-size:12px; color:#5c4500;
-  }
-  .rn-debug-bar button{
-    font-family:inherit; font-size:11.5px; font-weight:700; cursor:pointer;
-    background:#b98900; color:#fff; border:none; border-radius:4px; padding:6px 10px;
-  }
-  .rn-debug-bar button:hover{ background:#96700a; }
-  .rn-pin, .rn-city{ cursor:grab; }
-  .rn-pin:active, .rn-city:active{ cursor:grabbing; }
-
   /* ---------- mapa ---------- */
   .rn-map-wrap{ position:relative; /* padding:6px 18px 4px; */ }
   .rn-map-clip{ overflow:hidden; /* border-radius:2px; */ padding-bottom:10px; }
@@ -92,9 +78,6 @@
   /* ---------- ciudades de referencia ---------- */
   .rn-city-dot{ fill:#fff; stroke:var(--black); stroke-width:3.5; }
   .rn-city-label{ fill:var(--text); font-family:'Chivo',sans-serif; font-weight:600; font-size:22px; letter-spacing:.01em; pointer-events:none; }
-  /* TEMPORAL: habilita arrastrar el texto de las ciudades en modo debug */
-  .rn-city-label{ pointer-events:auto; cursor:grab; }
-  .rn-city-label:active{ cursor:grabbing; }
 
   /* ---------- pie ---------- */
   .rn-foot{
@@ -210,7 +193,7 @@
   .rn-sort-mobile select:focus{ outline:2px solid var(--gray-focus); outline-offset:1px; border-color:var(--gray-hover); }
 
   @media (max-width:640px){
-    .rn-head{ padding:18px 16px 12px; }
+    .rn-head{ /* padding:18px 16px 12px; */ }
     .rn-head h1{ font-size:18px; }
     .rn-map-wrap{ padding:6px 8px 2px; }
     .rn-table-scroll{ padding:0 16px 18px; overflow-x:visible; }
@@ -261,11 +244,6 @@
       <span class="lg-item"><span class="lg-shape lg-diamond"></span>Evaluación económica preliminar</span>
       <span class="lg-item"><span class="lg-shape lg-circle"></span>Exploración inicial</span>
       <span class="lg-item"><span class="lg-shape lg-square"></span>Prospección</span>
-    </div>
-
-    <div class="rn-debug-bar" id="rnDebugBar">
-      <span>MODO DEBUG — arrastrá los pines, las ciudades y los textos de las ciudades para reubicarlos</span>
-      <button type="button" id="rnDebugCopy">Copiar datos</button>
     </div>
 
     <div class="rn-map-wrap" id="rnMapWrap">
@@ -338,27 +316,27 @@
 <script>
 (function(){
   var DATA = [
-    {ref:1, nombre:'Ivana',          mineral:'U-V', etapa:'Evaluación económica preliminar', ha:6777,  titular:'Ivana Minerales SA',   x:664.57, y:391.43},
-    {ref:2, nombre:'Anit',           mineral:'U-V', etapa:'Exploración inicial',              ha:13499, titular:'Minera Cielo Azul',     x:569.91, y:316.74},
-    {ref:3, nombre:'Santa Bárbara',  mineral:'U-V', etapa:'Exploración inicial',              ha:4701,  titular:'Minera Cielo Azul',     x:524.75, y:266.37},
-    {ref:4, nombre:'Anit Sur',       mineral:'U-V', etapa:'Prospección',                       ha:38937, titular:'Minera Cielo Azul',     x:604.65, y:340.19},
-    {ref:5, nombre:'Ivana Central',  mineral:'U-V', etapa:'Exploración inicial',              ha:10468, titular:'Ivana Minerales SA',    x:641.13, y:380.14},
-    {ref:6, nombre:'Ivana Norte',    mineral:'U-V', etapa:'Exploración inicial',              ha:3800,  titular:'Ivana Minerales SA',    x:635.05, y:362.77},
-    {ref:7, nombre:'Catriel',        mineral:'U',   etapa:'Exploración inicial',              ha:12771, titular:'Comisión Nacional de Energía Atómica', x:432.68, y:56.70},
-    {ref:8, nombre:'Barda Colorada', mineral:'U-V', etapa:'Prospección',                       ha:49958, titular:'Piche Resources SA',    x:411.79, y:58.15},
-    {ref:9, nombre:'Lucho U',        mineral:'U',   etapa:'Prospección',                       ha:5930,  titular:'Claudio Guillermo Lucero', x:628.59, y:423.28}
+    {ref:1, nombre:'Ivana',          mineral:'U-V', etapa:'Evaluación económica preliminar', ha:6777,  titular:'Ivana Minerales SA',   x:628.2, y:409.9},
+    {ref:2, nombre:'Anit',           mineral:'U-V', etapa:'Exploración inicial',              ha:13499, titular:'Minera Cielo Azul',     x:521.2, y:283.4},
+    {ref:3, nombre:'Santa Bárbara',  mineral:'U-V', etapa:'Exploración inicial',              ha:4701,  titular:'Minera Cielo Azul',     x:501.9, y:250.6},
+    {ref:4, nombre:'Anit Sur',       mineral:'U-V', etapa:'Prospección',                       ha:38937, titular:'Minera Cielo Azul',     x:566.5, y:336.2},
+    {ref:5, nombre:'Ivana Central',  mineral:'U-V', etapa:'Exploración inicial',              ha:10468, titular:'Ivana Minerales SA',    x:611.3, y:383.6},
+    {ref:6, nombre:'Ivana Norte',    mineral:'U-V', etapa:'Exploración inicial',              ha:3800,  titular:'Ivana Minerales SA',    x:593.8, y:359.3},
+    {ref:7, nombre:'Catriel',        mineral:'U',   etapa:'Exploración inicial',              ha:12771, titular:'Comisión Nacional de Energía Atómica', x:431.8, y:30.4},
+    {ref:8, nombre:'Barda Colorada', mineral:'U-V', etapa:'Prospección',                       ha:49958, titular:'Piche Resources SA',    x:422.8, y:50.7},
+    {ref:9, nombre:'Lucho U',        mineral:'U',   etapa:'Prospección',                       ha:5930,  titular:'Claudio Guillermo Lucero', x:618.1, y:421.1}
   ];
 
   var CITIES = [
-    {id:1, nombre:'Viedma',                  capital:true,  x:930.00, y:467.26},
-    {id:2, nombre:'San Carlos de Bariloche', capital:false, x:65.79,  y:513.17},
-    {id:3, nombre:'General Roca',            capital:false, x:474.10, y:211.87},
-    {id:4, nombre:'Cipolletti',              capital:false, x:428.46, y:198.82},
-    {id:5, nombre:'Valcheta',                capital:false, x:622.65, y:451.91},
-    {id:6, nombre:'San Antonio Oeste',       capital:false, x:762.33, y:456.07},
-    {id:7, nombre:'Catriel',                 capital:false, x:453.57, y:50.61},
-    {id:8, nombre:'Choele Choel',            capital:false, x:672.76, y:247.11},
-    {id:9, nombre:'Los Menucos',             capital:false, x:411.81, y:473.96}
+    {id:1, nombre:'Viedma',                  capital:true,  x:980.4,  y:464.4,  labelDx:-39.3, labelDy:35.5},
+    {id:2, nombre:'San Carlos de Bariloche', capital:false, x:63.5,   y:507.6,  labelDx:-57.1, labelDy:39.5},
+    {id:3, nombre:'General Roca',            capital:false, x:469.3,  y:200.9,  labelDx:16,    labelDy:2},
+    {id:4, nombre:'Cipolletti',              capital:false, x:430.7,  y:192.2,  labelDx:-45.2, labelDy:-23.7},
+    {id:5, nombre:'Valcheta',                capital:false, x:622.65, y:451.91, labelDx:-47.3, labelDy:29.6},
+    {id:6, nombre:'San Antonio Oeste',       capital:false, x:762.3,  y:451.3,  labelDx:-11.7, labelDy:35.5},
+    {id:7, nombre:'Catriel',                 capital:false, x:453.57, y:50.61,  labelDx:14,    labelDy:2},
+    {id:8, nombre:'Choele Choel',            capital:false, x:692.5,  y:253,    labelDx:14,    labelDy:3.9},
+    {id:9, nombre:'Los Menucos',             capital:false, x:376.3,  y:408.8,  labelDx:-62.9, labelDy:29.6}
   ];
   var CITY_SIZE = 8;
   var CITY_FONT_SIZE = 16;
@@ -430,89 +408,6 @@
     applyPinTransform(g, d.x, d.y);
   }
 
-  // ---------- TEMPORAL: modo debug, arrastrar pines/ciudades/etiquetas para recalibrar coordenadas ----------
-  var debugMoved = false;
-  var debugDragEl = null;
-  // getAnchor()/setAnchor(x,y) trabajan en el mismo espacio que clientToSvg (raíz del SVG),
-  // y se guarda el punto exacto donde agarraste el elemento para que no "salte" al soltar/mover
-  function makeDraggableGeneric(el, getAnchor, setAnchor){
-    var grab = null;
-    el.addEventListener('pointerdown', function(ev){
-      ev.stopPropagation();
-      debugDragEl = el;
-      var p0 = clientToSvg(ev.clientX, ev.clientY);
-      var a0 = getAnchor();
-      grab = {dx: p0.x - a0.x, dy: p0.y - a0.y};
-      try{ el.setPointerCapture(ev.pointerId); }catch(e){}
-    });
-    el.addEventListener('pointermove', function(ev){
-      if(debugDragEl !== el || !grab) return;
-      debugMoved = true;
-      var p = clientToSvg(ev.clientX, ev.clientY);
-      setAnchor(p.x - grab.dx, p.y - grab.dy);
-    });
-    function endDrag(ev){
-      if(debugDragEl !== el) return;
-      try{ el.releasePointerCapture(ev.pointerId); }catch(e){}
-      debugDragEl = null;
-      grab = null;
-    }
-    el.addEventListener('pointerup', endDrag);
-    el.addEventListener('pointercancel', endDrag);
-  }
-  function makeDraggable(el, obj, kind){
-    makeDraggableGeneric(el,
-      function(){ return {x:obj.x, y:obj.y}; },
-      function(x, y){
-        obj.x = Math.round(x*10)/10;
-        obj.y = Math.round(y*10)/10;
-        if(kind === 'pin'){
-          movePin(obj);
-          if(state.selected === obj.ref) positionTooltip(obj, pinEls[obj.ref]);
-        } else {
-          moveCity(obj);
-        }
-      }
-    );
-  }
-  // la etiqueta de texto no está en el pivote del grupo (a diferencia del punto), así que
-  // hay que compensar la contraescala del zoom para que siga al cursor 1:1 en pantalla
-  function makeLabelDraggable(labelEl, c){
-    makeDraggableGeneric(labelEl,
-      function(){
-        var s = zoomInvScale * mobileBoost;
-        var dx = c.labelDx != null ? c.labelDx : CITY_SIZE + 6;
-        var dy = c.labelDy != null ? c.labelDy : 0;
-        return {x: c.x + s*dx, y: c.y + s*dy};
-      },
-      function(x, y){
-        var s = zoomInvScale * mobileBoost;
-        c.labelDx = Math.round(((x - c.x)/s)*10)/10;
-        c.labelDy = Math.round(((y - c.y)/s)*10)/10;
-        moveCity(c);
-      }
-    );
-  }
-  function debugExport(){
-    var out = 'var DATA = ' + JSON.stringify(DATA, null, 2) + ';\n\nvar CITIES = ' + JSON.stringify(CITIES, null, 2) + ';';
-    var btn = document.getElementById('rnDebugCopy');
-    function done(ok){
-      var prev = btn.textContent;
-      btn.textContent = ok ? '¡Copiado!' : 'Error al copiar';
-      setTimeout(function(){ btn.textContent = prev; }, 1600);
-    }
-    if(navigator.clipboard && navigator.clipboard.writeText){
-      navigator.clipboard.writeText(out).then(function(){ done(true); }, function(){ done(false); });
-    } else {
-      var ta = document.createElement('textarea');
-      ta.value = out; ta.style.position = 'fixed'; ta.style.opacity = '0';
-      document.body.appendChild(ta); ta.select();
-      try{ document.execCommand('copy'); done(true); }catch(e){ done(false); }
-      document.body.removeChild(ta);
-    }
-  }
-  document.getElementById('rnDebugCopy').addEventListener('click', debugExport);
-
   var pinEls = {};
   DATA.forEach(function(d){
     var g = document.createElementNS('http://www.w3.org/2000/svg','g');
@@ -548,16 +443,14 @@
     pinsG.appendChild(g);
     pinEls[d.ref] = g;
     movePin(d);
-    makeDraggable(g, d, 'pin');
 
-    g.addEventListener('click', function(){
-      if(debugMoved){ debugMoved = false; return; }
-      selectRef(d.ref, g);
-    });
+    g.addEventListener('click', function(){ selectRef(d.ref, g); });
     g.addEventListener('keydown', function(ev){
       if(ev.key==='Enter' || ev.key===' '){ ev.preventDefault(); selectRef(d.ref, g); }
     });
   });
+  // Ivana (ref 1) es el proyecto más importante: lo traemos al frente para que no quede tapado
+  pinsG.appendChild(pinEls[1]);
 
   // ---------- ciudades de referencia (blancas, filete negro, solo texto) ----------
   function setCityLabel(label, x, y, name, fontSize, bold){
@@ -620,8 +513,6 @@
     cityPinsG.appendChild(g);
     cityEls[c.id] = g;
     moveCity(c);
-    makeDraggable(g, c, 'city');
-    makeLabelDraggable(label, c);
   });
 
   // ---------- zoom / paneo del mapa (rueda, pellizco táctil, botones) ----------
@@ -680,7 +571,7 @@
 
   svg.addEventListener('pointerdown', function(ev){
     var t = ev.target;
-    if(t.closest && (t.closest('.rn-pin') || t.closest('.rn-city'))) return;
+    if(t.closest && t.closest('.rn-pin')) return;
     activePointers[ev.pointerId] = {x:ev.clientX, y:ev.clientY};
     var ids = Object.keys(activePointers);
     if(ids.length === 2){
