@@ -34,7 +34,7 @@
     overflow:hidden;
   }
   .rn-head{
-    padding:22px 26px 14px;
+    padding:8px 0px 14px;
     border-top:3px solid var(--black);
   }
   .rn-head h1{
@@ -45,7 +45,7 @@
   }
 
   /* ---------- mapa ---------- */
-  .rn-map-wrap{ position:relative; padding:6px 18px 4px; }
+  .rn-map-wrap{ position:relative; /* padding:6px 18px 4px; */ }
   .rn-map-clip{ overflow:hidden; border-radius:2px; }
   .rn-map-wrap svg{ display:block; width:100%; height:auto; overflow:hidden; touch-action:none; user-select:none; -webkit-user-select:none; }
 
@@ -80,16 +80,16 @@
 
   /* ---------- ciudades de referencia ---------- */
   .rn-city-dot{ fill:#fff; stroke:var(--black); stroke-width:3.5; }
-  .rn-city-label{ fill:var(--text); font-family:'Chivo',sans-serif; font-weight:600; pointer-events:none; }
+  .rn-city-label{ fill:var(--text); font-family:'Chivo',sans-serif; font-weight:600; font-size:24px; pointer-events:none; }
 
   /* ---------- pie ---------- */
   .rn-foot{
     display:flex; flex-wrap:wrap; gap:6px 18px; align-items:baseline; justify-content:space-between;
-    padding:14px 26px 20px; border-top:2px solid var(--black);
+    padding:10px 0 0 0; border-top:2px solid var(--black);
   }
   .rn-foot .firma{ display:inline-flex; align-items:center; flex:none; }
   .rn-foot .firma svg{ height:15px; width:auto; display:block; }
-  .rn-foot .fuente{ font-size:12.5px; color:var(--text); }
+  .rn-foot .fuente{ font-size:12px; color:var(--text); }
 
   /* ---------- cartelito / tooltip ---------- */
   .rn-tooltip{
@@ -135,7 +135,7 @@
   hr.rn-rule{ border:none; border-top:1px solid var(--border); margin:0; }
 
   /* ---------- tabla ---------- */
-  .rn-table-scroll{ overflow-x:auto; padding:22px 26px 22px; }
+  .rn-table-scroll{ overflow-x:auto; /* padding:22px 26px 22px; */ }
   table.rn-table{ width:100%; border-collapse:collapse; table-layout:fixed; font-variant-numeric:tabular-nums; }
   table.rn-table thead th{
     text-align:left; font-size:10.5px; text-transform:uppercase; letter-spacing:.045em;
@@ -177,7 +177,7 @@
   /* ---------- leyenda de formas ---------- */
   .rn-legend{
     display:flex; flex-wrap:wrap; align-items:center; gap:8px 14px;
-    padding:10px 26px 16px; font-size:11.5px;
+    padding:10px 0 10px 0; font-size:11.5px;
   }
   .rn-legend .lg-title{ font-weight:700; font-size:10.5px; text-transform:uppercase; letter-spacing:.05em; color:var(--muted); }
   .rn-legend .lg-div{ width:1px; height:12px; background:var(--border); }
