@@ -83,6 +83,7 @@
   .rn-foot{
     display:flex; flex-wrap:wrap; gap:6px 18px; align-items:baseline; justify-content:space-between;
     padding:10px 0 0 0; border-top:2px solid var(--black);
+    flex-direction:row-reverse;
   }
   .rn-foot .firma{ display:inline-flex; align-items:center; flex:none; }
   .rn-foot .firma svg{ height:15px; width:auto; display:block; }
@@ -360,6 +361,7 @@
 
   function fmtHa(n){ return n.toLocaleString('es-AR'); }
   function mineralColor(m){ return m==='U' ? 'var(--u)' : 'var(--uv)'; }
+  function mineralLabel(m){ return m==='U' ? 'Uranio' : 'Uranio - Vanadio'; }
   function byRef(ref){ return DATA.filter(function(x){ return x.ref===ref; })[0]; }
 
   var svgPt = svg.createSVGPoint();
@@ -651,7 +653,7 @@
     ttBody.innerHTML =
       '<div class="tt-title"><span class="tt-ref">'+d.ref+'</span>'+d.nombre+'</div>'+
       '<div class="tt-row"><span class="tt-k">Titular</span><span class="tt-v">'+d.titular+'</span></div>'+
-      '<div class="tt-row"><span class="tt-k">Mineral</span><span class="tt-v">'+d.mineral+'</span></div>'+
+      '<div class="tt-row"><span class="tt-k">Mineral</span><span class="tt-v">'+mineralLabel(d.mineral)+'</span></div>'+
       '<div class="tt-row"><span class="tt-k">Etapa</span><span class="tt-v">'+d.etapa+'</span></div>'+
       '<div class="tt-row"><span class="tt-k">Superficie</span><span class="tt-v">'+fmtHa(d.ha)+' ha</span></div>';
     positionTooltip(d, anchorEl);
