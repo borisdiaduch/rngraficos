@@ -68,15 +68,17 @@
   .rn-hint{
     position:absolute; top:22%; right:14%; z-index:6;
     width:52px; height:52px; pointer-events:none;
-    display:flex; align-items:center; justify-content:center;
+    opacity:1; transition:opacity .35s ease;
   }
+  .rn-hint.is-leaving{ opacity:0; }
   .rn-hint-ping{
     position:absolute; inset:0; border-radius:50%;
     background:rgba(90,90,90,.6);
     animation:rn-hint-pulse 1.6s ease-in-out infinite;
   }
-  .rn-hint-icon{ position:relative; width:30px; height:auto; z-index:1; }
-  .rn-hint-icon path{ fill:var(--black); }
+  /* la mano se ubica para que la punta del dedo quede centrada sobre el círculo que pulsa */
+  .rn-hint .rn-hint-icon{ position:absolute; left:20.3px; top:18.7px; width:30px; height:auto; z-index:1; }
+  .rn-hint-icon path{ fill:#fff; stroke:var(--black); stroke-width:1.5; stroke-linejoin:round; }
   @keyframes rn-hint-pulse{
     0%, 100%{ transform:scale(.8); opacity:.55; }
     50%{ transform:scale(1.25); opacity:.85; }
@@ -384,7 +386,11 @@
   var minimap = document.getElementById('rnMinimap');
   var hint = document.getElementById('rnHint');
   function dismissHint(){
-    if(hint && hint.parentNode){ hint.parentNode.removeChild(hint); hint = null; }
+    if(!hint) return;
+    var el = hint;
+    hint = null;
+    el.classList.add('is-leaving');
+    setTimeout(function(){ if(el.parentNode) el.parentNode.removeChild(el); }, 350);
   }
   var minimapRect = document.getElementById('rnMinimapRect');
   var tooltip = document.getElementById('rnTooltip');
