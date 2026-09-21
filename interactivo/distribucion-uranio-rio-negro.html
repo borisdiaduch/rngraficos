@@ -64,31 +64,25 @@
   .rn-areas{ pointer-events:none; }
   .rn-mineral-shape{ stroke:none; }
 
-  /* ---------- indicador de interactividad (se borra solo o al tocarlo) ---------- */
+  /* ---------- indicador de interactividad (se borra solo o al interactuar con el gráfico) ---------- */
   .rn-hint{
     position:absolute; top:22%; right:14%; z-index:6;
-    width:52px; height:52px; cursor:pointer;
+    width:52px; height:52px; pointer-events:none;
     display:flex; align-items:center; justify-content:center;
   }
   .rn-hint-ping{
     position:absolute; inset:0; border-radius:50%;
-    background:rgba(90,90,90,.4);
-    animation:rn-hint-ping 1.8s cubic-bezier(0,0,.2,1) infinite;
+    background:rgba(90,90,90,.6);
+    animation:rn-hint-pulse 1.6s ease-in-out infinite;
   }
-  .rn-hint-dot{
-    position:relative; width:42px; height:42px; border-radius:50%;
-    background:rgba(90,90,90,.65);
-    display:flex; align-items:center; justify-content:center;
-    box-shadow:0 2px 6px rgba(20,20,20,.18);
-  }
-  .rn-hint-dot svg{ width:22px; height:auto; }
-  .rn-hint-dot svg path{ fill:#fff; }
-  @keyframes rn-hint-ping{
-    0%{ transform:scale(.55); opacity:.8; }
-    100%{ transform:scale(1.9); opacity:0; }
+  .rn-hint-icon{ position:relative; width:30px; height:auto; z-index:1; }
+  .rn-hint-icon path{ fill:var(--black); }
+  @keyframes rn-hint-pulse{
+    0%, 100%{ transform:scale(.8); opacity:.55; }
+    50%{ transform:scale(1.25); opacity:.85; }
   }
   @media (prefers-reduced-motion:reduce){
-    .rn-hint-ping{ animation:none; opacity:0; }
+    .rn-hint-ping{ animation:none; }
   }
 
   .rn-pin{ cursor:pointer; }
@@ -309,16 +303,14 @@
       </div>
       <div class="rn-hint" id="rnHint" aria-hidden="true">
         <span class="rn-hint-ping"></span>
-        <span class="rn-hint-dot">
-          <svg viewBox="0 0 57.59 44.58"><g>
-            <path d="M54.33,19.1c4.11,4.08,4.35,11.17.6,15.81-2.04,2.51-4.2,4.45-6.42,6.48-3.11,2.85-7.3,3.48-11.34,3.07l-14.41-1.44c-1.95-.19-3.16-2.37-3.01-3.98.18-1.98,1.63-3.45,3.72-3.6,2.06-.14,4,.15,6.41-.29L12.47,17.56c-1.38-1.4-.81-3.74.31-4.89,1.2-1.23,3.45-1.76,4.9-.34l9.22,9.09c.03-1.91.7-3.22,2.19-4.05,1.27-.7,2.88-.5,4.39.64-.12-1.72.55-3.21,1.95-3.97,1.36-.74,2.89-.69,4.46.54-.02-1.88.58-3.28,2.24-4.12,1.22-.63,3.06-.45,4.28.76l7.93,7.88Z"></path>
-            <path d="M26.43,6.82l-3.16,3.2c-.72.73-1.79.69-2.48.08-.6-.53-.78-1.74-.09-2.43l3.33-3.33c.59-.59,1.7-.45,2.23-.02.69.57,1,1.69.18,2.51Z"></path>
-            <path d="M10.25,20.64c.67.73.62,1.82-.14,2.55l-3.34,3.26c-.6.58-1.87.21-2.26-.3-.56-.74-.6-1.72.08-2.4l3.13-3.13c.74-.74,1.89-.65,2.51.03Z"></path>
-            <path d="M7.95,15.17c.08.93-.74,1.93-1.68,1.93H1.56c-.98.01-1.67-1.22-1.55-1.92.22-1.25,1.15-1.54,2.27-1.55l3.73-.06c1-.01,1.87.89,1.93,1.6Z"></path>
-            <path d="M17.2,1.65l.02,4.27c0,1.13-.67,1.86-1.66,1.91-.83.05-1.81-.65-1.81-1.63V1.48c.01-.85,1.05-1.52,1.82-1.47.76.05,1.62.79,1.63,1.65Z"></path>
-            <path d="M10.06,7.48c.87.87.78,1.9.08,2.61-.59.61-1.74.7-2.47-.03l-3.09-3.09c-.77-.77-.68-1.86-.04-2.5.69-.69,1.74-.76,2.52.02l3.01,3Z"></path>
-          </g></svg>
-        </span>
+        <svg class="rn-hint-icon" viewBox="0 0 57.59 44.58"><g>
+          <path d="M54.33,19.1c4.11,4.08,4.35,11.17.6,15.81-2.04,2.51-4.2,4.45-6.42,6.48-3.11,2.85-7.3,3.48-11.34,3.07l-14.41-1.44c-1.95-.19-3.16-2.37-3.01-3.98.18-1.98,1.63-3.45,3.72-3.6,2.06-.14,4,.15,6.41-.29L12.47,17.56c-1.38-1.4-.81-3.74.31-4.89,1.2-1.23,3.45-1.76,4.9-.34l9.22,9.09c.03-1.91.7-3.22,2.19-4.05,1.27-.7,2.88-.5,4.39.64-.12-1.72.55-3.21,1.95-3.97,1.36-.74,2.89-.69,4.46.54-.02-1.88.58-3.28,2.24-4.12,1.22-.63,3.06-.45,4.28.76l7.93,7.88Z"></path>
+          <path d="M26.43,6.82l-3.16,3.2c-.72.73-1.79.69-2.48.08-.6-.53-.78-1.74-.09-2.43l3.33-3.33c.59-.59,1.7-.45,2.23-.02.69.57,1,1.69.18,2.51Z"></path>
+          <path d="M10.25,20.64c.67.73.62,1.82-.14,2.55l-3.34,3.26c-.6.58-1.87.21-2.26-.3-.56-.74-.6-1.72.08-2.4l3.13-3.13c.74-.74,1.89-.65,2.51.03Z"></path>
+          <path d="M7.95,15.17c.08.93-.74,1.93-1.68,1.93H1.56c-.98.01-1.67-1.22-1.55-1.92.22-1.25,1.15-1.54,2.27-1.55l3.73-.06c1-.01,1.87.89,1.93,1.6Z"></path>
+          <path d="M17.2,1.65l.02,4.27c0,1.13-.67,1.86-1.66,1.91-.83.05-1.81-.65-1.81-1.63V1.48c.01-.85,1.05-1.52,1.82-1.47.76.05,1.62.79,1.63,1.65Z"></path>
+          <path d="M10.06,7.48c.87.87.78,1.9.08,2.61-.59.61-1.74.7-2.47-.03l-3.09-3.09c-.77-.77-.68-1.86-.04-2.5.69-.69,1.74-.76,2.52.02l3.01,3Z"></path>
+        </g></svg>
       </div>
     </div>
 
@@ -390,6 +382,10 @@
   var svg = document.getElementById('rnSvg');
   var mapWrap = document.getElementById('rnMapWrap');
   var minimap = document.getElementById('rnMinimap');
+  var hint = document.getElementById('rnHint');
+  function dismissHint(){
+    if(hint && hint.parentNode){ hint.parentNode.removeChild(hint); hint = null; }
+  }
   var minimapRect = document.getElementById('rnMinimapRect');
   var tooltip = document.getElementById('rnTooltip');
   var ttBody = document.getElementById('rnTtBody');
@@ -488,7 +484,7 @@
     pinEls[d.ref] = g;
     movePin(d);
 
-    g.addEventListener('click', function(){ selectRef(d.ref, g); });
+    g.addEventListener('click', function(){ dismissHint(); selectRef(d.ref, g); });
     g.addEventListener('keydown', function(ev){
       if(ev.key==='Enter' || ev.key===' '){ ev.preventDefault(); selectRef(d.ref, g); }
     });
@@ -605,6 +601,7 @@
 
   svg.addEventListener('wheel', function(ev){
     ev.preventDefault();
+    dismissHint();
     var p = clientToSvg(ev.clientX, ev.clientY);
     zoomAt(p.x, p.y, Math.pow(1.0018, -ev.deltaY));
   }, { passive:false });
@@ -614,6 +611,7 @@
   var panPointerId = null, panLast = null, panMoved = false;
 
   svg.addEventListener('pointerdown', function(ev){
+    dismissHint();
     var t = ev.target;
     if(t.closest && t.closest('.rn-pin')) return;
     activePointers[ev.pointerId] = {x:ev.clientX, y:ev.clientY};
@@ -812,13 +810,8 @@
   render();
   updateMinimap();
 
-  // ---------- indicador de interactividad: se borra al tocarlo o solo a los 20s ----------
-  var hint = document.getElementById('rnHint');
-  if(hint){
-    var removeHint = function(){ if(hint && hint.parentNode) hint.parentNode.removeChild(hint); };
-    hint.addEventListener('click', removeHint);
-    setTimeout(removeHint, 20000);
-  }
+  // ---------- indicador de interactividad: se borra al interactuar con el gráfico o solo a los 20s ----------
+  setTimeout(dismissHint, 20000);
 
   // ---------- alto automático si está incrustado en un iframe ----------
   function postHeight(){
