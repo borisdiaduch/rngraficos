@@ -41,9 +41,9 @@ html,body{ margin:0; background:#fff; }
 
 /* ---------- escala centrada ---------- */
 .rn-scale{ margin:18px auto 0; max-width:360px; }
-.rn-scale .title{ font-weight:700; font-size:10.5px; text-transform:uppercase; letter-spacing:.05em; color:#000; margin-bottom:6px; text-align:center; }
+.rn-scale .title{ font-weight:700; font-size:10.5px; text-transform:uppercase; /* letter-spacing:.05em; */ color:#1c1c1c; margin-bottom:6px; text-align:center; }
 .rn-scale .bar{ display:grid; grid-template-columns:repeat(9, 1fr); height:14px; }
-.rn-scale .ticks{ display:grid; grid-template-columns:repeat(9, 1fr); margin-top:5px; font-size:11.5px; font-weight:700; font-variant-numeric:tabular-nums; }
+.rn-scale .ticks{ display:grid; grid-template-columns:repeat(9, 1fr); margin-top:5px; font-size:11.5px; font-weight:600; font-variant-numeric:tabular-nums; color:#696969; }
 .rn-scale .ends{ display:flex; justify-content:space-between; margin-top:7px; font-size:12.5px; font-weight:700; }
 
 /* ---------- mapas ---------- */
@@ -61,7 +61,7 @@ html,body{ margin:0; background:#fff; }
 .rn-state:hover{ stroke:var(--black); stroke-width:2.2; }
 .rn-state.is-active{ stroke:var(--black); stroke-width:3.4; }
 .rn-state:focus-visible{ stroke:var(--gray-focus); stroke-width:4; }
-.rn-prov{ fill:none; stroke:#b9b6ac; stroke-width:1; pointer-events:none; }
+.rn-prov{ fill:none; stroke:none; pointer-events:none; }
 .rn-lbl{ font-family:'Chivo',sans-serif; font-weight:600; font-size:16px; fill:var(--black); paint-order:stroke; stroke:#fff; stroke-width:4.5px; stroke-linejoin:round; pointer-events:none; dominant-baseline:central; }
 .rn-lbl.cap{ font-weight:800; }
 .rn-dot{ fill:var(--black); stroke:#fff; stroke-width:1.8; pointer-events:none; }
