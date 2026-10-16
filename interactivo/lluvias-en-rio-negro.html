@@ -40,7 +40,7 @@ html,body{ margin:0; background:#fff; }
 .rn-totals dd{ margin:0; font-weight:800; font-variant-numeric:tabular-nums; }
 
 /* ---------- escala centrada ---------- */
-.rn-scale{ margin:26px 0 0; }
+.rn-scale{ margin:18px auto 0; max-width:360px; }
 .rn-scale .title{ font-weight:700; font-size:10.5px; text-transform:uppercase; letter-spacing:.05em; color:#000; margin-bottom:6px; text-align:center; }
 .rn-scale .bar{ display:grid; grid-template-columns:repeat(9, 1fr); height:14px; }
 .rn-scale .ticks{ display:grid; grid-template-columns:repeat(9, 1fr); margin-top:5px; font-size:11.5px; font-weight:700; font-variant-numeric:tabular-nums; }
@@ -53,6 +53,8 @@ html,body{ margin:0; background:#fff; }
 .rn-switch button:hover{ background:#eeeeec; }
 .rn-switch button[aria-pressed="true"]{ background:var(--black); color:#fff; }
 .rn-switch button:focus-visible{ outline:2px solid var(--gray-focus); outline-offset:2px; }
+.rn-period{ margin:8px 0 0; text-align:center; font-size:13px; color:var(--muted); }
+.rn-period b{ color:var(--text); font-weight:700; }
 .rn-map-wrap{ position:relative; margin-top:8px; }
 .rn-map-wrap svg{ display:block; width:100%; height:auto; overflow:visible; user-select:none; -webkit-user-select:none; }
 .rn-state{ stroke:#fff; stroke-width:1.2; stroke-linejoin:round; cursor:pointer; transition:fill .4s ease; outline:none; }
@@ -93,6 +95,7 @@ html,body{ margin:0; background:#fff; }
   .rn-foot .firma{ display:inline-flex; align-items:center; flex:none; }
   .rn-foot .firma svg{ height:12px; width:auto; display:block; }
   .rn-foot .fuente{ font-size:11px; color:var(--text); }
+.rn-foot{ border-top-width:1px; }
 
 @media (max-width:640px){
   .rn-head h1{ font-size:23px; }
@@ -113,23 +116,18 @@ html,body{ margin:0; background:#fff; }
 
   <header class="rn-head">
     <h1>Con El Niño, llovió casi el doble de lo normal en Río Negro</h1>
-    <p class="rn-dek">Cuánto más o menos llovió que el promedio 1991–2020 para los mismos meses, antes y después de que se instalara El Niño. Cada cuadro es una zona de unos 50 km.</p>
-    <hr class="rn-rule">
+    <p class="rn-dek">Cuánto más o menos llovió en cada zona de la provincia respecto del promedio 1991–2020 para los mismos meses.</p>
   </header>
 
+  <!-- DATOS DESTACADOS (desactivados por ahora)
   <dl class="rn-totals" id="rnTotals"></dl>
+  -->
 
   <div class="rn-switch" role="group" aria-label="Período">
-    <button type="button" data-p="post" aria-pressed="true">Con El Niño</button>
     <button type="button" data-p="pre" aria-pressed="false">Antes de El Niño</button>
+    <button type="button" data-p="post" aria-pressed="true">Con El Niño</button>
   </div>
-
-  <div class="rn-scale" aria-hidden="true">
-    <div class="title">Diferencia con el promedio (%)</div>
-    <div class="bar" id="rnBar"></div>
-    <div class="ticks" id="rnTicks"></div>
-    <div class="ends"><span>Más seco</span><span>Normal</span><span>Más lluvioso</span></div>
-  </div>
+  <p class="rn-period" id="rnPeriod" aria-live="polite"></p>
 
   <section class="rn-panel" data-p="post">
     <div class="rn-map-wrap">
@@ -149,6 +147,13 @@ html,body{ margin:0; background:#fff; }
       <div class="rn-tooltip" role="status" aria-live="polite"></div>
     </div>
   </section>
+
+  <div class="rn-scale" aria-hidden="true">
+    <div class="title">Diferencia con el promedio (%)</div>
+    <div class="bar" id="rnBar"></div>
+    <div class="ticks" id="rnTicks"></div>
+    <div class="ends"><span>Más seco</span><span>Normal</span><span>Más lluvioso</span></div>
+  </div>
 
 
   <div class="rn-foot">
@@ -190,11 +195,12 @@ document.getElementById("rnTicks").innerHTML = TICKS.map(function(t){ return '<s
 
 /* ---------- textos ---------- */
 var PV = DATA.prov, P = DATA.periods;
-/* datos fijos: julio a septiembre 2026 (con El Niño) */
+/* DATOS DESTACADOS (desactivados por ahora)
 document.getElementById("rnTotals").innerHTML =
   '<div><dt>2026:</dt><dd>' + fmtMm(PV.post.mm) + '</dd></div>' +
   '<div><dt>Promedio:</dt><dd>' + fmtMm(PV.post.n) + '</dd></div>' +
   '<div><dt>Diferencia:</dt><dd>' + fmtAnom(PV.post.a) + '</dd></div>';
+*/
 
 
 /* ---------- mapas ---------- */
@@ -214,6 +220,7 @@ var panels = [];
 Array.prototype.forEach.call(document.querySelectorAll(".rn-panel"), function(sec){
   var k = sec.getAttribute("data-p"), D = DATA.cells[k], cellEls = [];
   function heads(){
+    document.getElementById("rnPeriod").textContent = P[k].long;
   }
   heads();
   var svg = sec.querySelector("svg"), wrap = sec.querySelector(".rn-map-wrap"), tip = sec.querySelector(".rn-tooltip");
