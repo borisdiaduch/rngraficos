@@ -33,22 +33,16 @@ html,body{ margin:0; background:#fff; }
 .rn-dek{ margin:6px auto 0; max-width:30em; font-size:15px; line-height:1.4; color:var(--text); text-wrap:balance; }
 .rn-rule{ width:230px; height:0; border:0; border-top:1px solid var(--black); margin:14px auto 12px; }
 
-/* ---------- datos principales ---------- */
-.rn-totals{ display:flex; flex-wrap:wrap; justify-content:center; gap:4px 56px; margin:0; font-size:17px; }
-.rn-totals > div{ display:flex; align-items:baseline; gap:6px; }
-.rn-totals dt{ font-weight:500; font-variant-caps:all-small-caps; letter-spacing:.03em; }
-.rn-totals dd{ margin:0; font-weight:800; font-variant-numeric:tabular-nums; }
-
 /* ---------- escala centrada ---------- */
-.rn-scale{ margin:18px auto 0; max-width:360px; }
+.rn-scale{ margin:20px auto 0; max-width:360px; }
 .rn-scale .title{ font-weight:700; font-size:10.5px; text-transform:uppercase; /* letter-spacing:.05em; */ color:#1c1c1c; margin-bottom:6px; text-align:center; }
-.rn-scale .bar{ display:grid; grid-template-columns:repeat(9, 1fr); height:14px; }
+.rn-scale .bar{ display:grid; grid-template-columns:repeat(9, 1fr); height:8px; }
 .rn-scale .ticks{ display:grid; grid-template-columns:repeat(9, 1fr); margin-top:5px; font-size:11.5px; font-weight:600; font-variant-numeric:tabular-nums; color:#696969; }
 .rn-scale .ticks span:nth-child(n+6){ text-align:right; }
 .rn-scale .ends{ display:flex; justify-content:space-between; margin-top:7px; font-size:12.5px; font-weight:700; }
 
 /* ---------- mapas ---------- */
-.rn-panel{ margin-top:18px; }
+.rn-panel{ margin-top:20px; }
 .rn-switch{ display:flex; justify-content:center; margin:18px auto 0; width:max-content; max-width:100%; background:var(--bg); border-radius:999px; padding:3px; }
 .rn-switch button{ font:inherit; font-size:13.5px; font-weight:600; color:var(--text); background:none; border:0; border-radius:999px; padding:7px 16px; cursor:pointer; white-space:nowrap; }
 .rn-switch button:hover{ background:#eeeeec; }
@@ -92,7 +86,7 @@ html,body{ margin:0; background:#fff; }
 .rn-tooltip .tt-empty{ font-size:12px; color:var(--muted); }
 
 /* ---------- pie (idéntico al de Brasil) ---------- */
-.rn-foot{ display:flex; gap:6px 18px; align-items:baseline; justify-content:space-between; padding:10px 0 0; margin-top:14px; border-top:2px solid var(--black); flex-direction:row-reverse; }
+.rn-foot{ display:flex; gap:6px 18px; align-items:baseline; justify-content:space-between; padding:10px 0 0; margin-top:20px; border-top:2px solid var(--black); flex-direction:row-reverse; }
   .rn-foot .firma{ display:inline-flex; align-items:center; flex:none; }
   .rn-foot .firma svg{ height:12px; width:auto; display:block; }
   .rn-foot .fuente{ font-size:11px; color:var(--text); }
@@ -101,7 +95,6 @@ html,body{ margin:0; background:#fff; }
 @media (max-width:640px){
   .rn-head h1{ font-size:23px; }
   .rn-dek{ font-size:14px; }
-  .rn-totals{ gap:2px 22px; font-size:15px; }
   .rn-scale .ticks{ font-size:10.5px; }
   .rn-lbl{ font-size:23px; stroke-width:6px; }
 }
@@ -119,10 +112,6 @@ html,body{ margin:0; background:#fff; }
     <h1>Precipitaciones en Río Negro</h1>
     <p class="rn-dek">Lluvia de julio a septiembre en cada zona de la provincia, frente al promedio 1991–2020. En 2026, con El Niño en curso.</p>
   </header>
-
-  <!-- DATOS DESTACADOS (desactivados por ahora)
-  <dl class="rn-totals" id="rnTotals"></dl>
-  -->
 
   <div class="rn-switch" role="group" aria-label="Período">
     <button type="button" data-p="pre" aria-pressed="false">2025</button>
@@ -195,13 +184,7 @@ document.getElementById("rnBar").innerHTML = PAL.map(function(c){ return '<span 
 document.getElementById("rnTicks").innerHTML = TICKS.map(function(t){ return '<span>' + t + '</span>'; }).join("");
 
 /* ---------- textos ---------- */
-var PV = DATA.prov, P = DATA.periods;
-/* DATOS DESTACADOS (desactivados por ahora)
-document.getElementById("rnTotals").innerHTML =
-  '<div><dt>2026:</dt><dd>' + fmtMm(PV.post.mm) + '</dd></div>' +
-  '<div><dt>Promedio:</dt><dd>' + fmtMm(PV.post.n) + '</dd></div>' +
-  '<div><dt>Diferencia:</dt><dd>' + fmtAnom(PV.post.a) + '</dd></div>';
-*/
+var P = DATA.periods;
 
 
 /* ---------- mapas ---------- */
