@@ -32,7 +32,7 @@
   /* ---------- encabezado ---------- */
   .rn-head{ text-align:center; }
   .rn-head h1{ margin:0; font-size:28px; line-height:1.1; font-weight:800; letter-spacing:-0.01em; text-wrap:balance; }
-  .rn-dek{ margin:6px auto 0; max-width:30em; font-size:15px; line-height:1.4; color:var(--text); text-wrap:balance; }
+  .rn-dek{ margin:10px auto 0; font-size:15px; color:var(--text); }
   .rn-rule{ height:0; border:0; border-top:1px solid var(--black); margin:14px auto 12px; }
   .sc{ font-variant-caps:all-small-caps; letter-spacing:.03em; }
 
@@ -48,14 +48,15 @@
 
   /* ---------- cara a cara ---------- */
   .rn-duel-wrap{ position:relative; }
-  .rn-duel{ display:flex; gap:20px; padding:16px 0 8px; overflow-x:auto; scroll-snap-type:x proximity; scrollbar-width:thin; -webkit-overflow-scrolling:touch; }
+  .rn-duel{ display:flex; gap:20px; padding:16px 0 4px; overflow-x:auto; scrollbar-width:none; -webkit-overflow-scrolling:touch; }
+  .rn-duel::-webkit-scrollbar{ display:none; }
   .rn-duel > :first-child{ margin-left:auto; }   /* centrado si entra todo; desde el borde si hay que deslizar */
   .rn-duel > :last-child{ margin-right:auto; }
-  .rn-duel-wrap::before, .rn-duel-wrap::after{ content:""; position:absolute; top:0; bottom:8px; width:40px; z-index:1; pointer-events:none; opacity:0; transition:opacity .2s ease; }
+  .rn-duel-wrap::before, .rn-duel-wrap::after{ content:""; position:absolute; top:0; bottom:0; width:40px; z-index:1; pointer-events:none; opacity:0; transition:opacity .2s ease; }
   .rn-duel-wrap::before{ left:0; background:linear-gradient(to right, var(--panel), rgba(255,255,255,0)); }
   .rn-duel-wrap::after{ right:0; background:linear-gradient(to left, var(--panel), rgba(255,255,255,0)); }
   .rn-duel-wrap.can-left::before, .rn-duel-wrap.can-right::after{ opacity:1; }
-  .rn-rival{ flex:none; display:flex; align-items:center; gap:12px; scroll-snap-align:start; }
+  .rn-rival{ flex:none; display:flex; align-items:center; gap:12px; }
   .rn-rival.is-extra .rn-photo{ background:#ecebe6; display:flex; align-items:center; justify-content:center; }
   .rn-rival.is-extra .rn-photo img{ position:static; width:80%; transform:none; }
   .rn-rival.is-extra .rn-rival-pct{ color:#a1a1a1; }
@@ -761,6 +762,15 @@
   initStatic();
   bindEvents();
   $("rnDuel").addEventListener("scroll", updateDuelFades, { passive: true });
+  // La rueda vertical del mouse desliza la tira; en los extremos sigue bajando la página
+  $("rnDuel").addEventListener("wheel", function(ev){
+    if (ev.ctrlKey || Math.abs(ev.deltaX) >= Math.abs(ev.deltaY)) return; // zoom o desplazamiento horizontal nativo
+    var d = ev.currentTarget, max = d.scrollWidth - d.clientWidth;
+    var delta = ev.deltaY * (ev.deltaMode === 1 ? 16 : ev.deltaMode === 2 ? d.clientWidth : 1);
+    if ((delta > 0 && d.scrollLeft >= max - 1) || (delta < 0 && d.scrollLeft <= 0)) return;
+    ev.preventDefault();
+    d.scrollLeft += delta;
+  }, { passive: false });
   window.addEventListener("resize", updateDuelFades);
   renderHead();
   renderMap();
