@@ -343,6 +343,12 @@
     return isFinite(n) ? n : null;
   }
   function pct(o, k){ if (!o) return null; var p = num(o[k + "n"]); return p !== null ? p : num(o[k]); }
+  var MESES = ["enero","febrero","marzo","abril","mayo","junio","julio","agosto","septiembre","octubre","noviembre","diciembre"];
+  // "05/10/2026" -> "5 de octubre, 2026"
+  function fechaLarga(d){
+    var m = /^(\d{2})\/(\d{2})\/(\d{4})$/.exec(String(d || ""));
+    return m ? (+m[1]) + " de " + MESES[+m[2] - 1] + ", " + m[3] : "";
+  }
   function isoBR(d, t){
     var m = /^(\d{2})\/(\d{2})\/(\d{4})$/.exec(String(d || ""));
     return m && t ? m[3] + "-" + m[2] + "-" + m[1] + "T" + t + "-03:00" : null;
@@ -379,7 +385,7 @@
       apurado: pct(s, "pst"),
       votosPublicados: publicados, final: raw.tf === "s", definido: raw.md || null,
       total: num(v.tv), validos: num(v.vv),
-      totalizacao: isoBR(raw.dt, raw.ht), hora: raw.ht || null,
+      totalizacao: isoBR(raw.dt, raw.ht), hora: raw.ht || null, fecha: fechaLarga(raw.dt),
       candidatos: cands,
       lider: lider ? a : null,
       empate: !!(publicados && a && b && a.votos > 0 && a.votos === b.votos)
@@ -504,13 +510,14 @@
   function renderStatus(){
     var r = state.national, st = $("rnStatus"), alert = $("rnAlert");
     var hora = r && r.hora ? r.hora : "";
+    var fecha = r && r.fecha ? ", " + r.fecha : "";
     st.className = "rn-status";
     if (!r) {
       setText(st, state.lastOk === false ? "" : "Cargando resultados del TSE…");
     } else if (state.lastOk === false) {
-      setText(st, "Últimos datos disponibles: " + hora.slice(0, 5)); st.classList.add("is-stale");
+      setText(st, "Últimos datos disponibles: " + hora.slice(0, 5) + fecha); st.classList.add("is-stale");
     } else {
-      setText(st, (r.final ? "Resultado final · " : "Actualizado: ") + hora);
+      setText(st, (r.final ? "Resultado final · " : "Actualizado: ") + hora + fecha);
     }
     var showAlert = !r && state.lastOk === false;
     alert.hidden = !showAlert;
