@@ -45,6 +45,13 @@
   .rn-rival-pct{ margin:4px 0 0; font-family:var(--num); font-size:30px; line-height:30px; font-weight:1000; font-variant-numeric:tabular-nums; white-space:nowrap; }
   .rn-rival-votes{ margin:2px 0 0; font-size:12px; line-height:15px; color:var(--text); font-variant-numeric:tabular-nums; }
 
+  /* botón al mapa completo */
+  .rn-bn-cta{ display:inline-flex; align-items:center; gap:7px; flex:none; padding:8px 16px; border-radius:999px; background:var(--bg); color:var(--text) !important; font-size:13.5px; font-weight:700; white-space:nowrap; transition:background .15s ease; }
+  .rn-bn-cta:hover{ background:#e9e7e0; }
+  .rn-bn-cta:focus-visible{ outline:2px solid #8f8c82; outline-offset:2px; }
+  .rn-bn-cta svg{ flex:none; width:13px; height:13px; transition:transform .15s ease; }
+  .rn-bn-cta:hover svg{ transform:translateX(2px); }
+
   /* ---------- en vivo + totales + hora de actualización ---------- */
   .rn-bn-meta{ display:flex; align-items:center; justify-content:center; flex-wrap:wrap; gap:6px 25px; padding:7px 0; }
   .rn-bn-dot{ flex:none; width:8px; height:8px; border-radius:50%; background:#e30613; box-shadow:0 0 0 4px rgba(227,6,19,.18); animation:rn-bn-pulse 1.4s ease-in-out infinite; }
@@ -55,7 +62,7 @@
   .rn-totals > div{ display:flex; align-items:baseline; gap:6px; }
   .rn-totals dt{ font-weight:500; font-variant-caps:all-small-caps; letter-spacing:.03em; }
   .rn-totals dd{ margin:0; font-weight:800; font-variant-numeric:tabular-nums; }
-  .rn-status{ margin:0; font-size:11.5px; color:var(--muted); }
+  .rn-status{ margin:0; text-align:center; font-size:11.5px; color:var(--muted); }
   .rn-status.is-stale{ color:#9a5b00; }
 
   /* mobile: la foto tiene el alto del bloque de texto (18 + 2 + 22 + 2 + 14 = 58px) */
@@ -70,7 +77,8 @@
     .rn-rival-votes{ margin-top:2px; font-size:11px; line-height:14px; }
     .rn-bn-meta{ gap:2px 14px; padding:7px 0; }
     .rn-totals > div{ font-size:14.5px; }
-    .rn-status{ flex-basis:100%; text-align:center; font-size:10.5px; }
+    .rn-status{ flex-basis:100%; font-size:10.5px; }
+    .rn-bn-cta{ padding:5px 14px; font-size:12.5px; }
   }
   /* celulares angostos: 16 + 2 + 22 + 2 + 14 = 56px */
   @media (max-width:380px){
@@ -103,6 +111,7 @@
   <hr class="rn-rule">
   <div class="rn-bn-main">
     <div class="rn-duel-wrap" id="rnDuelWrap"><div class="rn-duel" id="rnDuel"></div></div>
+    <a class="rn-bn-cta" id="rnCta" target="_top" hidden><span id="rnCtaText"></span><svg viewBox="0 0 16 16" aria-hidden="true"><path d="M2 8h11M9 3.5 13.5 8 9 12.5" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg></a>
   </div>
   <hr class="rn-rule">
   <div class="rn-bn-meta">
@@ -110,7 +119,6 @@
     <dl class="rn-totals">
       <div><dt>Escrutado:</dt><dd id="rnMesas">–</dd></div>
       <div><dt>Total:</dt><dd id="rnTotal">–</dd></div>
-      <div><dt>Actualizado:</dt><dd id="rnHora">–</dd></div>
     </dl>
     <p class="rn-status" id="rnStatus" aria-live="polite">Cargando resultados del TSE…</p>
   </div>
@@ -125,6 +133,9 @@
   var CONFIG = {
     eleccion: "2t",                // "2t" = segunda vuelta (25/10/2026) · "1t" = primera vuelta (04/10/2026)
     elections: { "2t": "6258", "1t": "6257" },
+    // Botón al mapa completo (link vacío = sin botón)
+    link: "https://borisdiaduch.github.io/rngraficos/interactivo/balotaje-brasil-2026.html",
+    boton: "Ver mapa",
     year: 2026,
     office: "0001",                // Presidente
     updateInterval: 20000,
@@ -242,6 +253,7 @@
   var destacados = DESTACADOS.filter(enEleccion), extras = EXTRAS.filter(enEleccion);
 
   function initStatic(){
+    if (CONFIG.link) { $("rnCta").href = CONFIG.link; setText($("rnCtaText"), CONFIG.boton); $("rnCta").hidden = false; }
     $("rnDuel").innerHTML = destacados.map(function(d, i){
       return '<div class="rn-rival" data-i="' + i + '">' +
         '<div class="rn-photo" style="background:' + d.fondo + '"><img src="' + d.foto + '" alt="" width="225" height="225"></div>' +
@@ -271,7 +283,6 @@
     if (!r) { st.hidden = false; setText(st, lastOk === false ? "No se pudieron leer los datos del TSE. Se reintenta cada 20 segundos." : "Cargando resultados del TSE…"); return; }
     setText($("rnMesas"), fmtPct(r.apurado));
     setText($("rnTotal"), fmtNum(r.total || 0));          // 0 mientras el TSE no informa votos
-    setText($("rnHora"), r.hora || "–");                 // sólo la hora, sin el día
     $("rnDot").classList.toggle("is-final", r.final);    // deja de titilar con el escrutinio terminado
     destacados.forEach(function(d, i){
       var el = document.querySelector('.rn-rival[data-i="' + i + '"]');
@@ -284,8 +295,10 @@
       setText(el.querySelector(".rn-rival-pct"), r.publicados && v && v.pct !== null ? fmtPct(v.pct) : "–");
       setText(el.querySelector(".rn-rival-votes"), r.publicados && v && v.votos !== null ? fmtNum(v.votos) + " votos" : "");
     });
-    // Aviso sólo cuando el TSE deja de responder (la hora de los últimos datos ya está en "Actualizado")
-    var txt = lastOk === false ? "Sin conexión con el TSE: se muestran los últimos datos disponibles." : "";
+    // Mismo formato que el mapa, pero sólo con la hora (sin el día)
+    var hora = r.hora || "";
+    var txt = lastOk === false ? "Últimos datos disponibles" + (hora ? ": " + hora.slice(0, 5) : "")
+      : hora ? (r.final ? "Resultado final · " : "Actualizado: ") + hora : "";
     if (lastOk === false) st.classList.add("is-stale");
     setText(st, txt);
     st.hidden = !txt;
