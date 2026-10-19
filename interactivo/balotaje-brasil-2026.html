@@ -48,7 +48,7 @@
 
   /* ---------- cara a cara ---------- */
   .rn-duel-wrap{ position:relative; }
-  .rn-duel{ display:flex; gap:20px; padding:16px 0 4px; overflow-x:auto; scrollbar-width:none; -webkit-overflow-scrolling:touch; }
+  .rn-duel{ display:flex; gap:5px; padding:0; overflow-x:auto; scrollbar-width:none; -webkit-overflow-scrolling:touch; }
   .rn-duel::-webkit-scrollbar{ display:none; }
   .rn-duel > :first-child{ margin-left:auto; }   /* centrado si entra todo; desde el borde si hay que deslizar */
   .rn-duel > :last-child{ margin-right:auto; }
@@ -56,14 +56,20 @@
   .rn-duel-wrap::before{ left:0; background:linear-gradient(to right, var(--panel), rgba(255,255,255,0)); }
   .rn-duel-wrap::after{ right:0; background:linear-gradient(to left, var(--panel), rgba(255,255,255,0)); }
   .rn-duel-wrap.can-left::before, .rn-duel-wrap.can-right::after{ opacity:1; }
-  .rn-rival{ flex:none; display:flex; align-items:center; gap:12px; }
+  .rn-rival{ flex:none; display:flex; align-items:center; gap:12px; border-radius:12px; padding:10px; background-color:#fff; -webkit-user-select:none; user-select:none; -webkit-tap-highlight-color:transparent; }
+  /* tarjetas de candidatos: al elegir una, el mapa muestra sus votos estado por estado */
+  .rn-rival[data-i]{ cursor:pointer; transition:opacity .2s ease, background-color .2s ease; }
+  @media (hover:hover){ .rn-rival[data-i]:hover{ background-color:#f5f5f5; } }
+  .rn-rival.is-sel .rn-photo::after{ content:""; position:absolute; inset:0; border-radius:50%; box-shadow:inset 0 0 0 3px var(--c); }
+  .rn-rival[data-i]:focus-visible{ outline:2px solid var(--gray-focus); outline-offset:-2px; }
+  .rn-duel.has-sel .rn-rival:not(.is-sel){ opacity:.35; }
   .rn-rival.is-extra .rn-photo{ background:#e5e5e5; }
   .rn-rival.is-otros .rn-photo{ background:#d9d0bb; }
   .rn-rival.is-extra .rn-photo{ display:flex; align-items:center; justify-content:center; }
   .rn-rival.is-extra .rn-photo img{ position:static; width:100%; height:auto; transform:none; }
   .rn-rival.is-otros .rn-rival-pct{ color:#beae8a; }
   .rn-rival.is-extra .rn-rival-pct{ color:#a1a1a1; }
-  .rn-photo{ flex:none; width:96px; height:96px; border-radius:50%; overflow:hidden; position:relative; }
+  .rn-photo{ flex:none; width:90px; height:90px; border-radius:50%; overflow:hidden; position:relative; }
   .rn-photo img{ position:absolute; left:50%; width:var(--w, 88%); height:auto; display:block; transform:translateX(calc(-50% + var(--x, 0%))); }
   .rn-rival-name{ margin:0; font-family:var(--num); font-size:18px; font-weight:700; }
   .rn-rival-party{ margin:1px 0 0; font-size:13px; line-height:1.05; font-variant-caps:all-small-caps; letter-spacing:.03em; color:var(--muted); font-weight:700; max-width:12em; }
@@ -77,6 +83,8 @@
   .lg-scale .sw{ height:5px; }
   .lg-ticks{ position:relative; grid-column:1 / span 3; height:13px; font-size:10.5px; font-weight:600; margin-top:1px; }
   .lg-ticks span{ position:absolute; transform:translateX(-50%); top:0; }
+  .lg-scale.is-cand{ grid-template-columns:repeat(4, 36px); justify-content:end; }
+  .lg-scale.is-cand .lg-ticks{ grid-column:1 / span 4; }
   .rn-legend .lg-item{ display:flex; justify-content:flex-end; align-items:center; gap:6px; font-weight:500; margin-top:6px; }
   .rn-legend .lg-shape{ flex:none; width:11px; height:11px; border-radius:2px; }
 
@@ -133,7 +141,9 @@
     .rn-dek{ font-size:14px; }
     .rn-totals{ gap:2px 22px; font-size:15px; }
     /* tarjetas: foto a la izquierda del alto del bloque de texto (18 + 2 + 22 + 2 + 14 = 58px), sin partido */
-    .rn-duel{ gap:14px; }
+    .rn-duel-wrap{ margin:0 -8px; }   /* el padding de la tarjeta sale al margen: fotos y textos quedan alineados con el resto */
+    .rn-duel{ gap:5px; }
+    .rn-rival{ padding:8px; }
     .rn-duel-wrap::before, .rn-duel-wrap::after{ width:14px; }   /* que el degradé no tape a Lula */
     .rn-rival{ gap:8px; }
     .rn-photo{ width:58px; height:58px; }
@@ -144,15 +154,14 @@
   }
   /* celulares más angostos: que Bolsonaro y Lula entren uno al lado del otro */
   @media (max-width:380px){
-    .rn-duel{ gap:10px; }
     .rn-rival{ gap:7px; }
+    .rn-rival{ padding:8px 6px; }
     .rn-photo{ width:56px; height:56px; }            /* 16 + 2 + 22 + 2 + 14 */
     .rn-rival-name{ font-size:13.5px; line-height:16px; }
     .rn-rival-pct{ font-size:21px; }
     .rn-rival-votes{ font-size:10.5px; }
   }
   @media (max-width:356px){
-    .rn-duel{ gap:8px; }
     .rn-rival{ gap:6px; }
     .rn-photo{ width:52px; height:52px; }            /* 15 + 2 + 20 + 2 + 13 */
     .rn-rival-name{ font-size:13px; line-height:15px; }
@@ -160,6 +169,7 @@
     .rn-rival-votes{ font-size:10px; line-height:13px; }
   }
   @media (max-width:336px){
+    .rn-rival{ padding:8px 5px; }
     .rn-photo{ width:48px; height:48px; }            /* 14 + 2 + 18 + 2 + 12 */
     .rn-rival-name{ font-size:12.5px; line-height:14px; }
     .rn-rival-pct{ font-size:18px; line-height:18px; }
@@ -490,6 +500,35 @@
   }
   function hasData(r){ return r && r.votosPublicados && r.lider && (r.apurado || 0) >= EDITORIAL.minApurado; }
   function bin(p){ var c = EDITORIAL.escalas[current].cortes; return p >= c[1] ? 2 : p >= c[0] ? 1 : 0; }
+  /* ---------- mapa de calor de un candidato ---------- */
+  var selCand = null;   // índice en EDITORIAL.destacados del candidato elegido (null = quién gana cada estado)
+  function hasVotes(r){ return r && r.votosPublicados && (r.apurado || 0) >= EDITORIAL.minApurado; }
+  function mix(a, b, t){
+    var pa = [1, 3, 5].map(function(i){ return parseInt(a.substr(i, 2), 16); }), pb = [1, 3, 5].map(function(i){ return parseInt(b.substr(i, 2), 16); });
+    return "#" + pa.map(function(v, k){ return ("0" + Math.round(v + (pb[k] - v) * t).toString(16)).slice(-2); }).join("");
+  }
+  // 4 tonos del color del candidato; cortes "redondos" de 0 al máximo de sus porcentajes por estado
+  function heatScale(d){
+    var max = 0;
+    UFS.forEach(function(u){ var r = state.ufs[u[0]], c = hasVotes(r) ? findInResult(d, r) : null; if (c && c.porcentagem > max) max = c.porcentagem; });
+    var step = [1, 2, 2.5, 5, 10, 12.5, 15, 20, 25].filter(function(x){ return x >= Math.max(max, 1) / 4; })[0] || 25;
+    return { step: step, colors: [0.25, 0.5, 0.75, 1].map(function(t){ return mix("#ffffff", d.color, t); }) };
+  }
+  function heatFill(r, d, sc){
+    if (!hasVotes(r)) return getComputedStyle(root).getPropertyValue("--nodata").trim() || "#e6e3da";
+    var c = findInResult(d, r), p = c ? c.porcentagem || 0 : 0;
+    return sc.colors[Math.min(3, Math.floor(p / sc.step))];
+  }
+  function renderLegendCand(d, sc){
+    setText($("rnLgCandTitle"), "Votos de " + d.corto + " (%)");
+    var fmt = function(v){ return fmtNum(v, v % 1 ? 1 : 0); };
+    setHTML($("rnLgCandScale"),
+      sc.colors.map(function(col){ return '<span class="sw" style="background:' + col + '"></span>'; }).join("") +
+      '<div class="lg-ticks"><span style="left:0;transform:none">0</span>' +
+      [1, 2, 3].map(function(k){ return '<span style="left:calc(' + k + ' * (100% - 9px) / 4 + ' + (3 * k - 1.5) + 'px)">' + fmt(k * sc.step) + '</span>'; }).join("") +
+      '<span style="right:0;transform:none">' + fmt(4 * sc.step) + '</span></div>');
+  }
+
   function fillOf(r){
     if (r && r.empate && (r.apurado || 0) >= EDITORIAL.minApurado) return EDITORIAL.otroColor;
     if (!hasData(r)) return getComputedStyle(root).getPropertyValue("--nodata").trim() || "#e6e3da";
@@ -517,7 +556,7 @@
   function initStatic(){
     setText($("rnTitle"), EDITORIAL.titulo);
     $("rnDuel").innerHTML = EDITORIAL.destacados.map(function(d, i){
-      return '<div class="rn-rival" data-i="' + i + '">' +
+      return '<div class="rn-rival" data-i="' + i + '" role="button" tabindex="0" aria-pressed="false" style="--c:' + d.color + '">' +
         '<div class="rn-photo" style="background:' + d.fondo + ';--w:' + d.fotoAjuste.w + ';--x:' + d.fotoAjuste.x + '"><img src="' + d.foto + '" alt="" width="161" height="225"></div>' +
         '<div><p class="rn-rival-name">' + esc(d.nombre) + '</p><p class="rn-rival-party">' + esc(d.partidoNombre) + '</p>' +
         '<p class="rn-rival-pct" style="color:' + d.color + '">–</p><p class="rn-rival-votes"></p></div></div>';
@@ -536,9 +575,10 @@
       return d.escala.map(function(col){ return '<span class="sw" data-i="' + i + '" style="background:' + col + '"></span>'; }).join("");
     }).join("");
     $("rnLegend").innerHTML =
-      '<p class="lg-title">Porcentaje de votos</p>' +
+      '<div id="rnLgDefault"><p class="lg-title">Porcentaje de votos</p>' +
       '<div class="lg-scale">' + rows + '<div class="lg-ticks" id="rnLgTicks"></div></div>' +
-      '<span class="lg-item" id="rnLgOther" hidden><span class="lg-shape" style="background:' + EDITORIAL.otroColor + '"></span>Otro o empate</span>';
+      '<span class="lg-item" id="rnLgOther" hidden><span class="lg-shape" style="background:' + EDITORIAL.otroColor + '"></span>Otro o empate</span></div>' +
+      '<div id="rnLgCand" hidden><p class="lg-title" id="rnLgCandTitle"></p><div class="lg-scale is-cand" id="rnLgCandScale"></div></div>';
 
   }
 
@@ -562,7 +602,21 @@
       Array.prototype.forEach.call(document.querySelectorAll('.lg-scale .sw[data-i="' + i + '"]'), function(el){ el.hidden = off; });
     });
     EXTRAS.forEach(function(x){ document.querySelector('.rn-rival[data-x="' + x.k + '"]').hidden = !inElection(x); });
+    if (selCand !== null && !inElection(EDITORIAL.destacados[selCand])) selCand = null; // p. ej. Cury al pasar a segunda vuelta
+    renderSel();
     updateDuelFades();
+  }
+
+  function renderSel(){
+    $("rnDuel").classList.toggle("has-sel", selCand !== null);
+    Array.prototype.forEach.call(document.querySelectorAll(".rn-rival[data-i]"), function(el){
+      var on = +el.getAttribute("data-i") === selCand;
+      el.classList.toggle("is-sel", on); el.setAttribute("aria-pressed", on ? "true" : "false");
+    });
+  }
+  function pickCand(i){
+    selCand = selCand === i ? null : i;
+    renderSel(); renderMap();
   }
 
   // Degradé en los bordes de la tira cuando queda contenido por deslizar
@@ -631,15 +685,20 @@
   }
 
   function renderMap(){
-    var other = false;
+    var other = false, d = selCand !== null ? EDITORIAL.destacados[selCand] : null, sc = d ? heatScale(d) : null;
     Array.prototype.forEach.call(document.querySelectorAll(".rn-state"), function(p){
-      var uf = p.getAttribute("data-uf"), r = state.ufs[uf], f = fillOf(r);
+      var uf = p.getAttribute("data-uf"), r = state.ufs[uf], f = d ? heatFill(r, d, sc) : fillOf(r);
       if (p.getAttribute("fill") !== f) p.setAttribute("fill", f);
-      if (f === EDITORIAL.otroColor) other = true;
+      if (!d && f === EDITORIAL.otroColor) other = true;
       p.classList.toggle("is-active", selected === uf);
-      p.setAttribute("aria-label", UF_NAMES[uf] + (hasData(r) ? ": lidera " + nameOf(r.lider) + " con " + fmtPct(r.lider.porcentagem, 1) : ": sin datos suficientes"));
+      var c = d && hasVotes(r) ? findInResult(d, r) : null;
+      p.setAttribute("aria-label", UF_NAMES[uf] + (d ? (c ? ": " + d.nombre + " " + fmtPct(c.porcentagem, 1) : ": sin datos suficientes")
+        : hasData(r) ? ": lidera " + nameOf(r.lider) + " con " + fmtPct(r.lider.porcentagem, 1) : ": sin datos suficientes"));
     });
     $("rnLgOther").hidden = !other;
+    $("rnLgDefault").hidden = !!d;
+    $("rnLgCand").hidden = !d;
+    if (d) renderLegendCand(d, sc);
     if (selected) {
       var a = document.querySelector('.rn-state[data-uf="' + selected + '"]');
       if (a) a.parentNode.appendChild(a); // al frente, para que se vea el borde completo
@@ -817,6 +876,11 @@
 
   initStatic();
   bindEvents();
+  Array.prototype.forEach.call(document.querySelectorAll(".rn-rival[data-i]"), function(el){
+    var i = +el.getAttribute("data-i");
+    el.addEventListener("click", function(){ pickCand(i); });
+    el.addEventListener("keydown", function(ev){ if (ev.key === "Enter" || ev.key === " ") { ev.preventDefault(); pickCand(i); } });
+  });
   $("rnDuel").addEventListener("scroll", updateDuelFades, { passive: true });
   // La rueda vertical del mouse desliza la tira con suavidad; en los extremos sigue bajando la página
   var wheelTarget = null, wheelRaf = 0;
