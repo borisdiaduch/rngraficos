@@ -128,15 +128,42 @@
   .rn-switch button:focus-visible{ outline:2px solid var(--gray-focus); outline-offset:2px; }
 
   @media (max-width:640px){
-    .rn-duel{ gap:10px; }
-    .rn-rival{ flex-direction:column; align-items:flex-start; gap:8px; }
-    .rn-photo{ width:76px; height:76px; }
     .rn-legend{ bottom:-5%; }
     .rn-head h1{ font-size:23px; }
     .rn-dek{ font-size:14px; }
     .rn-totals{ gap:2px 22px; font-size:15px; }
-    .rn-rival-name{ font-size:18px; }
-    .rn-rival-pct{ font-size:30px; }
+    /* tarjetas: foto a la izquierda del alto del bloque de texto (18 + 2 + 22 + 2 + 14 = 58px), sin partido */
+    .rn-duel{ gap:14px; }
+    .rn-duel-wrap::before, .rn-duel-wrap::after{ width:14px; }   /* que el degradé no tape a Lula */
+    .rn-rival{ gap:8px; }
+    .rn-photo{ width:58px; height:58px; }
+    .rn-rival-party{ display:none; }
+    .rn-rival-name{ font-size:14.5px; line-height:18px; }
+    .rn-rival-pct{ margin-top:2px; font-size:22px; line-height:22px; }
+    .rn-rival-votes{ margin-top:2px; font-size:11px; line-height:14px; }
+  }
+  /* celulares más angostos: que Bolsonaro y Lula entren uno al lado del otro */
+  @media (max-width:380px){
+    .rn-duel{ gap:10px; }
+    .rn-rival{ gap:7px; }
+    .rn-photo{ width:56px; height:56px; }            /* 16 + 2 + 22 + 2 + 14 */
+    .rn-rival-name{ font-size:13.5px; line-height:16px; }
+    .rn-rival-pct{ font-size:21px; }
+    .rn-rival-votes{ font-size:10.5px; }
+  }
+  @media (max-width:356px){
+    .rn-duel{ gap:8px; }
+    .rn-rival{ gap:6px; }
+    .rn-photo{ width:52px; height:52px; }            /* 15 + 2 + 20 + 2 + 13 */
+    .rn-rival-name{ font-size:13px; line-height:15px; }
+    .rn-rival-pct{ font-size:20px; line-height:20px; }
+    .rn-rival-votes{ font-size:10px; line-height:13px; }
+  }
+  @media (max-width:336px){
+    .rn-photo{ width:48px; height:48px; }            /* 14 + 2 + 18 + 2 + 12 */
+    .rn-rival-name{ font-size:12.5px; line-height:14px; }
+    .rn-rival-pct{ font-size:18px; line-height:18px; }
+    .rn-rival-votes{ font-size:9.5px; line-height:12px; }
   }
   @media (prefers-reduced-motion:reduce){
     .rn-br *{ transition:none !important; }
@@ -154,8 +181,8 @@
     </div>
 
     <dl class="rn-totals">
-      <div><dt>Mesas escrutadas:</dt><dd id="rnMesas">–</dd></div>
-      <div><dt>Votos totales:</dt><dd id="rnVotos">–</dd></div>
+      <div><dt>Escrutado:</dt><dd id="rnMesas">–</dd></div>
+      <div><dt>Votos:</dt><dd id="rnVotos">–</dd></div>
     </dl>
     <p class="rn-alert" id="rnAlert" role="alert" hidden></p>
     <hr class="rn-rule">
@@ -255,8 +282,8 @@
   var EDITORIAL = {
     titulo: "Elecciones presidenciales en Brasil",
     bajadas: {
-      "2t": "Resultados oficiales de la segunda vuelta presidencial, estado por estado.",
-      "1t": "Resultados oficiales de la primera vuelta presidencial, estado por estado."
+      "2t": "Resultados oficiales de la segunda vuelta, estado por estado.",
+      "1t": "Resultados oficiales de la primera vuelta, estado por estado."
     },
     destacados: [
       { numero: 22, partido: "PL", nombre: "Flávio Bolsonaro", corto: "Bolsonaro", partidoNombre: "Partido Liberal",
