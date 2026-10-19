@@ -59,16 +59,27 @@
   .rn-status{ margin:0; font-size:11.5px; color:var(--muted); }
   .rn-status.is-stale{ color:#9a5b00; }
 
-  @media (max-width:640px){
-    .rn-bn-main{ flex-direction:column; gap:10px; padding:12px 0 10px; }
+  /* mobile: foto a la izquierda y texto a la derecha, todo más compacto */
+  @media (max-width:760px){
+    .rn-bn-main{ flex-direction:column; gap:8px; padding:10px 0 8px; }
     .rn-duel-wrap{ width:100%; }
-    .rn-duel{ gap:10px; }
-    .rn-rival{ flex-direction:column; align-items:flex-start; gap:8px; }
-    .rn-photo{ width:76px; height:76px; }
-    .rn-bn-cta{ font-size:13px; padding:7px 16px; }
-    .rn-bn-meta{ gap:2px 20px; padding:8px 0; }
-    .rn-totals{ gap:2px 20px; font-size:14px; }
-    .rn-status{ flex-basis:100%; text-align:center; }
+    .rn-duel{ gap:14px; }
+    .rn-rival{ gap:7px; }
+    .rn-photo{ width:44px; height:44px; }
+    .rn-rival-name{ font-size:14px; line-height:1.15; }
+    .rn-rival-party{ font-size:10px; max-width:10.5em; }
+    .rn-rival-pct{ margin-top:2px; font-size:20px; }
+    .rn-rival-votes{ margin-top:1px; font-size:10.5px; }
+    .rn-bn-cta{ gap:6px; padding:5px 12px; font-size:12px; }
+    .rn-bn-cta svg{ width:12px; height:12px; }
+    .rn-bn-meta{ gap:0 16px; padding:6px 0; }
+    .rn-totals{ gap:0 16px; font-size:12.5px; }
+    .rn-status{ flex-basis:100%; text-align:center; font-size:10.5px; }
+  }
+  @media (max-width:360px){
+    .rn-duel{ gap:12px; }
+    .rn-photo{ width:40px; height:40px; }
+    .rn-rival-name{ font-size:13.5px; }
   }
   @media (prefers-reduced-motion:reduce){
     .rn-bn *{ transition:none !important; }
