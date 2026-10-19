@@ -24,6 +24,9 @@
   .rn-bn a{ color:inherit; text-decoration:none; }
   .rn-rule{ height:0; border:0; border-top:1px solid var(--black); margin:0; }
 
+  /* ---------- cabezal ---------- */
+  .rn-bn-bar{ display:flex; align-items:center; justify-content:space-between; gap:12px; padding:5px 10px; background:var(--black); color:#fff; font-size:12px; font-weight:800; line-height:1.2; letter-spacing:.06em; text-transform:uppercase; }
+
   /* ---------- candidatos + botón ---------- */
   .rn-bn-main{ display:flex; align-items:center; justify-content:center; gap:12px 32px; padding:14px 0 12px; }
   .rn-duel-wrap{ position:relative; flex:0 1 auto; min-width:0; }
@@ -64,6 +67,7 @@
 
   /* mobile: sólo candidato, % y votos; la foto tiene el alto del bloque de texto (18 + 2 + 22 + 2 + 14 = 58px) */
   @media (max-width:760px){
+    .rn-bn-bar{ padding:4px 8px; font-size:11px; }
     .rn-bn-main{ flex-direction:column; gap:8px; padding:10px 0 8px; }
     .rn-duel-wrap{ width:100%; }
     .rn-duel{ gap:14px; }
@@ -107,7 +111,7 @@
 </head>
 <body>
 <div class="rn-bn" id="rnBn">
-  <hr class="rn-rule">
+  <div class="rn-bn-bar"><span>Elecciones Brasil</span><span id="rnRonda"></span></div>
   <div class="rn-bn-main">
     <div class="rn-duel-wrap" id="rnDuelWrap"><div class="rn-duel" id="rnDuel"></div></div>
     <a class="rn-bn-cta" id="rnCta" target="_top" hidden><span class="rn-bn-dot" aria-hidden="true"></span><span id="rnCtaText"></span><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 8h10M9 4l4 4-4 4"/></svg></a>
@@ -131,6 +135,7 @@
   var CONFIG = {
     eleccion: "2t",                // "2t" = segunda vuelta (25/10/2026) · "1t" = primera vuelta (04/10/2026)
     elections: { "2t": "6258", "1t": "6257" },
+    rondas: { "2t": "Segunda vuelta", "1t": "Primera vuelta" },
     // Botón "En vivo": a la nota web en vivo con el mapa y el minuto a minuto (link vacío = sin botón)
     link: "https://borisdiaduch.github.io/rngraficos/interactivo/balotaje-brasil-2026.html",
     boton: "En vivo",
@@ -251,6 +256,7 @@
   var destacados = DESTACADOS.filter(enEleccion), extras = EXTRAS.filter(enEleccion);
 
   function initStatic(){
+    setText($("rnRonda"), CONFIG.rondas[CONFIG.eleccion]);
     if (CONFIG.link) { $("rnCta").href = CONFIG.link; setText($("rnCtaText"), CONFIG.boton); $("rnCta").hidden = false; }
     // "Otros" lleva el renglón de partido vacío (carácter de relleno) para quedar alineado
     $("rnDuel").innerHTML = destacados.map(function(d, i){
