@@ -56,11 +56,11 @@
   .rn-duel-wrap::before{ left:0; background:linear-gradient(to right, var(--panel), rgba(255,255,255,0)); }
   .rn-duel-wrap::after{ right:0; background:linear-gradient(to left, var(--panel), rgba(255,255,255,0)); }
   .rn-duel-wrap.can-left::before, .rn-duel-wrap.can-right::after{ opacity:1; }
-  .rn-rival{ flex:none; display:flex; align-items:center; gap:12px; }
+  .rn-rival{ flex:none; display:flex; align-items:center; gap:12px; border-radius:12px; padding:10px; background-color:#fff; -webkit-user-select:none; user-select:none; -webkit-tap-highlight-color:transparent; }
   /* tarjetas de candidatos: al elegir una, el mapa muestra sus votos estado por estado */
-  .rn-rival[data-i]{ cursor:pointer; transition:opacity .2s ease, background-color .2s ease; border-radius:12px; padding:10px; background-color:#fff; -webkit-user-select:none; user-select:none; -webkit-tap-highlight-color:transparent; }
-  @media (hover:hover){ .rn-rival[data-i]:hover{ background-color:#f4f3f0; } }
-  .rn-rival[data-i]:active, .rn-rival.is-sel{ background-color:#f4f3f0; }
+  .rn-rival[data-i]{ cursor:pointer; transition:opacity .2s ease, background-color .2s ease; }
+  @media (hover:hover){ .rn-rival[data-i]:hover{ background-color:#f5f5f5; } }
+  .rn-rival.is-sel .rn-photo::after{ content:""; position:absolute; inset:0; border-radius:50%; box-shadow:inset 0 0 0 3px var(--c); }
   .rn-rival[data-i]:focus-visible{ outline:2px solid var(--gray-focus); outline-offset:-2px; }
   .rn-duel.has-sel .rn-rival:not(.is-sel){ opacity:.35; }
   .rn-rival.is-extra .rn-photo{ background:#e5e5e5; }
@@ -143,7 +143,7 @@
     /* tarjetas: foto a la izquierda del alto del bloque de texto (18 + 2 + 22 + 2 + 14 = 58px), sin partido */
     .rn-duel-wrap{ margin:0 -8px; }   /* el padding de la tarjeta sale al margen: fotos y textos quedan alineados con el resto */
     .rn-duel{ gap:5px; }
-    .rn-rival[data-i]{ padding:8px; }
+    .rn-rival{ padding:8px; }
     .rn-duel-wrap::before, .rn-duel-wrap::after{ width:14px; }   /* que el degradé no tape a Lula */
     .rn-rival{ gap:8px; }
     .rn-photo{ width:58px; height:58px; }
@@ -155,7 +155,7 @@
   /* celulares más angostos: que Bolsonaro y Lula entren uno al lado del otro */
   @media (max-width:380px){
     .rn-rival{ gap:7px; }
-    .rn-rival[data-i]{ padding:8px 6px; }
+    .rn-rival{ padding:8px 6px; }
     .rn-photo{ width:56px; height:56px; }            /* 16 + 2 + 22 + 2 + 14 */
     .rn-rival-name{ font-size:13.5px; line-height:16px; }
     .rn-rival-pct{ font-size:21px; }
@@ -169,7 +169,7 @@
     .rn-rival-votes{ font-size:10px; line-height:13px; }
   }
   @media (max-width:336px){
-    .rn-rival[data-i]{ padding:8px 5px; }
+    .rn-rival{ padding:8px 5px; }
     .rn-photo{ width:48px; height:48px; }            /* 14 + 2 + 18 + 2 + 12 */
     .rn-rival-name{ font-size:12.5px; line-height:14px; }
     .rn-rival-pct{ font-size:18px; line-height:18px; }
@@ -556,7 +556,7 @@
   function initStatic(){
     setText($("rnTitle"), EDITORIAL.titulo);
     $("rnDuel").innerHTML = EDITORIAL.destacados.map(function(d, i){
-      return '<div class="rn-rival" data-i="' + i + '" role="button" tabindex="0" aria-pressed="false">' +
+      return '<div class="rn-rival" data-i="' + i + '" role="button" tabindex="0" aria-pressed="false" style="--c:' + d.color + '">' +
         '<div class="rn-photo" style="background:' + d.fondo + ';--w:' + d.fotoAjuste.w + ';--x:' + d.fotoAjuste.x + '"><img src="' + d.foto + '" alt="" width="161" height="225"></div>' +
         '<div><p class="rn-rival-name">' + esc(d.nombre) + '</p><p class="rn-rival-party">' + esc(d.partidoNombre) + '</p>' +
         '<p class="rn-rival-pct" style="color:' + d.color + '">–</p><p class="rn-rival-votes"></p></div></div>';
