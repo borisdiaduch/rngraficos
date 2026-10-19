@@ -78,6 +78,7 @@
     .rn-bn-meta{ gap:0 18px; padding:7px 0; }
     .rn-totals{ gap:0 18px; font-size:14.5px; }
     .rn-status{ flex-basis:100%; text-align:center; font-size:10.5px; }
+    .rn-status.is-time{ display:none; }   /* la hora de actualización no va en mobile */
   }
   /* celulares angostos: 16 + 2 + 22 + 2 + 14 = 56px */
   @media (max-width:380px){
@@ -296,7 +297,7 @@
     var cuando = r.hora ? r.hora + (r.fecha ? ", " + r.fecha : "") : "";
     var txt = lastOk === false ? "Últimos datos disponibles" + (cuando ? ": " + cuando : "")
             : cuando ? (r.final ? "Resultado final · " : "Actualizado: ") + cuando : "";
-    if (lastOk === false) st.classList.add("is-stale");
+    if (lastOk === false) st.classList.add("is-stale"); else if (txt) st.classList.add("is-time");
     setText(st, txt);
     st.hidden = !txt;
     updateDuelFades();
