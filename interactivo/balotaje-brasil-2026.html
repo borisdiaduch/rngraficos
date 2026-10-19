@@ -48,7 +48,7 @@
 
   /* ---------- cara a cara ---------- */
   .rn-duel-wrap{ position:relative; }
-  .rn-duel{ display:flex; gap:20px; padding:16px 0 4px; overflow-x:auto; scrollbar-width:none; -webkit-overflow-scrolling:touch; }
+  .rn-duel{ display:flex; gap:5px; padding:0; overflow-x:auto; scrollbar-width:none; -webkit-overflow-scrolling:touch; }
   .rn-duel::-webkit-scrollbar{ display:none; }
   .rn-duel > :first-child{ margin-left:auto; }   /* centrado si entra todo; desde el borde si hay que deslizar */
   .rn-duel > :last-child{ margin-right:auto; }
@@ -58,19 +58,18 @@
   .rn-duel-wrap.can-left::before, .rn-duel-wrap.can-right::after{ opacity:1; }
   .rn-rival{ flex:none; display:flex; align-items:center; gap:12px; }
   /* tarjetas de candidatos: al elegir una, el mapa muestra sus votos estado por estado */
-  .rn-rival[data-i]{ cursor:pointer; transition:opacity .2s ease; border-radius:8px; }
-  .rn-rival[data-i]:focus-visible{ outline:2px solid var(--gray-focus); outline-offset:4px; }
+  .rn-rival[data-i]{ cursor:pointer; transition:opacity .2s ease, background-color .2s ease; border-radius:12px; padding:10px; background-color:#fff; -webkit-user-select:none; user-select:none; -webkit-tap-highlight-color:transparent; }
+  @media (hover:hover){ .rn-rival[data-i]:hover{ background-color:#f4f3f0; } }
+  .rn-rival[data-i]:active, .rn-rival.is-sel{ background-color:#f4f3f0; }
+  .rn-rival[data-i]:focus-visible{ outline:2px solid var(--gray-focus); outline-offset:-2px; }
   .rn-duel.has-sel .rn-rival:not(.is-sel){ opacity:.35; }
-  .rn-rival.is-sel .rn-photo::after{ content:""; position:absolute; inset:0; border-radius:50%; box-shadow:inset 0 0 0 3px var(--c); }
-  .rn-pick{ margin:8px 0 0; text-align:center; font-size:12px; color:var(--muted); }
-  .rn-pick button{ font:inherit; color:var(--text); background:none; border:0; padding:0; text-decoration:underline; text-underline-offset:2px; cursor:pointer; }
   .rn-rival.is-extra .rn-photo{ background:#e5e5e5; }
   .rn-rival.is-otros .rn-photo{ background:#d9d0bb; }
   .rn-rival.is-extra .rn-photo{ display:flex; align-items:center; justify-content:center; }
   .rn-rival.is-extra .rn-photo img{ position:static; width:100%; height:auto; transform:none; }
   .rn-rival.is-otros .rn-rival-pct{ color:#beae8a; }
   .rn-rival.is-extra .rn-rival-pct{ color:#a1a1a1; }
-  .rn-photo{ flex:none; width:96px; height:96px; border-radius:50%; overflow:hidden; position:relative; }
+  .rn-photo{ flex:none; width:90px; height:90px; border-radius:50%; overflow:hidden; position:relative; }
   .rn-photo img{ position:absolute; left:50%; width:var(--w, 88%); height:auto; display:block; transform:translateX(calc(-50% + var(--x, 0%))); }
   .rn-rival-name{ margin:0; font-family:var(--num); font-size:18px; font-weight:700; }
   .rn-rival-party{ margin:1px 0 0; font-size:13px; line-height:1.05; font-variant-caps:all-small-caps; letter-spacing:.03em; color:var(--muted); font-weight:700; max-width:12em; }
@@ -142,7 +141,9 @@
     .rn-dek{ font-size:14px; }
     .rn-totals{ gap:2px 22px; font-size:15px; }
     /* tarjetas: foto a la izquierda del alto del bloque de texto (18 + 2 + 22 + 2 + 14 = 58px), sin partido */
-    .rn-duel{ gap:14px; }
+    .rn-duel-wrap{ margin:0 -8px; }   /* el padding de la tarjeta sale al margen: fotos y textos quedan alineados con el resto */
+    .rn-duel{ gap:5px; }
+    .rn-rival[data-i]{ padding:8px; }
     .rn-duel-wrap::before, .rn-duel-wrap::after{ width:14px; }   /* que el degradé no tape a Lula */
     .rn-rival{ gap:8px; }
     .rn-photo{ width:58px; height:58px; }
@@ -153,15 +154,14 @@
   }
   /* celulares más angostos: que Bolsonaro y Lula entren uno al lado del otro */
   @media (max-width:380px){
-    .rn-duel{ gap:10px; }
     .rn-rival{ gap:7px; }
+    .rn-rival[data-i]{ padding:8px 6px; }
     .rn-photo{ width:56px; height:56px; }            /* 16 + 2 + 22 + 2 + 14 */
     .rn-rival-name{ font-size:13.5px; line-height:16px; }
     .rn-rival-pct{ font-size:21px; }
     .rn-rival-votes{ font-size:10.5px; }
   }
   @media (max-width:356px){
-    .rn-duel{ gap:8px; }
     .rn-rival{ gap:6px; }
     .rn-photo{ width:52px; height:52px; }            /* 15 + 2 + 20 + 2 + 13 */
     .rn-rival-name{ font-size:13px; line-height:15px; }
@@ -169,6 +169,7 @@
     .rn-rival-votes{ font-size:10px; line-height:13px; }
   }
   @media (max-width:336px){
+    .rn-rival[data-i]{ padding:8px 5px; }
     .rn-photo{ width:48px; height:48px; }            /* 14 + 2 + 18 + 2 + 12 */
     .rn-rival-name{ font-size:12.5px; line-height:14px; }
     .rn-rival-pct{ font-size:18px; line-height:18px; }
@@ -199,7 +200,6 @@
     <div class="rn-duel-wrap" id="rnDuelWrap">
       <div class="rn-duel" id="rnDuel"></div>
     </div>
-    <p class="rn-pick" id="rnPick" aria-live="polite"></p>
     <p class="rn-status" id="rnStatus" aria-live="polite">Cargando resultados del TSE…</p>
 
     <div class="rn-map-wrap" id="rnMapWrap">
@@ -556,7 +556,7 @@
   function initStatic(){
     setText($("rnTitle"), EDITORIAL.titulo);
     $("rnDuel").innerHTML = EDITORIAL.destacados.map(function(d, i){
-      return '<div class="rn-rival" data-i="' + i + '" role="button" tabindex="0" aria-pressed="false" style="--c:' + d.color + '">' +
+      return '<div class="rn-rival" data-i="' + i + '" role="button" tabindex="0" aria-pressed="false">' +
         '<div class="rn-photo" style="background:' + d.fondo + ';--w:' + d.fotoAjuste.w + ';--x:' + d.fotoAjuste.x + '"><img src="' + d.foto + '" alt="" width="161" height="225"></div>' +
         '<div><p class="rn-rival-name">' + esc(d.nombre) + '</p><p class="rn-rival-party">' + esc(d.partidoNombre) + '</p>' +
         '<p class="rn-rival-pct" style="color:' + d.color + '">–</p><p class="rn-rival-votes"></p></div></div>';
@@ -613,9 +613,6 @@
       var on = +el.getAttribute("data-i") === selCand;
       el.classList.toggle("is-sel", on); el.setAttribute("aria-pressed", on ? "true" : "false");
     });
-    setHTML($("rnPick"), selCand === null
-      ? "Elegí un candidato para ver sus votos en cada estado."
-      : "Votos de " + esc(EDITORIAL.destacados[selCand].nombre) + " en cada estado · <button type=\"button\" id=\"rnPickBack\">Ver quién gana cada estado</button>");
   }
   function pickCand(i){
     selCand = selCand === i ? null : i;
@@ -884,7 +881,6 @@
     el.addEventListener("click", function(){ pickCand(i); });
     el.addEventListener("keydown", function(ev){ if (ev.key === "Enter" || ev.key === " ") { ev.preventDefault(); pickCand(i); } });
   });
-  $("rnPick").addEventListener("click", function(ev){ if (ev.target.id === "rnPickBack") pickCand(selCand); });
   $("rnDuel").addEventListener("scroll", updateDuelFades, { passive: true });
   // La rueda vertical del mouse desliza la tira con suavidad; en los extremos sigue bajando la página
   var wheelTarget = null, wheelRaf = 0;
