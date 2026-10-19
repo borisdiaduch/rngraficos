@@ -375,10 +375,10 @@
     if (!document.hidden && !(data && data.final) && Date.now() - lastRun > CONFIG.updateInterval) tick();
   });
 
-  /* ---------- altura para el iframe ---------- */
+  /* ---------- altura para el iframe (la del contenido: el alto del documento nunca baja del alto del iframe) ---------- */
   function postHeight(){
     if (window.parent === window) return;
-    window.parent.postMessage({ type: "rn-iframe-height", id: "balotaje-brasil-2026-banner", height: Math.ceil(document.documentElement.scrollHeight) }, "*");
+    window.parent.postMessage({ type: "rn-iframe-height", id: "balotaje-brasil-2026-banner", height: Math.ceil($("rnBn").getBoundingClientRect().height) }, "*");
   }
   if (window.ResizeObserver) new ResizeObserver(postHeight).observe(document.body);
   window.addEventListener("load", postHeight);
