@@ -25,10 +25,10 @@
   .rn-rule{ height:0; border:0; border-top:1px solid var(--black); margin:0; }
 
   /* ---------- cabezal ---------- */
-  .rn-bn-bar{ display:flex; align-items:center; justify-content:space-between; gap:12px; padding:7px 0; color:var(--black); font-size:13px; font-weight:400; line-height:1.2; letter-spacing:.06em; text-transform:uppercase; }
+  .rn-bn-bar{ display:flex; align-items:center; justify-content:space-between; gap:12px; padding:7px 0; color:var(--black); font-size:13px; font-weight:400; line-height:1.2; text-transform:uppercase; }
   .rn-bn-bar .t{ display:inline-flex; align-items:center; gap:7px; }
   .rn-bn-bar b{ font-weight:800; }
-  .rn-bn-flag{ flex:none; width:16px; height:16px; display:block; }
+  .rn-bn-flag{ flex:none; width:20px; height:14px; display:block; }
 
   /* ---------- candidatos + botón ---------- */
   .rn-bn-main{ display:flex; align-items:center; justify-content:center; gap:12px 32px; padding:14px 0 12px; }
@@ -54,12 +54,12 @@
   .rn-bn-cta{ display:inline-flex; align-items:center; gap:8px; flex:none; padding:8px 18px; border-radius:999px; background:var(--bg); color:var(--text) !important; font-size:13.5px; font-weight:700; white-space:nowrap; transition:background .15s ease; }
   .rn-bn-cta:hover{ background:#e9e7e0; }
   .rn-bn-cta:focus-visible{ outline:2px solid #8f8c82; outline-offset:2px; }
-  .rn-bn-cta svg{ width:14px; height:14px; }
   .rn-bn-dot{ flex:none; width:8px; height:8px; border-radius:50%; background:#e30613; animation:rn-bn-pulse 1.4s ease-in-out infinite; }
   @keyframes rn-bn-pulse{ 0%, 100%{ opacity:1; } 50%{ opacity:.25; } }
 
   /* ---------- totales + actualización ---------- */
-  .rn-bn-meta{ display:flex; align-items:baseline; justify-content:center; flex-wrap:wrap; gap:4px 25px; padding:9px 0; }
+  .rn-bn-meta{ display:flex; align-items:center; justify-content:center; flex-wrap:wrap; gap:6px 25px; padding:7px 0; }
+  .rn-bn-meta .rn-bn-cta{ padding:5px 14px; font-size:13px; }
   .rn-totals{ display:flex; flex-wrap:wrap; justify-content:center; gap:4px 25px; margin:0; font-size:15px; }
   .rn-totals > div{ display:flex; align-items:baseline; gap:6px; }
   .rn-totals dt{ font-weight:500; font-variant-caps:all-small-caps; letter-spacing:.03em; }
@@ -71,7 +71,7 @@
   @media (max-width:760px){
     .rn-bn-bar{ padding:6px 0; font-size:11.5px; }
     .rn-bn-bar .t{ gap:6px; }
-    .rn-bn-flag{ width:14px; height:14px; }
+    .rn-bn-flag{ width:17px; height:12px; }
     .rn-bn-main{ flex-direction:column; gap:8px; padding:10px 0 8px; }
     .rn-duel-wrap{ width:100%; }
     .rn-duel{ gap:14px; }
@@ -80,8 +80,7 @@
     .rn-rival-name{ font-size:14.5px; line-height:18px; }
     .rn-rival-pct{ margin-top:2px; font-size:22px; line-height:22px; }
     .rn-rival-votes{ margin-top:2px; font-size:11px; line-height:14px; }
-    .rn-bn-cta{ gap:7px; padding:5px 13px; font-size:12px; }
-    .rn-bn-cta svg{ width:12px; height:12px; }
+    .rn-bn-meta .rn-bn-cta{ gap:7px; padding:4px 12px; font-size:12px; }
     .rn-bn-meta{ gap:0 18px; padding:7px 0; }
     .rn-totals{ gap:0 18px; font-size:14.5px; }
     .rn-status{ flex-basis:100%; text-align:center; font-size:10.5px; }
@@ -116,20 +115,19 @@
 <div class="rn-bn" id="rnBn">
   <hr class="rn-rule">
   <div class="rn-bn-bar">
-    <span class="t">Elecciones <svg class="rn-bn-flag" viewBox="0 0 22 22" aria-hidden="true"><defs><clipPath id="rnFlagClip"><circle cx="11" cy="11" r="11"/></clipPath></defs><g clip-path="url(#rnFlagClip)"><rect width="22" height="22" fill="#009c3b"/><path d="M11 3.2L20.2 11 11 18.8 1.8 11z" fill="#ffdf00"/><circle cx="11" cy="11" r="4.6" fill="#002776"/><path d="M6.6 10.1c2.9-.7 6-.3 8.7 1.1" stroke="#fff" stroke-width=".9" fill="none"/></g></svg> <b>Brasil</b></span>
+    <span class="t">Elecciones <svg class="rn-bn-flag" viewBox="0 0 20 14" aria-hidden="true"><rect width="20" height="14" fill="#009c3b"/><path d="M10 1.5L18.5 7 10 12.5 1.5 7z" fill="#ffdf00"/><circle cx="10" cy="7" r="3.5" fill="#002776"/><path d="M6.6 6.3c2.2-.5 4.6-.2 6.6.9" stroke="#fff" stroke-width=".8" fill="none"/></svg> <b>Brasil</b></span>
     <span id="rnRonda"></span>
   </div>
   <hr class="rn-rule">
   <div class="rn-bn-main">
     <div class="rn-duel-wrap" id="rnDuelWrap"><div class="rn-duel" id="rnDuel"></div></div>
-    <a class="rn-bn-cta" id="rnCta" target="_top" hidden><span class="rn-bn-dot" aria-hidden="true"></span><span id="rnCtaText"></span><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 8h10M9 4l4 4-4 4"/></svg></a>
   </div>
   <hr class="rn-rule">
   <div class="rn-bn-meta">
     <dl class="rn-totals">
-      <div><dt>Mesas escrutadas:</dt><dd id="rnMesas">–</dd></div>
-      <div><dt>Votos totales:</dt><dd id="rnVotos">–</dd></div>
+      <div><dt>Escrutado:</dt><dd id="rnMesas">–</dd></div>
     </dl>
+    <a class="rn-bn-cta" id="rnCta" target="_top" hidden><span class="rn-bn-dot" aria-hidden="true"></span><span id="rnCtaText"></span></a>
     <p class="rn-status" id="rnStatus" aria-live="polite">Cargando resultados del TSE…</p>
   </div>
   <hr class="rn-rule">
@@ -294,7 +292,6 @@
     st.className = "rn-status";
     if (!r) { st.hidden = false; setText(st, lastOk === false ? "No se pudieron leer los datos del TSE. Se reintenta cada 20 segundos." : "Cargando resultados del TSE…"); return; }
     setText($("rnMesas"), fmtPct(r.apurado));
-    setText($("rnVotos"), fmtNum(r.total !== null ? r.total : r.validos));
     destacados.forEach(function(d, i){
       var el = document.querySelector('.rn-rival[data-i="' + i + '"]');
       var c = r.candidatos.filter(function(x){ return matches(d, x); })[0];
