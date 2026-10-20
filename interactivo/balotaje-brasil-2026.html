@@ -643,6 +643,7 @@
       setText($("rnMesas"), "–"); setText($("rnVotos"), "–");
       Array.prototype.forEach.call(document.querySelectorAll(".rn-rival-pct"), function(el){ setText(el, "–"); });
       Array.prototype.forEach.call(document.querySelectorAll(".rn-rival-votes"), function(el){ setText(el, ""); });
+      sortStrip();   // sin datos: orden editorial
       return;
     }
     setText($("rnMesas"), fmtPct(r.apurado));
@@ -658,6 +659,24 @@
       setText(el.querySelector(".rn-rival-pct"), r.votosPublicados && v && v.pct !== null ? fmtPct(v.pct) : "–");
       setText(el.querySelector(".rn-rival-votes"), r.votosPublicados && v && v.votos !== null ? fmtNum(v.votos) + " votos" : "");
     });
+    sortStrip();
+  }
+
+  // Tira ordenada por porcentaje: el que gana a la izquierda; después "Otros" y, de blancos y nulos, el mayor primero.
+  // Empates (p. ej. todo en 0 antes de los primeros datos) mantienen el orden editorial.
+  function sortStrip(){
+    var r = state.national, pub = r && r.votosPublicados, duel = $("rnDuel");
+    var cards = Array.prototype.slice.call(duel.querySelectorAll(".rn-rival"));
+    var info = cards.map(function(el){
+      var i = el.getAttribute("data-i"), k = el.getAttribute("data-x"), c, v;
+      if (i !== null) { c = pub ? findInResult(EDITORIAL.destacados[+i], r) : null; return { el: el, grupo: 0, base: +i, pct: c ? c.porcentagem || 0 : 0 }; }
+      var x = 0; while (EXTRAS[x].k !== k) x++;
+      v = pub ? (k === "otros" ? otrosOf(r) : r[k]) : null;
+      return { el: el, grupo: k === "otros" ? 1 : 2, base: x, pct: v && v.pct || 0 };
+    });
+    info.sort(function(a, b){ return (a.grupo - b.grupo) || (b.pct - a.pct) || (a.base - b.base); });
+    // Se mueven los nodos sólo si cambió el orden (conservan eventos, selección y estado oculto)
+    if (info.some(function(o, n){ return o.el !== cards[n]; })) info.forEach(function(o){ duel.appendChild(o.el); });
     updateDuelFades();
   }
 
